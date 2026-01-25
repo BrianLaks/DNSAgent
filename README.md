@@ -17,7 +17,8 @@ DNS Agent is a lightweight, high-performance network-wide DNS server designed fo
 If you just want to run DNS Agent without cloning the code:
 1. **Download the latest release ZIP** (or the `publish` folder from this repo).
 2. Right-click the folder and **Extract All**.
-3. Right-click `Setup-DNSAgent.ps1` and select **Run with PowerShell** (ensure you are Administrator).
+3. Right-click `Start-Setup.bat` and select **Run as Administrator**.
+   - *This will automatically handle all PowerShell permissions and .NET version checks.*
 4. 🎉 Your DNS Shield is now active! Visit `http://localhost:5123` to see your stats.
 
 ---
