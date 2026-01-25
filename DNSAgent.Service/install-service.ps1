@@ -16,12 +16,12 @@ foreach ($port in $PortsToClean) {
     $processes = Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess
     $processes += Get-NetUDPEndpoint -LocalPort $port -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess
     
-    foreach ($pid in ($processes | Select-Object -Unique)) {
+    foreach ($owningPid in ($processes | Select-Object -Unique)) {
         try {
-            $p = Get-Process -Id $pid -ErrorAction SilentlyContinue
+            $p = Get-Process -Id $owningPid -ErrorAction SilentlyContinue
             if ($p) {
-                Write-Host "Terminating process $($p.Name) (PID: $pid) listening on port $port..." -ForegroundColor Gray
-                Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue
+                Write-Host "Terminating process $($p.Name) (PID: $owningPid) listening on port $port..." -ForegroundColor Gray
+                Stop-Process -Id $owningPid -Force -ErrorAction SilentlyContinue
             }
         }
         catch { }
