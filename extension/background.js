@@ -154,11 +154,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 // Context menu: Block this domain
-chrome.contextMenus.create({
-    id: 'block-domain',
-    title: 'Block this domain with DNS Agent',
-    contexts: ['link']
-});
+function createContextMenu() {
+    chrome.contextMenus.removeAll(() => {
+        chrome.contextMenus.create({
+            id: 'block-domain',
+            title: 'Block this domain with DNS Agent',
+            contexts: ['link']
+        });
+    });
+}
 
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     if (info.menuItemId === 'block-domain' && contextDomain) {
@@ -187,10 +191,12 @@ setInterval(fetchFilters, 6 * 60 * 60 * 1000);
 // Initialize
 chrome.runtime.onInstalled.addListener(() => {
     console.log('[DNS Agent] Extension installed');
+    createContextMenu();
     discoverDnsAgent();
 });
 
 // Try to connect on startup
+createContextMenu();
 discoverDnsAgent();
 
 // Periodic connection check (every 5 minutes)
