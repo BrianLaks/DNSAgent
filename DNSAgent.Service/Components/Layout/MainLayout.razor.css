@@ -9,13 +9,15 @@ main {
 }
 
 .sidebar {
-    background: linear-gradient(180deg, #1e90ff 0%, #000080 100%);
+    background: var(--brand-secondary) !important;
     box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    transition: all 0.5s ease;
 }
 
 .top-row {
-    background-color: #f7f7f7;
-    border-bottom: 1px solid #d6d5d5;
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
     justify-content: flex-end;
     height: 3.5rem;
     display: flex;

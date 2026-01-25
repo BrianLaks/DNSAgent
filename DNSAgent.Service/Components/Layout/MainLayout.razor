@@ -1,6 +1,12 @@
 ﻿@inherits LayoutComponentBase
+@implements IDisposable
+@using DNSAgent.Service.Services
+@inject ThemeService ThemeService
 
-<div class="page">
+<div class="page @ThemeService.GetThemeClass()" style="@ThemeService.GetInlineStyles()">
+    <div class="dashboard-watermark">
+        <img src="@ThemeService.GetLogoPath()" alt="" />
+    </div>
     <div class="sidebar">
         <NavMenu />
     </div>
@@ -16,8 +22,14 @@
     </main>
 </div>
 
-<div id="blazor-error-ui" data-nosnippet>
-    An unhandled error has occurred.
-    <a href="." class="reload">Reload</a>
-    <span class="dismiss">🗙</span>
-</div>
+@code {
+    protected override void OnInitialized()
+    {
+        ThemeService.OnThemeChanged += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        ThemeService.OnThemeChanged -= StateHasChanged;
+    }
+}

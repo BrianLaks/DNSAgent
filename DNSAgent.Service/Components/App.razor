@@ -6,14 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <base href="/" />
     <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="app.css" />
-    <link rel="stylesheet" href="DNSAgent.Service.styles.css" />
+    <link rel="stylesheet" href="app.css?v=@DateTime.Now.Ticks" />
+    <link rel="stylesheet" href="DNSAgent.Service.styles.css?v=@DateTime.Now.Ticks" />
     <link rel="icon" type="image/png" href="favicon.png" />
-    <HeadOutlet />
+    <HeadOutlet @rendermode="InteractiveServer" />
 </head>
 
 <body>
-    <Routes />
+    <Routes @rendermode="InteractiveServer" />
     <script>
         window.clipboardCopy = {
             copyText: function(text) {
@@ -28,6 +28,19 @@
     </script>
     <script src="lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="_framework/blazor.web.js"></script>
+    <script>
+        // Blazor Enhanced Navigation fix for Bootstrap
+        Blazor.addEventListener('enhancedload', () => {
+            // Re-initialize Bootstrap accordions/dropdowns
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            })
+            
+            // Note: Most collapse/dropdown functionality works via delegation, 
+            // but sometimes a manual refresh is needed for specific layouts.
+        });
+    </script>
 </body>
 
 </html>

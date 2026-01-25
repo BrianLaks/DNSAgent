@@ -48,7 +48,8 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.ExpireTimeSpan = TimeSpan.FromDays(7);
 });
 
-// DNS Worker (always runs)
+// Register Services
+builder.Services.AddSingleton<ThemeService>();
 builder.Services.AddSingleton<DnsWorker>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<DnsWorker>());
 

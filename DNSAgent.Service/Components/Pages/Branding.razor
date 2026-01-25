@@ -1,0 +1,99 @@
+@page "/branding"
+@inject ThemeService ThemeService
+@using DNSAgent.Service.Services
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
+
+<PageTitle>Branding Exploration - DNS Agent</PageTitle>
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-10 offset-md-1 text-center mb-5">
+            <h1 class="display-4 fw-bold">Branding Exploration</h1>
+            <p class="lead">Select a visual identity to re-brand the entire application instantly.</p>
+        </div>
+    </div>
+
+    <div class="row g-4 justify-content-center">
+        <!-- Classic -->
+        <div class="col-md-3">
+            <div class="card h-100 theme-card @(ThemeService.CurrentTheme == AppTheme.Classic ? "active-theme" : "")" @onclick="() => SetTheme(AppTheme.Classic)">
+                <div class="card-body text-center">
+                    <img src="logo.png" style="height: 100px;" alt="Classic" class="mb-3" />
+                    <h5 class="card-title">Classic Blue</h5>
+                    <p class="card-text small op-7">Original DodgerBlue & Navy aesthetic.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Aegis -->
+        <div class="col-md-3">
+            <div class="card h-100 theme-card @(ThemeService.CurrentTheme == AppTheme.Aegis ? "active-theme" : "")" @onclick="() => SetTheme(AppTheme.Aegis)">
+                <div class="card-body text-center">
+                    <img src="logo_aegis.png" style="height: 100px;" alt="Aegis" class="mb-3" />
+                    <h5 class="card-title">🛡️ Aegis DNS</h5>
+                    <p class="card-text small op-7">Strong, corporate gold/navy theme.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sentry -->
+        <div class="col-md-3">
+            <div class="card h-100 theme-card @(ThemeService.CurrentTheme == AppTheme.Sentry ? "active-theme" : "")" @onclick="() => SetTheme(AppTheme.Sentry)">
+                <div class="card-body text-center">
+                    <img src="logo_sentry.png" style="height: 100px;" alt="Sentry" class="mb-3" />
+                    <h5 class="card-title">🎯 SentryDNS</h5>
+                    <p class="card-text small op-7">High-tech crimson and charcoal.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- GhostGuard -->
+        <div class="col-md-3">
+            <div class="card h-100 theme-card @(ThemeService.CurrentTheme == AppTheme.GhostGuard ? "active-theme" : "")" @onclick="() => SetTheme(AppTheme.GhostGuard)">
+                <div class="card-body text-center">
+                    <img src="logo_ghost.png" style="height: 100px;" alt="Ghost" class="mb-3" />
+                    <h5 class="card-title">👻 GhostGuard</h5>
+                    <p class="card-text small op-7">Stealthy neon purple cyber-punk.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .theme-card {
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        border: 2px solid transparent !important;
+    }
+
+    .theme-card:hover {
+        transform: scale(1.05);
+        box-shadow: 0 12px 20px rgba(0,0,0,0.2) !important;
+    }
+
+    .active-theme {
+        border-color: var(--brand-primary) !important;
+        background: rgba(255, 255, 255, 0.05);
+        transform: translateY(-5px);
+    }
+
+    .op-7 { opacity: 0.7; }
+</style>
+
+@code {
+    protected override void OnInitialized()
+    {
+        ThemeService.OnThemeChanged += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        ThemeService.OnThemeChanged -= StateHasChanged;
+    }
+
+    private void SetTheme(AppTheme theme)
+    {
+        ThemeService.SetTheme(theme);
+    }
+}
