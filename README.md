@@ -15,7 +15,7 @@ DNS Agent is a lightweight, high-performance network-wide DNS server designed fo
 ## ⚡ Quick Start (No Coding Required)
 
 If you just want to run DNS Agent without cloning the code:
-1. **Download the latest release ZIP** (e.g., `DNSAgent_v1.6.2.zip`).
+1. **Download the latest `DNSAgent.zip`** from this repo.
 2. Right-click the folder and **Extract All**.
 3. Right-click `Start-Setup.bat` and select **Run as Administrator**.
    - *This handles all permissions, firewall rules, and .NET checks automatically.*
