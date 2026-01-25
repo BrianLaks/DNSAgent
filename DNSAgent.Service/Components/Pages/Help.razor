@@ -1,3 +1,4 @@
+@inject IJSRuntime JS
 @page "/help"
 
 <PageTitle>Setup & Help - DNS Agent</PageTitle>
@@ -99,8 +100,12 @@ foreach ($interface in $interfaces) {
 
     private async Task CopyScript()
     {
-        // Simple JS interop for clipboard could be added here
-        // For now, we'll assume the user selects and copies, or we can use a small JS helper
-        await Task.CompletedTask;
+        var script = "$dnsServer = \"" + CurrentIP + "\"\r\n" +
+                    "$interfaces = Get-NetIPInterface -AddressFamily IPv4 | Where-Object { $_.ConnectionState -eq \"Connected\" }\r\n" +
+                    "foreach ($interface in $interfaces) {\r\n" +
+                    "    Set-DnsClientServerAddress -InterfaceIndex $interface.InterfaceIndex -ServerAddresses $dnsServer\r\n" +
+                    "    Write-Host \"DNS updated to $dnsServer for interface: $($interface.InterfaceAlias)\"\r\n" +
+                    "}";
+        await JS.InvokeVoidAsync("clipboardCopy.copyText", script);
     }
 }

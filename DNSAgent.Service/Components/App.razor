@@ -14,6 +14,18 @@
 
 <body>
     <Routes />
+    <script>
+        window.clipboardCopy = {
+            copyText: function(text) {
+                navigator.clipboard.writeText(text).then(function () {
+                    alert("Copied to clipboard!");
+                })
+                .catch(function (error) {
+                    alert("Error copying text: " + error);
+                });
+            }
+        };
+    </script>
     <script src="lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="_framework/blazor.web.js"></script>
 </body>
