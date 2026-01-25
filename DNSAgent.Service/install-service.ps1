@@ -29,6 +29,21 @@ function Install-DNSAgentService {
     $BinWithQuotes = "`"$BinaryPath`""
     New-Service -Name $ServiceName -BinaryPathName $BinWithQuotes -DisplayName $DisplayName -Description $Description -StartupType Automatic
     
+    # --- FIREWALL RULES ---
+    Write-Host "Creating Firewall Rules for Port 5123 (Web) and Port 53 (DNS)..." -ForegroundColor Cyan
+    try {
+        if (!(Get-NetFirewallRule -DisplayName "DNS Agent Web UI" -ErrorAction SilentlyContinue)) {
+            New-NetFirewallRule -DisplayName "DNS Agent Web UI" -Direction Inbound -LocalPort 5123 -Protocol TCP -Action Allow -Description "Allows access to the DNS Agent Web Dashboard" | Out-Null
+        }
+        if (!(Get-NetFirewallRule -DisplayName "DNS Agent Port 53 Content" -ErrorAction SilentlyContinue)) {
+            New-NetFirewallRule -DisplayName "DNS Agent Port 53 Content" -Direction Inbound -LocalPort 53 -Protocol UDP, TCP -Action Allow -Description "Allows network DNS queries" | Out-Null
+        }
+        Write-Host "✅ Firewall rules added successfully." -ForegroundColor Green
+    }
+    catch {
+        Write-Host "Warning: Could not automatically set firewall rules. You may need to open port 5123 (TCP) and 53 (UDP) manually." -ForegroundColor Yellow
+    }
+    
     # Critical Fix: Set the Working Directory to the app folder so it finds the CSS/Web files
     # Note: New-Service doesn't set the Working Directory, but we ensure our relative lookups in C# 
     # handle this or we can set it via registry. For now, the ImagePath is correct.
