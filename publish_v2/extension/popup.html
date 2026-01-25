@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNS Agent</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛡️ DNS Agent</h1>
+            <p class="subtitle">YouTube Ad Blocker</p>
+        </div>
+
+        <div class="status-section">
+            <div class="status-indicator" id="status-indicator">
+                <span class="status-dot" id="status-dot"></span>
+                <span id="status-text">Connecting...</span>
+            </div>
+            <div class="status-details" id="status-details"></div>
+        </div>
+
+        <div class="stats-section">
+            <h2>📊 Statistics</h2>
+            <div class="stat-grid">
+                <div class="stat-item">
+                    <div class="stat-value" id="ads-blocked">0</div>
+                    <div class="stat-label">Ads Blocked</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="filter-version">-</div>
+                    <div class="stat-label">Filter Version</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls-section main-view">
+            <button class="btn btn-primary" id="refresh-filters">
+                🔄 Refresh Filters
+            </button>
+            <button class="btn btn-secondary" id="open-dashboard">
+                🌐 Open Dashboard
+            </button>
+        </div>
+
+        <div class="settings-view" id="settings-view" style="display: none;">
+            <div class="settings-group">
+                <label for="server-url">DNS Agent Server URL</label>
+                <div class="input-group">
+                    <input type="text" id="server-url" placeholder="http://192.168.1.x:5123">
+                    <button class="btn btn-small" id="save-settings">Save</button>
+                </div>
+                <p class="help-text">Point this to your DNS Agent server's IP and port.</p>
+            </div>
+            <button class="btn btn-secondary btn-full" id="back-to-main">⬅️ Back</button>
+        </div>
+
+        <div class="footer">
+            <a href="#" id="settings-link">⚙️ Settings</a>
+            <span class="version">v1.6.2</span>
+        </div>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+
+</html>

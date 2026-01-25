@@ -23,6 +23,9 @@ namespace DNSAgent.Service.Services
         private readonly ILogger<DnsWorker> _logger;
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly HashSet<string> _blockedDomains = new(StringComparer.OrdinalIgnoreCase);
+        private readonly HashSet<string> _blacklistedDomains = new(StringComparer.OrdinalIgnoreCase);
+        private readonly HashSet<string> _whitelistedDomains = new(StringComparer.OrdinalIgnoreCase);
+        private readonly ConcurrentDictionary<string, string> _ipToClientIdMap = new();
         // Optimize: Use a concurrent dictionary or similar if we want thread-safe updates from UI
         // For now, reload occasionally or use a reader/writer lock.
         private readonly Lock _listLock = new(); 
@@ -53,13 +56,15 @@ namespace DNSAgent.Service.Services
         }
 
 
-        private readonly HashSet<string> _whitelistedDomains = new(StringComparer.OrdinalIgnoreCase);
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             _logger.LogInformation("DNS Worker starting...");
             await LoadBlockListAsync();
             await RefreshWhitelistAsync(); // Load initial whitelist
+            await RefreshBlacklistAsync(); // Load persistent blacklist
+            await RefreshDeviceMapAsync(); // Load initial IP mapping
+            await RefreshActiveProviderAsync(); // Load the selected upstream provider
 
             IPEndPoint localEndPoint = new IPEndPoint(IPAddress.Any, 53);
             
@@ -215,6 +220,66 @@ namespace DNSAgent.Service.Services
             _logger.LogInformation("Refreshed whitelist. {Count} domains.", _whitelistedDomains.Count);
         }
 
+        public async Task RefreshBlacklistAsync()
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<DnsDbContext>();
+            var list = await db.BlacklistedDomains.ToListAsync();
+            
+            lock (_listLock)
+            {
+                _blacklistedDomains.Clear();
+                foreach (var item in list)
+                {
+                    _blacklistedDomains.Add(item.Domain);
+                }
+            }
+            _logger.LogInformation("Refreshed persistent blacklist. {Count} domains.", _blacklistedDomains.Count);
+        }
+
+        public async Task RefreshDeviceMapAsync()
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<DnsDbContext>();
+            var devices = await db.Devices.ToListAsync();
+            
+            _ipToClientIdMap.Clear();
+            foreach (var device in devices)
+            {
+                if (!string.IsNullOrEmpty(device.LastIP))
+                {
+                    _ipToClientIdMap[device.LastIP] = device.Id;
+                }
+            }
+        }
+
+        private DnsProvider? _activeProvider;
+
+        public async Task RefreshActiveProviderAsync()
+        {
+            try
+            {
+                using var scope = _scopeFactory.CreateScope();
+                var db = scope.ServiceProvider.GetRequiredService<DnsDbContext>();
+                _activeProvider = await db.DnsProviders.FirstOrDefaultAsync(p => p.IsActive);
+                
+                if (_activeProvider != null)
+                {
+                    _logger.LogInformation("Active DNS Provider: {Name} ({IP})", _activeProvider.Name, _activeProvider.PrimaryIP);
+                    _settings.Value.UpstreamDns = _activeProvider.PrimaryIP;
+                    _settings.Value.DoHUrl = _activeProvider.DoHUrl ?? _settings.Value.DoHUrl;
+                }
+                else
+                {
+                    _logger.LogWarning("No active DNS provider found in database.");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to refresh active provider from DB");
+            }
+        }
+
         private async Task HandleRequestAsync(UdpClient listener, byte[] buffer, IPEndPoint clientEndPoint)
         {
             string domain = ParseDomain(buffer);
@@ -235,7 +300,7 @@ namespace DNSAgent.Service.Services
                         {
                             blocked = false;
                         }
-                        else if (_blockedDomains.Contains(domain))
+                        else if (_blockedDomains.Contains(domain) || _blacklistedDomains.Contains(domain))
                         {
                             blocked = true;
                         }
@@ -283,6 +348,7 @@ namespace DNSAgent.Service.Services
             try
             {
                 string hostname = await GetHostnameAsync(ip);
+                _ipToClientIdMap.TryGetValue(ip, out var clientId);
 
                 using var scope = _scopeFactory.CreateScope();
                 var db = scope.ServiceProvider.GetRequiredService<DnsDbContext>();
@@ -291,6 +357,7 @@ namespace DNSAgent.Service.Services
                     Timestamp = DateTime.Now, 
                     SourceIP = ip, 
                     SourceHostname = hostname,
+                    ClientId = clientId,
                     Domain = domain, 
                     Status = status,
                     Transport = transport,
@@ -316,7 +383,8 @@ namespace DNSAgent.Service.Services
                 else
                 {
                     using var upstreamClient = new UdpClient();
-                    await upstreamClient.SendAsync(buffer, buffer.Length, _settings.Value.UpstreamDns, 53);
+                    string upstreamIp = _activeProvider?.PrimaryIP ?? _settings.Value.UpstreamDns;
+                    await upstreamClient.SendAsync(buffer, buffer.Length, upstreamIp, 53);
 
                     var receiveTask = upstreamClient.ReceiveAsync();
                     var timeoutTask = Task.Delay(2000);
@@ -346,7 +414,8 @@ namespace DNSAgent.Service.Services
                 var content = new ByteArrayContent(buffer);
                 content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/dns-message");
 
-                var response = await client.PostAsync(_settings.Value.DoHUrl, content);
+                string dohUrl = _activeProvider?.DoHUrl ?? _settings.Value.DoHUrl;
+                var response = await client.PostAsync(dohUrl, content);
                 if (response.IsSuccessStatusCode)
                 {
                     var responseData = await response.Content.ReadAsByteArrayAsync();

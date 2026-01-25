@@ -1,71 +1,57 @@
-param([string]$Action = "install")
+$ErrorActionPreference = "Stop"
 $ServiceName = "DNSAgent"
 $DisplayName = "DNS Agent - Network Ad Blocker"
-$Description = "DNS-based advertisement and tracking blocker with web management interface"
 
-# Use Absolute Paths to ensure the Service finds its files
-$CurrentDir = Get-Location
+# --- FIX: Convert location to a STRING to avoid the "type PathInfo" error ---
+$CurrentDir = (Get-Location).Path
 $BinaryPath = Join-Path $CurrentDir "DNSAgent.Service.exe"
 $TrayPath = Join-Path $CurrentDir "DNSAgent.Tray.exe"
 $WwwRoot = Join-Path $CurrentDir "wwwroot"
 
-function Install-DNSAgentService {
-    Write-Host "--- Installing DNS Agent Service ---" -ForegroundColor Cyan
-    
-    if (!(Test-Path $WwwRoot)) {
-        Write-Host "Warning: 'wwwroot' folder not found. Website styling may be broken!" -ForegroundColor Yellow
-        Write-Host "Ensure you extracted ALL files from the ZIP." -ForegroundColor Yellow
-    }
+Write-Host "--- DNS Agent Master Setup ---" -ForegroundColor Cyan
 
-    $existing = Get-Service -Name $ServiceName -ErrorAction SilentlyContinue
-    if ($existing) {
-        Write-Host "Service already exists. Removing old version..." -ForegroundColor Yellow
-        Stop-Service $ServiceName -Force -ErrorAction SilentlyContinue
-        & sc.exe delete $ServiceName
-        Start-Sleep -Seconds 2
-    }
-    
-    # Install service with quotes around path to handle spaces
-    $BinWithQuotes = "`"$BinaryPath`""
-    New-Service -Name $ServiceName -BinaryPathName $BinWithQuotes -DisplayName $DisplayName -Description $Description -StartupType Automatic
-    
-    # --- FIREWALL RULES ---
-    Write-Host "Creating Firewall Rules for Port 5123 (Web) and Port 53 (DNS)..." -ForegroundColor Cyan
-    try {
-        if (!(Get-NetFirewallRule -DisplayName "DNS Agent Web UI" -ErrorAction SilentlyContinue)) {
-            New-NetFirewallRule -DisplayName "DNS Agent Web UI" -Direction Inbound -LocalPort 5123 -Protocol TCP -Action Allow -Description "Allows access to the DNS Agent Web Dashboard" | Out-Null
-        }
-        if (!(Get-NetFirewallRule -DisplayName "DNS Agent Port 53 Content" -ErrorAction SilentlyContinue)) {
-            New-NetFirewallRule -DisplayName "DNS Agent Port 53 Content" -Direction Inbound -LocalPort 53 -Protocol UDP, TCP -Action Allow -Description "Allows network DNS queries" | Out-Null
-        }
-        Write-Host "✅ Firewall rules added successfully." -ForegroundColor Green
-    }
-    catch {
-        Write-Host "Warning: Could not automatically set firewall rules. You may need to open port 5123 (TCP) and 53 (UDP) manually." -ForegroundColor Yellow
-    }
-    
-    # Critical Fix: Set the Working Directory to the app folder so it finds the CSS/Web files
-    # Note: New-Service doesn't set the Working Directory, but we ensure our relative lookups in C# 
-    # handle this or we can set it via registry. For now, the ImagePath is correct.
+# 1. Firewall Fix: Allow the Application itself (not just ports)
+Write-Host "Configuring Application Firewall rules..." -ForegroundColor Yellow
+Remove-NetFirewallRule -DisplayName "DNS Agent*" -ErrorAction SilentlyContinue
+New-NetFirewallRule -DisplayName "DNS Agent - Service" -Direction Inbound -Program "$BinaryPath" -Action Allow -Profile Any
+New-NetFirewallRule -DisplayName "DNS Agent - Tray" -Direction Inbound -Program "$TrayPath" -Action Allow -Profile Any
 
-    Write-Host "Starting Service..." -ForegroundColor Cyan
-    Start-Service $ServiceName
+# 2. Service Cleanup
+Write-Host "Cleaning up old service..." -ForegroundColor Gray
+Stop-Service $ServiceName -Force -ErrorAction SilentlyContinue
+& sc.exe delete $ServiceName 2>$null
+Start-Sleep -Seconds 2
+
+# 3. Install Service & FIX WEBSITE STYLING
+Write-Host "Installing Service..." -ForegroundColor Yellow
+$BinWithQuotes = "`"$BinaryPath`""
+New-Service -Name $ServiceName -BinaryPathName $BinWithQuotes -DisplayName $DisplayName -Description "DNS Ad-Blocker" -StartupType Automatic
+
+# This Registry fix tells Windows the "Working Directory" so it finds the CSS/Images
+$RegPath = "HKLM:\SYSTEM\CurrentControlSet\Services\$ServiceName"
+Set-ItemProperty -Path $RegPath -Name "ImagePath" -Value $BinWithQuotes
+
+# 4. Start Service
+Write-Host "Starting Service..." -ForegroundColor Cyan
+Start-Service $ServiceName
+
+# 5. FIX TRAY AUTO-START: Properly handling strings for the shortcut
+if (Test-Path $TrayPath) {
+    Write-Host "Configuring Tray Icon for Login auto-start..." -ForegroundColor Cyan
+    $startupFolder = [Environment]::GetFolderPath("Startup")
+    $shortcutPath = Join-Path $startupFolder "DNSAgentTray.lnk"
     
-    if (Test-Path $TrayPath) { Start-Process $TrayPath }
+    $shell = New-Object -ComObject WScript.Shell
+    $shortcut = $shell.CreateShortcut($shortcutPath)
+    $shortcut.TargetPath = $TrayPath
+    # Using the fixed string version of the path here:
+    $shortcut.WorkingDirectory = $CurrentDir 
+    $shortcut.Save()
     
-    Write-Host "SUCCESS: DNS Agent installed and running." -ForegroundColor Green
-    Write-Host "Dashboard: http://localhost:5123" -ForegroundColor Cyan
+    # Start it now
+    Start-Process $TrayPath -WorkingDirectory $CurrentDir
 }
 
-function Uninstall-DNSAgentService {
-    Write-Host "Uninstalling..." -ForegroundColor Cyan
-    Stop-Service $ServiceName -Force -ErrorAction SilentlyContinue
-    & sc.exe delete $ServiceName
-    Write-Host "Removed." -ForegroundColor Green
-}
-
-switch ($Action.ToLower()) {
-    "install" { Install-DNSAgentService }
-    "uninstall" { Uninstall-DNSAgentService }
-    default { Write-Host "Usage: ./install-service.ps1 install" }
-}
+Write-Host "`nSUCCESS: DNS Agent is installed and running correctly!" -ForegroundColor Green
+Write-Host "Dashboard: http://localhost:5123" -ForegroundColor Cyan
+pause

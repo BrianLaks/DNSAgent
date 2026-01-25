@@ -1,0 +1,182 @@
+@page "/reports"
+@rendermode InteractiveServer
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
+@using DNSAgent.Service.Data
+@using Microsoft.EntityFrameworkCore
+@inject DnsDbContext Db
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Advanced Reports - DNS Agent</PageTitle>
+
+<div class="container mt-4">
+    <div class="row mb-4 align-items-center">
+        <div class="col">
+            <h1>Advanced Reports</h1>
+            <p class="text-muted">Analyze your network traffic over time.</p>
+        </div>
+        <div class="col-auto d-flex gap-2">
+            <div class="input-group">
+                <span class="input-group-text">Date:</span>
+                <input type="date" class="form-control" @bind="SelectedDate" />
+            </div>
+            <button class="btn btn-primary" @onclick="LoadData">
+                <span class="bi bi-arrow-repeat me-1"></span> Refresh
+            </button>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Summary Cards -->
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm border-0 bg-primary text-white">
+                <div class="card-body">
+                    <h6 class="card-title opacity-75">Daily Queries</h6>
+                    <h3>@totalQueries</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm border-0 bg-danger text-white">
+                <div class="card-body">
+                    <h6 class="card-title opacity-75">Daily Blocks</h6>
+                    <h3>@totalBlocked</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm border-0 bg-success text-white">
+                <div class="card-body">
+                    <h6 class="card-title opacity-75">Block Rate</h6>
+                    <h3>@blockRate.ToString("0.0")%</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm border-0 bg-info text-white">
+                <div class="card-body">
+                    <h6 class="card-title opacity-75">Active Hosts</h6>
+                    <h3>@activeHosts</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Chart -->
+        <div class="col-12 mb-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white font-weight-bold">
+                    Queries per Hour
+                </div>
+                <div class="card-body">
+                    <div id="hourlyChart" style="height: 350px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Top Domains -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white font-weight-bold">
+                    Top Blocked Domains
+                </div>
+                <div class="card-body">
+                    @if (topBlocked == null || !topBlocked.Any())
+                    {
+                        <p class="text-muted">No data available for this period.</p>
+                    }
+                    else
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var item in topBlocked)
+                            {
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span class="text-truncate" style="max-width: 70%;">@item.Domain</span>
+                                    <span class="badge bg-danger rounded-pill">@item.Count</span>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Distribution -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white font-weight-bold">
+                    Query Status Distribution
+                </div>
+                <div class="card-body">
+                    <div id="distributionChart" style="height: 300px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private DateTime SelectedDate { get; set; } = DateTime.Today;
+    private int totalQueries;
+    private int totalBlocked;
+    private int activeHosts;
+    private double blockRate;
+    private List<(string Domain, int Count)>? topBlocked;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadData();
+        }
+    }
+
+    private async Task LoadData()
+    {
+        var start = SelectedDate.Date;
+        var end = start.AddDays(1);
+
+        var data = await Db.QueryLogs
+            .Where(x => x.Timestamp >= start && x.Timestamp < end)
+            .ToListAsync();
+
+        totalQueries = data.Count;
+        totalBlocked = data.Count(x => x.Status == "Blocked");
+        activeHosts = data.Select(x => x.SourceIP).Distinct().Count();
+        blockRate = totalQueries == 0 ? 0 : (double)totalBlocked / totalQueries * 100;
+
+        topBlocked = data.Where(x => x.Status == "Blocked")
+            .GroupBy(x => x.Domain)
+            .OrderByDescending(g => g.Count())
+            .Take(10)
+            .Select(g => (g.Key, g.Count()))
+            .ToList();
+
+        // Hourly distribution for line chart
+        var hourlyData = data.GroupBy(x => x.Timestamp.Hour)
+            .Select(g => new { Hour = g.Key, Count = g.Count() })
+            .OrderBy(x => x.Hour)
+            .ToDictionary(x => x.Hour, x => x.Count);
+
+        var hours = Enumerable.Range(0, 24).ToArray();
+        var hourlyValues = hours.Select(h => hourlyData.ContainsKey(h) ? hourlyData[h] : 0).ToArray();
+
+        // JS Interop to render charts
+        await RenderCharts(hours, hourlyValues, totalBlocked, totalQueries - totalBlocked);
+        StateHasChanged();
+    }
+
+    private async Task RenderCharts(int[] hours, int[] values, int blocked, int allowed)
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("renderReportsCharts", hours, values, blocked, allowed);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error rendering charts: {ex.Message}");
+        }
+    }
+}

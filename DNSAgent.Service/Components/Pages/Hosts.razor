@@ -50,7 +50,8 @@
             <table class="table table-hover shadow-sm">
                 <thead>
                     <tr class="table-primary text-white">
-                        <th>Host Information</th>
+                        <th>Host / Machine Name</th>
+                        <th>User</th>
                         <th>Total Queries</th>
                         <th>Blocked</th>
                         <th>Allowed</th>
@@ -64,8 +65,20 @@
                     {
                         <tr>
                             <td>
-                                <div><strong>@host.Hostname</strong></div>
+                                <div><strong>@(string.IsNullOrEmpty(host.MachineName) ? host.Hostname : host.MachineName)</strong></div>
                                 <small class="text-muted">@host.IP</small>
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(host.UserName))
+                                {
+                                    <span class="badge bg-info text-dark">
+                                        <span class="bi bi-person me-1"></span> @host.UserName
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted small">Unknown</span>
+                                }
                             </td>
                             <td>@host.TotalQueries</td>
                             <td>
@@ -118,28 +131,43 @@
 
     private async Task LoadStats()
     {
-        // SQL-side grouping for performance
-        var query = Db.QueryLogs
+        var logs = await Db.QueryLogs
             .GroupBy(l => l.SourceIP)
-            .Select(g => new HostStat
+            .Select(g => new
             {
                 IP = g.Key,
-                // We take the most recent hostname for this IP
-                Hostname = g.OrderByDescending(x => x.Timestamp).Select(x => x.SourceHostname).FirstOrDefault() ?? g.Key,
+                Hostname = g.OrderByDescending(x => x.Timestamp).Select(x => x.SourceHostname).FirstOrDefault(),
+                ClientId = g.OrderByDescending(x => x.Timestamp).Select(x => x.ClientId).FirstOrDefault(),
                 TotalQueries = g.Count(),
                 BlockedQueries = g.Count(l => l.Status == "Blocked"),
                 AllowedQueries = g.Count(l => l.Status == "Allowed"),
                 LastSeen = g.Max(l => l.Timestamp)
             })
-            .OrderByDescending(h => h.TotalQueries);
+            .ToListAsync();
 
-        hostStats = await query.ToListAsync();
+        var devices = await Db.Devices.ToDictionaryAsync(d => d.Id);
+
+        hostStats = logs.Select(l => new HostStat
+        {
+            IP = l.IP,
+            Hostname = l.Hostname ?? l.IP,
+            MachineName = (l.ClientId != null && devices.TryGetValue(l.ClientId, out var d)) ? d.MachineName : "",
+            UserName = (l.ClientId != null && devices.TryGetValue(l.ClientId, out var u)) ? u.UserName : "",
+            TotalQueries = l.TotalQueries,
+            BlockedQueries = l.BlockedQueries,
+            AllowedQueries = l.AllowedQueries,
+            LastSeen = l.LastSeen
+        })
+        .OrderByDescending(h => h.TotalQueries)
+        .ToList();
     }
 
     public class HostStat
     {
         public string IP { get; set; } = "";
         public string Hostname { get; set; } = "";
+        public string MachineName { get; set; } = "";
+        public string UserName { get; set; } = "";
         public int TotalQueries { get; set; }
         public int BlockedQueries { get; set; }
         public int AllowedQueries { get; set; }

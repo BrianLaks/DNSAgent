@@ -1,0 +1,145 @@
+@page "/blacklist"
+@rendermode InteractiveServer
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
+@using DNSAgent.Service.Data
+@using DNSAgent.Service.Services
+@using Microsoft.EntityFrameworkCore
+@inject DnsDbContext Db
+@inject DnsWorker DnsWorker
+
+<PageTitle>Blacklist Management - DNS Agent</PageTitle>
+
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>Blacklist Management</h1>
+            <p class="text-muted">Domains here are blocked network-wide, regardless of threat feeds.</p>
+        </div>
+        <div class="col-auto">
+            <div class="input-group">
+                <input type="text" class="form-control" placeholder="example.com" @bind="newDomain" @onkeyup="HandleKeyUp" />
+                <button class="btn btn-primary" @onclick="AddDomain">
+                    <span class="bi bi-plus-circle me-1"></span> Add to Blacklist
+                </button>
+            </div>
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="text-danger small mt-1">@errorMessage</div>
+            }
+        </div>
+    </div>
+
+    @if (blacklist == null)
+    {
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (!blacklist.Any())
+    {
+        <div class="alert alert-info shadow-sm">
+            <span class="bi bi-info-circle me-2"></span> No custom domains in your blacklist yet.
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover shadow-sm bg-white">
+                <thead>
+                    <tr class="table-dark">
+                        <th>Domain</th>
+                        <th>Reason / Notes</th>
+                        <th>Added At</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in blacklist)
+                    {
+                        <tr>
+                            <td><code class="text-primary font-weight-bold">@item.Domain</code></td>
+                            <td><span class="text-muted">@item.Reason</span></td>
+                            <td>@item.AddedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td class="text-end">
+                                <button class="btn btn-sm btn-outline-danger" @onclick="() => RemoveDomain(item.Id)">
+                                    <span class="bi bi-trash"></span> Remove
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@code {
+    private List<BlacklistedDomain>? blacklist;
+    private string? newDomain;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadBlacklist();
+    }
+
+    private async Task HandleKeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await AddDomain();
+        }
+    }
+
+    private async Task LoadBlacklist()
+    {
+        blacklist = await Db.BlacklistedDomains
+            .OrderByDescending(x => x.AddedAt)
+            .ToListAsync();
+    }
+
+    private async Task AddDomain()
+    {
+        errorMessage = null;
+        if (string.IsNullOrWhiteSpace(newDomain)) return;
+
+        var domain = newDomain.Trim().ToLowerInvariant();
+        if (domain.Contains(" "))
+        {
+            errorMessage = "Invalid domain format.";
+            return;
+        }
+
+        if (await Db.BlacklistedDomains.AnyAsync(x => x.Domain == domain))
+        {
+            errorMessage = "Domain is already blacklisted.";
+            return;
+        }
+
+        Db.BlacklistedDomains.Add(new BlacklistedDomain
+        {
+            Domain = domain,
+            Reason = "Manually added via Web UI",
+            AddedAt = DateTime.UtcNow
+        });
+
+        await Db.SaveChangesAsync();
+        await DnsWorker.RefreshBlacklistAsync();
+        newDomain = "";
+        await LoadBlacklist();
+    }
+
+    private async Task RemoveDomain(int id)
+    {
+        var item = await Db.BlacklistedDomains.FindAsync(id);
+        if (item != null)
+        {
+            Db.BlacklistedDomains.Remove(item);
+            await Db.SaveChangesAsync();
+            await DnsWorker.RefreshBlacklistAsync();
+            await LoadBlacklist();
+        }
+    }
+}

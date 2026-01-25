@@ -76,7 +76,7 @@ namespace DNSAgent.Service.Controllers
         /// </summary>
         [HttpPost("block")]
         [Authorize]
-        public IActionResult BlockDomain([FromBody] BlockDomainRequest request)
+        public async Task<IActionResult> BlockDomain([FromBody] BlockDomainRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.Domain))
                 return BadRequest(new { error = "Domain is required" });
@@ -85,7 +85,20 @@ namespace DNSAgent.Service.Controllers
             if (!IsValidDomain(request.Domain))
                 return BadRequest(new { error = "Invalid domain format" });
 
-            // Add to blocklist
+            // Add to persistent blacklist
+            if (!await _db.BlacklistedDomains.AnyAsync(b => b.Domain == request.Domain))
+            {
+                _db.BlacklistedDomains.Add(new BlacklistedDomain
+                {
+                    Domain = request.Domain.ToLowerInvariant(),
+                    Reason = request.Reason ?? "Blocked from extension",
+                    AddedAt = DateTime.UtcNow
+                });
+                await _db.SaveChangesAsync();
+                await _dnsWorker.RefreshBlacklistAsync();
+            }
+
+            // Also add to in-memory blocklist for immediate effect
             _dnsWorker.AddToBlocklist(request.Domain);
 
             return Ok(new
@@ -201,6 +214,35 @@ namespace DNSAgent.Service.Controllers
         }
 
         /// <summary>
+        /// POST /api/heartbeat - Client identification and status
+        /// </summary>
+        [HttpPost("heartbeat")]
+        public async Task<IActionResult> DeviceHeartbeat([FromBody] HeartbeatRequest request)
+        {
+            if (string.IsNullOrEmpty(request.ClientId))
+                return BadRequest(new { error = "ClientId is required" });
+
+            var ip = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+            
+            var device = await _db.Devices.FindAsync(request.ClientId);
+            if (device == null)
+            {
+                device = new DeviceInfo { Id = request.ClientId };
+                _db.Devices.Add(device);
+            }
+
+            device.MachineName = request.MachineName ?? "Unknown Machine";
+            device.UserName = request.UserName ?? "Unknown User";
+            device.LastIP = ip;
+            device.LastSeen = DateTime.UtcNow;
+
+            await _db.SaveChangesAsync();
+            await _dnsWorker.RefreshDeviceMapAsync();
+
+            return Ok(new { success = true, registeredAs = device.MachineName });
+        }
+
+        /// <summary>
         /// POST /api/youtube-stats - Report YouTube ad blocking statistics
         /// </summary>
         [HttpPost("youtube-stats")]
@@ -219,7 +261,7 @@ namespace DNSAgent.Service.Controllers
                 ThumbnailsReplaced = request.ThumbnailsReplaced,
                 TimeSavedSeconds = request.TimeSavedSeconds,
                 FilterVersion = request.FilterVersion,
-                DeviceName = Request.Headers["User-Agent"].ToString() ?? "Unknown Extension"
+                DeviceName = request.MachineName ?? Request.Headers["User-Agent"].ToString() ?? "Unknown Extension"
             };
 
             _db.YouTubeStats.Add(stat);
@@ -268,5 +310,13 @@ namespace DNSAgent.Service.Controllers
         public int ThumbnailsReplaced { get; set; }
         public double TimeSavedSeconds { get; set; }
         public string FilterVersion { get; set; } = string.Empty;
+        public string? MachineName { get; set; }
+    }
+
+    public class HeartbeatRequest
+    {
+        public string ClientId { get; set; } = string.Empty;
+        public string? MachineName { get; set; }
+        public string? UserName { get; set; }
     }
 }

@@ -93,13 +93,55 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<DnsDbContext>();
     db.Database.EnsureCreated();
     
-    // Manual migration for v1.3 - v1.5 features
+    // Manual migration for v1.3 - v2.0 features
     try {
         db.Database.ExecuteSqlRaw("ALTER TABLE QueryLogs ADD COLUMN Transport TEXT DEFAULT 'UDP'");
         db.Database.ExecuteSqlRaw("ALTER TABLE QueryLogs ADD COLUMN IsDnssec INTEGER DEFAULT 0");
+        db.Database.ExecuteSqlRaw("ALTER TABLE QueryLogs ADD COLUMN ClientId TEXT");
     } catch { /* Columns already exist */ }
 
     try {
+        db.Database.ExecuteSqlRaw(@"
+            CREATE TABLE IF NOT EXISTS BlacklistedDomains (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                Domain TEXT NOT NULL,
+                Reason TEXT,
+                AddedAt TEXT NOT NULL
+            );");
+
+        db.Database.ExecuteSqlRaw(@"
+            CREATE TABLE IF NOT EXISTS Devices (
+                Id TEXT PRIMARY KEY,
+                MachineName TEXT NOT NULL,
+                UserName TEXT NOT NULL,
+                LastIP TEXT NOT NULL,
+                LastSeen TEXT NOT NULL
+            );");
+
+        db.Database.ExecuteSqlRaw(@"
+            CREATE TABLE IF NOT EXISTS DnsProviders (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                Name TEXT NOT NULL,
+                PrimaryIP TEXT NOT NULL,
+                SecondaryIP TEXT,
+                DoHUrl TEXT,
+                IsActive INTEGER NOT NULL DEFAULT 0,
+                IsPreset INTEGER NOT NULL DEFAULT 0
+            );");
+
+        // Seed default providers if table is empty
+        var hasProviders = db.DnsProviders.Any();
+        if (!hasProviders)
+        {
+            db.DnsProviders.AddRange(new List<DnsProvider>
+            {
+                new DnsProvider { Name = "Google DNS", PrimaryIP = "8.8.8.8", SecondaryIP = "8.8.4.4", DoHUrl = "https://dns.google/dns-query", IsActive = true, IsPreset = true },
+                new DnsProvider { Name = "Cloudflare", PrimaryIP = "1.1.1.1", SecondaryIP = "1.0.0.1", DoHUrl = "https://cloudflare-dns.com/dns-query", IsActive = false, IsPreset = true },
+                new DnsProvider { Name = "Quad9", PrimaryIP = "9.9.9.9", SecondaryIP = "149.112.112.112", DoHUrl = "https://dns.quad9.net/dns-query", IsActive = false, IsPreset = true }
+            });
+            db.SaveChanges();
+        }
+
         db.Database.ExecuteSqlRaw(@"
             CREATE TABLE IF NOT EXISTS YouTubeStats (
                 Id INTEGER PRIMARY KEY AUTOINCREMENT,

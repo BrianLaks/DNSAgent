@@ -1,0 +1,180 @@
+@page "/admin/dns-providers"
+@rendermode InteractiveServer
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
+@using DNSAgent.Service.Data
+@using DNSAgent.Service.Services
+@using Microsoft.EntityFrameworkCore
+@inject DnsDbContext Db
+@inject DnsWorker DnsWorker
+
+<PageTitle>DNS Providers - DNS Agent</PageTitle>
+
+<div class="container mt-4">
+    <div class="row mb-4 align-items-center">
+        <div class="col">
+            <h1>DNS Providers</h1>
+            <p class="text-muted">Configure the upstream DNS servers used by the agent.</p>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-primary" @onclick="ShowAddForm">
+                <span class="bi bi-plus-lg me-1"></span> Add Custom Provider
+            </button>
+        </div>
+    </div>
+
+    @if (providers == null)
+    {
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var p in providers)
+            {
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 shadow-sm border-@(p.IsActive ? "primary" : "light")">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="card-title mb-0">@p.Name</h5>
+                                @if (p.IsActive)
+                                {
+                                    <span class="badge bg-primary">Active</span>
+                                }
+                                @if (p.IsPreset)
+                                {
+                                    <span class="badge bg-secondary">Preset</span>
+                                }
+                            </div>
+                            <p class="card-text mb-1"><strong>Primary:</strong> <code>@p.PrimaryIP</code></p>
+                            @if (!string.IsNullOrEmpty(p.SecondaryIP))
+                            {
+                                <p class="card-text mb-1"><strong>Secondary:</strong> <code>@p.SecondaryIP</code></p>
+                            }
+                            @if (!string.IsNullOrEmpty(p.DoHUrl))
+                            {
+                                <p class="card-text small text-muted text-truncate" title="@p.DoHUrl"><strong>DoH:</strong> @p.DoHUrl</p>
+                            }
+                        </div>
+                        <div class="card-footer bg-white border-top-0 d-flex gap-2">
+                            @if (!p.IsActive)
+                            {
+                                <button class="btn btn-sm btn-outline-primary flex-grow-1" @onclick="() => SetActive(p.Id)">Set Active</button>
+                            }
+                            @if (!p.IsPreset)
+                            {
+                                <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteProvider(p.Id)">
+                                    <span class="bi bi-trash"></span>
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    @if (showAddForm)
+    {
+        <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5)">
+            <div class="modal-dialog">
+                <div class="modal-content shadow-lg border-0">
+                    <div class="modal-header bg-dark text-white">
+                        <h5 class="modal-title">Add Custom DNS Provider</h5>
+                        <button type="button" class="btn-close btn-close-white" @onclick="() => showAddForm = false"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Provider Name</label>
+                            <input type="text" class="form-control" @bind="newProvider.Name" placeholder="e.g. My Home DNS" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Primary IP Address</label>
+                            <input type="text" class="form-control" @bind="newProvider.PrimaryIP" placeholder="8.8.8.8" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Secondary IP Address (Optional)</label>
+                            <input type="text" class="form-control" @bind="newProvider.SecondaryIP" placeholder="8.8.4.4" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">DoH URL (Optional)</label>
+                            <input type="text" class="form-control" @bind="newProvider.DoHUrl" placeholder="https://..." />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" @onclick="() => showAddForm = false">Cancel</button>
+                        <button class="btn btn-primary" @onclick="CreateProvider">Save Provider</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<DnsProvider>? providers;
+    private bool showAddForm = false;
+    private DnsProvider newProvider = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProviders();
+    }
+
+    private async Task LoadProviders()
+    {
+        providers = await Db.DnsProviders.OrderBy(p => p.Name).ToListAsync();
+    }
+
+    private void ShowAddForm()
+    {
+        newProvider = new DnsProvider();
+        showAddForm = true;
+    }
+
+    private async Task CreateProvider()
+    {
+        if (string.IsNullOrWhiteSpace(newProvider.Name) || string.IsNullOrWhiteSpace(newProvider.PrimaryIP)) return;
+
+        newProvider.IsPreset = false;
+        newProvider.IsActive = false;
+        Db.DnsProviders.Add(newProvider);
+        await Db.SaveChangesAsync();
+        
+        showAddForm = false;
+        await LoadProviders();
+    }
+
+    private async Task SetActive(int id)
+    {
+        var all = await Db.DnsProviders.ToListAsync();
+        foreach (var p in all)
+        {
+            p.IsActive = (p.Id == id);
+        }
+        await Db.SaveChangesAsync();
+        await DnsWorker.RefreshActiveProviderAsync();
+        await LoadProviders();
+    }
+
+    private async Task DeleteProvider(int id)
+    {
+        var p = await Db.DnsProviders.FindAsync(id);
+        if (p != null && !p.IsPreset)
+        {
+            if (p.IsActive)
+            {
+                // Fallback to Google if we delete the active one
+                var google = await Db.DnsProviders.FirstOrDefaultAsync(x => x.Name == "Google DNS");
+                if (google != null) google.IsActive = true;
+            }
+            Db.DnsProviders.Remove(p);
+            await Db.SaveChangesAsync();
+            await DnsWorker.RefreshActiveProviderAsync();
+            await LoadProviders();
+        }
+    }
+}

@@ -80,9 +80,11 @@
                             <option value="DoH">DNS-over-HTTPS (Secure)</option>
                         </select>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">DoH Endpoint</label>
-                        <input type="text" class="form-control" @bind="dohUrl" placeholder="https://dns.google/dns-query" />
+                    <div class="mb-4">
+                        <p class="small text-muted mb-2">Upstream relay is now managed via DNS Providers.</p>
+                        <a href="admin/dns-providers" class="btn btn-sm btn-primary">
+                            <span class="bi bi-gear-fill me-1"></span> Manage DNS Providers
+                        </a>
                     </div>
                     <div class="form-check form-switch mb-3">
                         <input class="form-check-input" type="checkbox" role="switch" @bind="enforceDnssec" />

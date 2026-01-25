@@ -27,6 +27,7 @@
         };
     </script>
     <script src="lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <script src="_framework/blazor.web.js"></script>
     <script>
         // Blazor Enhanced Navigation fix for Bootstrap
@@ -36,10 +37,34 @@
             tooltipTriggerList.map(function (tooltipTriggerEl) {
                 return new bootstrap.Tooltip(tooltipTriggerEl)
             })
-            
-            // Note: Most collapse/dropdown functionality works via delegation, 
-            // but sometimes a manual refresh is needed for specific layouts.
         });
+
+        window.renderReportsCharts = (hours, values, blocked, allowed) => {
+            const hourlyOptions = {
+                series: [{ name: 'Queries', data: values }],
+                chart: { height: 350, type: 'area', toolbar: { show: false }, zoom: { enabled: false } },
+                dataLabels: { enabled: false },
+                stroke: { curve: 'smooth', width: 2 },
+                xaxis: { categories: hours.map(h => `${h}:00`) },
+                colors: ['#007bff'],
+                fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.45, opacityTo: 0.05 } }
+            };
+            if (window.hourlyChartInstance) window.hourlyChartInstance.destroy();
+            window.hourlyChartInstance = new ApexCharts(document.querySelector("#hourlyChart"), hourlyOptions);
+            window.hourlyChartInstance.render();
+
+            const distOptions = {
+                series: [allowed, blocked],
+                labels: ['Allowed', 'Blocked'],
+                chart: { type: 'donut', height: 300 },
+                colors: ['#28a745', '#dc3545'],
+                legend: { position: 'bottom' },
+                plotOptions: { pie: { donut: { labels: { show: true, total: { show: true } } } } }
+            };
+            if (window.distChartInstance) window.distChartInstance.destroy();
+            window.distChartInstance = new ApexCharts(document.querySelector("#distributionChart"), distOptions);
+            window.distChartInstance.render();
+        };
     </script>
 </body>
 

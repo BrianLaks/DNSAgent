@@ -13,7 +13,38 @@ namespace DNSAgent.Service.Data
 
         public DbSet<QueryLog> QueryLogs { get; set; }
         public DbSet<WhitelistedDomain> WhitelistedDomains { get; set; }
+        public DbSet<BlacklistedDomain> BlacklistedDomains { get; set; }
+        public DbSet<DnsProvider> DnsProviders { get; set; }
+        public DbSet<DeviceInfo> Devices { get; set; }
         public DbSet<YouTubeStat> YouTubeStats { get; set; }
+    }
+
+    public class BlacklistedDomain
+    {
+        public int Id { get; set; }
+        public string Domain { get; set; } = string.Empty;
+        public string? Reason { get; set; }
+        public DateTime AddedAt { get; set; } = DateTime.UtcNow;
+    }
+
+    public class DnsProvider
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string PrimaryIP { get; set; } = string.Empty;
+        public string? SecondaryIP { get; set; }
+        public string? DoHUrl { get; set; }
+        public bool IsActive { get; set; } = false;
+        public bool IsPreset { get; set; } = false;
+    }
+
+    public class DeviceInfo
+    {
+        public string Id { get; set; } = string.Empty; // Unique Client ID from extension
+        public string MachineName { get; set; } = string.Empty;
+        public string UserName { get; set; } = string.Empty;
+        public string LastIP { get; set; } = string.Empty;
+        public DateTime LastSeen { get; set; } = DateTime.UtcNow;
     }
 
     public class YouTubeStat
@@ -36,6 +67,7 @@ namespace DNSAgent.Service.Data
         public DateTime Timestamp { get; set; }
         public string SourceIP { get; set; }
         public string SourceHostname { get; set; } = string.Empty; // Reverse DNS lookup
+        public string? ClientId { get; set; } // Link to DeviceInfo
         public string Domain { get; set; }
         public string Status { get; set; } // "Blocked" or "Allowed"
         public string Transport { get; set; } = "UDP"; // "UDP" or "DoH"
