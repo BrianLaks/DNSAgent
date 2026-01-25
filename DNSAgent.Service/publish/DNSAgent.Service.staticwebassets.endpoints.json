@@ -1,0 +1,520 @@
+{
+  "Version": 1,
+  "ManifestType": "Publish",
+  "Endpoints": [
+    {
+      "Route": "DNSAgent.Service.5m0b8dwkbt.styles.css",
+      "AssetFile": "DNSAgent.Service.styles.css.br",
+      "Selectors": [
+        {
+          "Name": "Content-Encoding",
+          "Value": "br",
+          "Quality": "0.000672947510"
+        }
+      ],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "br"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "1485"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"/I5MmyKU+A78uRJV1A+bQ9uSRH3wuWPIskEtFgfFmr0=\""
+        },
+        {
+          "Name": "ETag",
+          "Value": "W/\"3TOt+9lv66oQdiFX/iZggiKeZTM1BuMQheoLGyPxFkg=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 25 Jan 2026 09:52:56 GMT"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "5m0b8dwkbt"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-3TOt+9lv66oQdiFX/iZggiKeZTM1BuMQheoLGyPxFkg="
+        },
+        {
+          "Name": "label",
+          "Value": "DNSAgent.Service.styles.css"
+        }
+      ]
+    },
+    {
+      "Route": "DNSAgent.Service.5m0b8dwkbt.styles.css",
+      "AssetFile": "DNSAgent.Service.styles.css.gz",
+      "Selectors": [
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip",
+          "Quality": "0.000559597090"
+        }
+      ],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "1786"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"kykSX7DGFi00MPsOQQWdsqoK22w123nS0v66tv9w54s=\""
+        },
+        {
+          "Name": "ETag",
+          "Value": "W/\"3TOt+9lv66oQdiFX/iZggiKeZTM1BuMQheoLGyPxFkg=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 25 Jan 2026 09:52:56 GMT"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "5m0b8dwkbt"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-3TOt+9lv66oQdiFX/iZggiKeZTM1BuMQheoLGyPxFkg="
+        },
+        {
+          "Name": "label",
+          "Value": "DNSAgent.Service.styles.css"
+        }
+      ]
+    },
+    {
+      "Route": "DNSAgent.Service.5m0b8dwkbt.styles.css",
+      "AssetFile": "DNSAgent.Service.styles.css",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "5979"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"3TOt+9lv66oQdiFX/iZggiKeZTM1BuMQheoLGyPxFkg=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 25 Jan 2026 09:52:56 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "5m0b8dwkbt"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-3TOt+9lv66oQdiFX/iZggiKeZTM1BuMQheoLGyPxFkg="
+        },
+        {
+          "Name": "label",
+          "Value": "DNSAgent.Service.styles.css"
+        }
+      ]
+    },
+    {
+      "Route": "DNSAgent.Service.5m0b8dwkbt.styles.css.br",
+      "AssetFile": "DNSAgent.Service.styles.css.br",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "br"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "1485"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"/I5MmyKU+A78uRJV1A+bQ9uSRH3wuWPIskEtFgfFmr0=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 25 Jan 2026 09:52:56 GMT"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "5m0b8dwkbt"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-/I5MmyKU+A78uRJV1A+bQ9uSRH3wuWPIskEtFgfFmr0="
+        },
+        {
+          "Name": "label",
+          "Value": "DNSAgent.Service.styles.css.br"
+        }
+      ]
+    },
+    {
+      "Route": "DNSAgent.Service.5m0b8dwkbt.styles.css.gz",
+      "AssetFile": "DNSAgent.Service.styles.css.gz",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "1786"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"kykSX7DGFi00MPsOQQWdsqoK22w123nS0v66tv9w54s=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 25 Jan 2026 09:52:56 GMT"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "5m0b8dwkbt"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-kykSX7DGFi00MPsOQQWdsqoK22w123nS0v66tv9w54s="
+        },
+        {
+          "Name": "label",
+          "Value": "DNSAgent.Service.styles.css.gz"
+        }
+      ]
+    },
+    {
+      "Route": "DNSAgent.Service.styles.css",
+      "AssetFile": "DNSAgent.Service.styles.css.br",
+      "Selectors": [
+        {
+          "Name": "Content-Encoding",
+          "Value": "br",
+          "Quality": "0.000672947510"
+        }
+      ],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "br"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "1485"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"/I5MmyKU+A78uRJV1A+bQ9uSRH3wuWPIskEtFgfFmr0=\""
+        },
+        {
+          "Name": "ETag",
+          "Value": "W/\"3TOt+9lv66oQdiFX/iZggiKeZTM1BuMQheoLGyPxFkg=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 25 Jan 2026 09:52:56 GMT"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-3TOt+9lv66oQdiFX/iZggiKeZTM1BuMQheoLGyPxFkg="
+        }
+      ]
+    },
+    {
+      "Route": "DNSAgent.Service.styles.css",
+      "AssetFile": "DNSAgent.Service.styles.css.gz",
+      "Selectors": [
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip",
+          "Quality": "0.000559597090"
+        }
+      ],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "1786"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"kykSX7DGFi00MPsOQQWdsqoK22w123nS0v66tv9w54s=\""
+        },
+        {
+          "Name": "ETag",
+          "Value": "W/\"3TOt+9lv66oQdiFX/iZggiKeZTM1BuMQheoLGyPxFkg=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 25 Jan 2026 09:52:56 GMT"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-3TOt+9lv66oQdiFX/iZggiKeZTM1BuMQheoLGyPxFkg="
+        }
+      ]
+    },
+    {
+      "Route": "DNSAgent.Service.styles.css",
+      "AssetFile": "DNSAgent.Service.styles.css",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "5979"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"3TOt+9lv66oQdiFX/iZggiKeZTM1BuMQheoLGyPxFkg=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 25 Jan 2026 09:52:56 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-3TOt+9lv66oQdiFX/iZggiKeZTM1BuMQheoLGyPxFkg="
+        }
+      ]
+    },
+    {
+      "Route": "DNSAgent.Service.styles.css.br",
+      "AssetFile": "DNSAgent.Service.styles.css.br",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "br"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "1485"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"/I5MmyKU+A78uRJV1A+bQ9uSRH3wuWPIskEtFgfFmr0=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 25 Jan 2026 09:52:56 GMT"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-/I5MmyKU+A78uRJV1A+bQ9uSRH3wuWPIskEtFgfFmr0="
+        }
+      ]
+    },
+    {
+      "Route": "DNSAgent.Service.styles.css.gz",
+      "AssetFile": "DNSAgent.Service.styles.css.gz",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "1786"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"kykSX7DGFi00MPsOQQWdsqoK22w123nS0v66tv9w54s=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sun, 25 Jan 2026 09:52:56 GMT"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-kykSX7DGFi00MPsOQQWdsqoK22w123nS0v66tv9w54s="
+        }
+      ]
+    }
+  ]
+}
