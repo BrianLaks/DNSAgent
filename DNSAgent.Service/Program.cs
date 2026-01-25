@@ -17,6 +17,9 @@ builder.Services.AddWindowsService(options =>
     options.ServiceName = "DNSAgent";
 });
 
+// Set current directory to executable location (CRITICAL for Service DB access)
+Directory.SetCurrentDirectory(AppContext.BaseDirectory);
+
 // Load configuration
 builder.Services.Configure<DnsAgentSettings>(
     builder.Configuration.GetSection("DnsAgent"));
