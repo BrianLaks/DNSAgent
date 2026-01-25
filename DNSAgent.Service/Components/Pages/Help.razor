@@ -10,70 +10,52 @@
             <h1 class="mb-4">Setup & Help Guide 📖</h1>
             
             <div class="accordion" id="helpAccordion">
-                <!-- Installation Guide -->
+                <!-- Client Visibility Guide -->
                 <div class="accordion-item shadow-sm mb-3 border-0">
                     <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#installGuide">
-                            <span class="bi bi-download me-2"></span> 🚀 Quick Installation
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#clientVisibility">
+                            <span class="bi bi-eye me-2"></span> 🔍 Seeing Individual Device IPs
                         </button>
                     </h2>
-                    <div id="installGuide" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                    <div id="clientVisibility" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
                         <div class="accordion-body">
-                            <p>Installation is designed to be simple and automated.</p>
-                            <ol>
-                                <li>Extract the <strong>DNSAgent.zip</strong> contents to a permanent folder.</li>
-                                <li>Right-click <strong>Start-Setup.bat</strong> and select <strong>Run as Administrator</strong>.</li>
-                                <li>The setup will automatically:
-                                    <ul>
-                                        <li>Register the Windows Service.</li>
-                                        <li>Open Firewall ports (5123 and 53).</li>
-                                        <li>Configure the System Tray icon for auto-start.</li>
-                                    </ul>
-                                </li>
-                            </ol>
+                            <p>Are you only seeing your **Router's IP** in the logs? This is normal if your router is acting as a "middleman" (DNS Proxy).</p>
+                            
+                            <h6 class="fw-bold">Why this happens:</h6>
+                            <p class="small text-muted">When you set the DNS at the router level, some routers take the query from the PC, ask DNS Agent themselves, and then give the answer back. DNS Agent only "sees" the router making the request.</p>
+                            
+                            <h6 class="fw-bold">How to see individual device names:</h6>
+                            <p>To see exactly which PC is making which request, you must point that device <strong>directly</strong> to this server's IP (<code>@CurrentIP</code>) instead of the router.</p>
+                            
+                            <div class="alert alert-primary py-2 mt-2">
+                                <span class="bi bi-info-circle me-1"></span>
+                                <small>Use the <strong>"PC Setup Script"</strong> below on each computer to enable per-device logging!</small>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Firewall Troubleshooting -->
+                <!-- Manual PC Setup -->
                 <div class="accordion-item shadow-sm mb-3 border-0">
                     <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#troubleshootHelp">
-                            <span class="bi bi-shield-lock me-2"></span> 🔥 Firewall & Access Issues
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#manualSetup">
+                            <span class="bi bi-pc-display me-2"></span> 💻 PC Setup Script (Direct Logging)
                         </button>
                     </h2>
-                    <div id="troubleshootHelp" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                    <div id="manualSetup" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
                         <div class="accordion-body">
-                            <p>If you cannot reach this dashboard from your phone or another PC, the Windows Firewall might be blocking the connection.</p>
-                            <p>Run this command in an <strong>Administrator PowerShell</strong> on the server to open the ports manually:</p>
+                            <p>Run this PowerShell script (as Administrator) on any Windows machine to point it directly to this server. This ensures the dashboard can identify this specific PC.</p>
+                            
                             <div class="bg-dark p-3 rounded position-relative">
-                                <pre class="text-warning mb-0" id="fwScript"><code>New-NetFirewallRule -DisplayName "DNS Agent Web" -Direction Inbound -LocalPort 5123 -Protocol TCP -Action Allow; 
-New-NetFirewallRule -DisplayName "DNS Agent DNS" -Direction Inbound -LocalPort 53 -Protocol UDP,TCP -Action Allow</code></pre>
-                                <button class="btn btn-sm btn-outline-light position-absolute top-0 end-0 m-2" @onclick="CopyFwScript">
+                                <pre class="text-success mb-0" id="psScript"><code>$dnsServer = "@CurrentIP"
+$interfaces = Get-NetIPInterface -AddressFamily IPv4 | Where-Object { $_.ConnectionState -eq "Connected" }
+foreach ($interface in $interfaces) {
+    Set-DnsClientServerAddress -InterfaceIndex $interface.InterfaceIndex -ServerAddresses $dnsServer
+    Write-Host "DNS updated to $dnsServer for interface: $($interface.InterfaceAlias)"
+}</code></pre>
+                                <button class="btn btn-sm btn-outline-light position-absolute top-0 end-0 m-2" @onclick="CopyScript">
                                     <span class="bi bi-clipboard"></span> Copy
                                 </button>
-                            </div>
-                            <p class="mt-3 small text-muted"><strong>Required Ports:</strong> Port 5123 (TCP) for Web UI, Port 53 (UDP/TCP) for DNS queries.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Service Troubleshooting -->
-                <div class="accordion-item shadow-sm border-0">
-                    <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#serviceHelp">
-                            <span class="bi bi-gear-fill me-2"></span> 🛠️ Manual Service Controls
-                        </button>
-                    </h2>
-                    <div id="serviceHelp" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
-                        <div class="accordion-body">
-                            <p>For advanced management, use the <strong>install-service.ps1</strong> script:</p>
-                            <ul>
-                                <li><code>.\install-service.ps1 install</code> - Fully registers and starts the service.</li>
-                                <li><code>.\install-service.ps1 uninstall</code> - Safely removes the service.</li>
-                            </ul>
-                            <div class="alert alert-warning py-2">
-                                <small><strong>Tip:</strong> Always run these from an Administrator command prompt!</small>
                             </div>
                         </div>
                     </div>
