@@ -14,10 +14,13 @@ catch {
     exit
 }
 
-# 2. Find paths
+# 2. Find paths and Unblock
 $scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Definition
 if ($scriptPath -eq "") { $scriptPath = Get-Location }
 Set-Location $scriptPath
+
+Write-Host "Unblocking package files..." -ForegroundColor Gray
+Get-ChildItem -Path $scriptPath -Recurse | Unblock-File
 
 # 3. Run the installer
 if (Test-Path "install-service.ps1") {
@@ -25,11 +28,6 @@ if (Test-Path "install-service.ps1") {
 }
 else {
     Write-Host "ERROR: install-service.ps1 not found in $scriptPath" -ForegroundColor Red
-}
-
-# 4. Start Tray App
-if (Test-Path "DNSAgent.Tray.exe") {
-    Start-Process "DNSAgent.Tray.exe"
 }
 
 Write-Host "Setup Complete." -ForegroundColor Green

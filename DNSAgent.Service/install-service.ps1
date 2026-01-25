@@ -48,8 +48,15 @@ if (Test-Path $TrayPath) {
     $shortcut.WorkingDirectory = $CurrentDir 
     $shortcut.Save()
     
-    # Start it now
-    Start-Process $TrayPath -WorkingDirectory $CurrentDir
+    # Start it now (gracefully)
+    try {
+        if (!(Get-Process "DNSAgent.Tray" -ErrorAction SilentlyContinue)) {
+            Start-Process $TrayPath -WorkingDirectory $CurrentDir
+        }
+    }
+    catch {
+        Write-Host "Note: Tray app could not be started automatically. You can start it manually from $TrayPath" -ForegroundColor Yellow
+    }
 }
 
 Write-Host "`nSUCCESS: DNS Agent is installed and running correctly!" -ForegroundColor Green
