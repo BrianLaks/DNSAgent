@@ -14,12 +14,26 @@ DNS Agent is a lightweight, high-performance network-wide DNS server designed fo
 
 ## ⚡ Quick Start (Public Release v1.6.2)
 
-If you just want to run DNS Agent without cloning the code:
 1. **Download `DNSAgent.zip`** from the `Release` folder in this repo.
 2. Right-click the folder and **Extract All**.
 3. Right-click **`Start-Setup.bat`** and select **Run as Administrator**.
-   - *This script handles PowerShell permissions, .NET 9 validation, and Firewall configuration automatically.*
 4. Visit `http://localhost:5123` to access your Dashboard.
+
+---
+
+## 🔌 Browser Extension Support
+
+### 🦁 Brave / 🌐 Chrome / 🧭 Microsoft Edge
+Our extension works on all Chromium-based browsers:
+1. Open your browser's extensions page (`brave://extensions` or `edge://extensions` or `chrome://extensions`).
+2. Enable **Developer Mode** (usually a toggle in the corner).
+3. Click **Load unpacked** and select the `extension` folder from your extracted ZIP.
+
+### 🏛️ Internet Explorer / Legacy Browsers
+Internet Explorer does not support modern extensions. However, **you are still protected!** 
+Because DNS Agent is a **DNS Server**, it blocks ads at the network level. To protect IE:
+1. Change your Windows Network Settings to use `127.0.0.1` (or your server's IP) as your **DNS Server**.
+2. DNS Agent will now block ad domains for *every* app on that machine, including IE.
 
 ---
 
