@@ -53,6 +53,27 @@ builder.Services.AddSingleton<ThemeService>();
 builder.Services.AddSingleton<DnsWorker>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<DnsWorker>());
 
+// API Controllers
+builder.Services.AddControllers();
+
+// CORS for local network access
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("LocalNetworkOnly", policy =>
+    {
+        policy.WithOrigins(
+            "http://localhost:*",
+            "http://127.0.0.1:*",
+            "http://192.168.*",
+            "http://10.*",
+            "http://172.*"
+        )
+        .AllowAnyMethod()
+        .AllowAnyHeader()
+        .AllowCredentials();
+    });
+});
+
 // Conditional Web UI
 if (settings.EnableWebUI)
 {
@@ -96,9 +117,17 @@ if (settings.EnableWebUI)
     }
 
     app.UseStaticFiles();
+    
+    // API Middleware (must be before authentication)
+    app.UseMiddleware<DNSAgent.Service.Middleware.LocalNetworkOnlyMiddleware>();
+    app.UseCors("LocalNetworkOnly");
+    
     app.UseAuthentication();
     app.UseAuthorization();
     app.UseAntiforgery();
+    
+    // Map API controllers
+    app.MapControllers();
     
     app.MapRazorComponents<DNSAgent.Service.Components.App>()
         .AddInteractiveServerRenderMode();

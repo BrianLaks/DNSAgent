@@ -399,5 +399,34 @@ namespace DNSAgent.Service.Services
             response[3] = 0x83; // RA=1, RCode=3 (NXDOMAIN)
             return response;
         }
+
+        // API Helper Methods
+        public int GetBlockedDomainCount()
+        {
+            lock (_listLock)
+            {
+                return _blockedDomains.Count;
+            }
+        }
+
+        public void AddToBlocklist(string domain)
+        {
+            lock (_listLock)
+            {
+                _blockedDomains.Add(domain.ToLowerInvariant());
+                _logger.LogInformation($"Added {domain} to blocklist via API");
+            }
+        }
+
+        public void RemoveFromBlocklist(string domain)
+        {
+            lock (_listLock)
+            {
+                _blockedDomains.Remove(domain.ToLowerInvariant());
+                _logger.LogInformation($"Removed {domain} from blocklist via API");
+            }
+        }
+
+        public string UpstreamProtocol => _settings.Value.UpstreamProtocol;
     }
 }
