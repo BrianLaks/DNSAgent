@@ -45,7 +45,7 @@
                 chart: { height: 350, type: 'area', toolbar: { show: false }, zoom: { enabled: false } },
                 dataLabels: { enabled: false },
                 stroke: { curve: 'smooth', width: 2 },
-                xaxis: { categories: hours.map(h => `${h}:00`) },
+                xaxis: { categories: hours },
                 colors: ['#007bff'],
                 fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.45, opacityTo: 0.05 } }
             };
@@ -61,9 +61,59 @@
                 legend: { position: 'bottom' },
                 plotOptions: { pie: { donut: { labels: { show: true, total: { show: true } } } } }
             };
-            if (window.distChartInstance) window.distChartInstance.destroy();
-            window.distChartInstance = new ApexCharts(document.querySelector("#distributionChart"), distOptions);
-            window.distChartInstance.render();
+                if (window.distChartInstance) window.distChartInstance.destroy();
+                window.distChartInstance = new ApexCharts(document.querySelector("#distributionChart"), distOptions);
+                window.distChartInstance.render();
+            }
+        };
+
+        window.renderDetailedReports = (trafficLabels, trafficData, youtubeLabels, adsData, sponsorsData, securityLabels, securityData) => {
+            // 1. Traffic Trend (7 Days)
+            const trafficOptions = {
+                series: [{ name: 'Queries', data: trafficData }],
+                chart: { height: 350, type: 'line', toolbar: { show: true } },
+                stroke: { curve: 'smooth', width: 3 },
+                xaxis: { categories: trafficLabels },
+                colors: ['#007bff'],
+                markers: { size: 4 }
+            };
+            const trafficEl = document.querySelector("#trafficTrendChart");
+            if (trafficEl) {
+                if (window.trafficChart) window.trafficChart.destroy();
+                window.trafficChart = new ApexCharts(trafficEl, trafficOptions);
+                window.trafficChart.render();
+            }
+
+            // 2. YouTube Trend
+            const ytOptions = {
+                series: [
+                    { name: 'Ads Blocked', data: adsData },
+                    { name: 'Sponsors Skipped', data: sponsorsData }
+                ],
+                chart: { height: 300, type: 'bar', stacked: true },
+                xaxis: { categories: youtubeLabels },
+                colors: ['#ff0000', '#000000']
+            };
+            const ytEl = document.querySelector("#youtubeTrendChart");
+            if (ytEl) {
+                if (window.ytChart) window.ytChart.destroy();
+                window.ytChart = new ApexCharts(ytEl, ytOptions);
+                window.ytChart.render();
+            }
+
+            // 3. Security Pie
+            const secOptions = {
+                series: securityData,
+                labels: securityLabels,
+                chart: { type: 'pie', height: 300 },
+                colors: ['#28a745', '#ffc107', '#17a2b8']
+            };
+            const secEl = document.querySelector("#securityPieChart");
+            if (secEl) {
+                if (window.secChart) window.secChart.destroy();
+                window.secChart = new ApexCharts(secEl, secOptions);
+                window.secChart.render();
+            }
         };
     </script>
 </body>

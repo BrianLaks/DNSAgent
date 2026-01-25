@@ -25,9 +25,9 @@
     <div class="row mb-4">
         <!-- Total Queries -->
         <div class="col-md-3 mb-3">
-            <div class="card h-100 shadow-sm border-0 bg-primary text-white">
+            <div class="card h-100 shadow-sm border-0 bg-primary text-white card-animate">
                 <div class="card-body py-3">
-                    <h6 class="card-title opacity-75 small">Queries (24h)</h6>
+                    <h6 class="card-title opacity-75 small">Total Queries (24h)</h6>
                     <h3 class="mb-0">@_stats.TotalQueries</h3>
                 </div>
             </div>
@@ -35,7 +35,7 @@
 
         <!-- Blocked Queries -->
         <div class="col-md-3 mb-3">
-            <div class="card h-100 shadow-sm border-0 bg-danger text-white">
+            <div class="card h-100 shadow-sm border-0 bg-danger text-white card-animate">
                 <div class="card-body py-3">
                     <h6 class="card-title opacity-75 small">Blocked (24h)</h6>
                     <h3 class="mb-0">@_stats.BlockedQueries</h3>
@@ -44,27 +44,35 @@
             </div>
         </div>
 
-        <!-- Connected Agents -->
+        <!-- YouTube Ads Blocked -->
         <div class="col-md-3 mb-3">
-            <div class="card h-100 shadow-sm border-0 bg-success text-white">
+            <div class="card h-100 shadow-sm border-0 bg-warning text-dark card-animate">
                 <div class="card-body py-3">
-                    <h6 class="card-title opacity-75 small">Connected Agents</h6>
-                    <h3 class="mb-0">@_stats.ConnectedAgents</h3>
-                    <div class="small opacity-75">Active heartbeats</div>
+                    <h6 class="card-title opacity-75 small">YouTube Ads Blocked</h6>
+                    <h3 class="mb-0">@_stats.YouTubeAdsBlocked</h3>
+                    <div class="small opacity-75">Total network</div>
                 </div>
             </div>
         </div>
 
         <!-- YouTube Time Saved -->
         <div class="col-md-3 mb-3">
-            <div class="card h-100 shadow-sm border-0 bg-info text-white">
+            <div class="card h-100 shadow-sm border-0 bg-info text-white card-animate">
                 <div class="card-body py-3">
                     <h6 class="card-title opacity-75 small">YouTube Time Saved</h6>
                     <h3 class="mb-0">@FormatTime(_stats.TimeSavedSeconds)</h3>
-                    <div class="small opacity-75">Ads: @_stats.YouTubeAdsBlocked</div>
+                    <div class="small opacity-75">Sponsors: @_stats.SponsorsSkipped</div>
                 </div>
             </div>
         </div>
+    </div>
+
+    <div class="text-center mb-5">
+        <AuthorizeView Roles="Admin">
+            <a href="admin/reports" class="btn btn-primary btn-lg shadow-sm px-5">
+                View Detailed Analytics 📊
+            </a>
+        </AuthorizeView>
     </div>
 
     <div class="row mb-4">
@@ -72,8 +80,8 @@
         <div class="col-lg-8 mb-4">
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-header bg-white border-bottom-0 pt-3">
-                    <h5 class="card-title mb-0">Total Traffic (24h)</h5>
-                    <small class="text-muted">Queries per hour</small>
+                    <h5 class="card-title mb-0">Activity Trend (24h)</h5>
+                    <small class="text-muted">DNS Queries across all devices</small>
                 </div>
                 <div class="card-body">
                     <div id="hourlyChart" style="height: 300px;"></div>
@@ -96,11 +104,57 @@
     </div>
 
     <div class="row">
+        <!-- Connected Devices List -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white border-bottom-0 pt-3 d-flex justify-content-between">
+                    <h5 class="card-title mb-0">Connected Hosts</h5>
+                    <span class="badge bg-success">@_stats.ConnectedAgents Active</span>
+                </div>
+                <div class="card-body">
+                    @if (_stats.ActiveDevices == null || !_stats.ActiveDevices.Any())
+                    {
+                        <div class="text-center py-4">
+                            <p class="text-muted small mb-0">No active devices detected.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-sm table-borderless">
+                                <thead>
+                                    <tr class="text-muted small">
+                                        <th>Device</th>
+                                        <th>IP Address</th>
+                                        <th class="text-end">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var device in _stats.ActiveDevices)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div class="fw-bold small">@device.Name</div>
+                                            </td>
+                                            <td class="small text-muted">@device.IP</td>
+                                            <td class="text-end">
+                                                <span class="badge rounded-pill bg-success" style="font-size: 0.65rem;">Online</span>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
         <!-- Top Blocked (Admin Only) -->
         <AuthorizeView Roles="Admin">
             <Authorized>
                 <div class="col-md-6 mb-4">
-                    <div class="card shadow-sm border-0">
+                    <div class="card shadow-sm border-0 h-100">
                         <div class="card-header bg-white border-bottom-0 pt-3">
                             <h5 class="card-title mb-0">Top Blocked Domains</h5>
                         </div>
@@ -114,7 +168,7 @@
                                 <div class="list-group list-group-flush">
                                     @foreach (var item in _stats.TopBlocked)
                                     {
-                                        <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
+                                        <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-2 border-0 border-bottom">
                                             <span class="text-truncate small" style="max-width: 70%;" title="@item.Domain">@item.Domain</span>
                                             <span class="badge bg-danger rounded-pill">@item.Count</span>
                                         </div>
@@ -127,34 +181,16 @@
             </Authorized>
             <NotAuthorized>
                 <div class="col-md-6 mb-4">
-                    <div class="card shadow-sm border-0 bg-light">
-                        <div class="card-body text-center py-5">
+                    <div class="card shadow-sm border-0 bg-light h-100">
+                        <div class="card-body text-center py-5 d-flex flex-column justify-content-center">
                             <span class="bi bi-lock-fill fs-2 text-muted"></span>
-                            <h6 class="mt-2">Analytics Restricted</h6>
-                            <p class="small text-muted">Login as Admin to see domain statistics.</p>
+                            <h6 class="mt-2 text-dark">Domain Analytics Restricted</h6>
+                            <p class="small text-muted mb-0">Login as Admin to see deep insights.</p>
                         </div>
                     </div>
                 </div>
             </NotAuthorized>
         </AuthorizeView>
-
-        <!-- Quick Info -->
-        <div class="col-md-6 mb-4">
-            <div class="card shadow-sm border-0 bg-light h-100">
-                <div class="card-body">
-                    <h5 class="card-title">Network Guard</h5>
-                    <p class="small text-muted mb-3">Your network is being protected by DNS Agent. All connected devices using this server as their primary DNS are currently safe from trackers and ads.</p>
-                    <div class="d-flex gap-2">
-                        <AuthorizeView Roles="Admin">
-                            <Authorized>
-                                <a href="logs" class="btn btn-sm btn-outline-primary">View Real-time Logs</a>
-                                <a href="hosts" class="btn btn-sm btn-outline-secondary">Device Analytics</a>
-                            </Authorized>
-                        </AuthorizeView>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 </div>
 
@@ -188,11 +224,13 @@
     {
         try
         {
-            var since = DateTime.Now.AddHours(-24);
+            var now = DateTime.Now;
+            var since = now.AddHours(-24);
             
             // DNS Stats
             var queries = await Db.QueryLogs
                 .Where(x => x.Timestamp >= since)
+                .OrderBy(x => x.Timestamp)
                 .ToListAsync();
 
             _stats.TotalQueries = queries.Count;
@@ -207,14 +245,21 @@
                 .Select(g => (Domain: g.Key, Count: g.Count()))
                 .ToList();
 
-            // Hourly Distribution
-            var hourlyData = queries.GroupBy(x => x.Timestamp.Hour)
-                .Select(g => new { Hour = g.Key, Count = g.Count() })
-                .ToDictionary(x => x.Hour, x => x.Count);
+            // Hourly Distribution (correctly bucketed by actual hour in last 24h)
+            var hourlyBuckets = new int[24];
+            var labels = new string[24];
+            
+            for (int i = 0; i < 24; i++)
+            {
+                var hourStart = now.AddHours(-23 + i);
+                var hourEnd = hourStart.AddHours(1);
+                
+                hourlyBuckets[i] = queries.Count(q => q.Timestamp >= hourStart && q.Timestamp < hourEnd);
+                labels[i] = hourStart.ToString("HH:00");
+            }
 
-            var hours = Enumerable.Range(0, 24).ToArray();
-            _stats.HourlyHours = hours;
-            _stats.HourlyValues = hours.Select(h => hourlyData.ContainsKey(h) ? hourlyData[h] : 0).ToArray();
+            _stats.HourlyLabels = labels;
+            _stats.HourlyValues = hourlyBuckets;
 
             // YouTube Stats
             try 
@@ -227,9 +272,15 @@
 
             // Connected Agents (Active heartbeats in last 10 mins)
             var heartbeatCutoff = DateTime.UtcNow.AddMinutes(-10);
-            _stats.ConnectedAgents = await Db.Devices
+            var activeHeartbeats = await Db.Devices
                 .Where(d => d.LastSeen >= heartbeatCutoff)
-                .CountAsync();
+                .ToListAsync();
+
+            _stats.ConnectedAgents = activeHeartbeats.Count;
+            _stats.ActiveDevices = activeHeartbeats.Select(d => new ActiveDevice {
+                Name = d.MachineName ?? "Unknown Device",
+                IP = d.LastIP ?? "Unknown IP"
+            }).ToList();
 
             _stats.ShouldRenderCharts = true;
             StateHasChanged();
@@ -242,12 +293,12 @@
 
     private async Task RenderDashboardCharts()
     {
-        if (_stats.HourlyHours != null && _stats.HourlyValues != null)
+        if (_stats.HourlyLabels != null && _stats.HourlyValues != null)
         {
             try
             {
                 await JSRuntime.InvokeVoidAsync("renderReportsCharts", 
-                    _stats.HourlyHours, 
+                    _stats.HourlyLabels, 
                     _stats.HourlyValues, 
                     _stats.BlockedQueries, 
                     _stats.AllowedQueries);
@@ -282,8 +333,15 @@
         public double TimeSavedSeconds { get; set; }
         public double BlockedPercentage => TotalQueries == 0 ? 0 : (double)BlockedQueries / TotalQueries * 100;
         public List<(string Domain, int Count)>? TopBlocked { get; set; }
-        public int[]? HourlyHours { get; set; }
+        public List<ActiveDevice>? ActiveDevices { get; set; }
+        public string[]? HourlyLabels { get; set; }
         public int[]? HourlyValues { get; set; }
         public bool ShouldRenderCharts { get; set; }
+    }
+
+    public class ActiveDevice
+    {
+        public string Name { get; set; } = "";
+        public string IP { get; set; } = "";
     }
 }
