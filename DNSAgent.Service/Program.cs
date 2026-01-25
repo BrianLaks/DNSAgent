@@ -77,6 +77,12 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<DnsDbContext>();
     db.Database.EnsureCreated();
     
+    // Manual migration for v1.3 features
+    try {
+        db.Database.ExecuteSqlRaw("ALTER TABLE QueryLogs ADD COLUMN Transport TEXT DEFAULT 'UDP'");
+        db.Database.ExecuteSqlRaw("ALTER TABLE QueryLogs ADD COLUMN IsDnssec INTEGER DEFAULT 0");
+    } catch { /* Columns already exist */ }
+    
     // Seed default admin user
     await DbInitializer.SeedDefaultAdminAsync(scope.ServiceProvider);
 }

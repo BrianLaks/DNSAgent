@@ -18,15 +18,18 @@
         <div class="top-row px-4 d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center gap-3">
                 <span class="badge bg-secondary opacity-75">v@(Constants.AppVersion)</span>
-                @if (DnsWorker.ProtectionEnabled)
-                {
-                    <span class="badge bg-success"><span class="bi bi-shield-fill-check me-1"></span> Protected</span>
-                }
-                else
-                {
-                    <span class="badge bg-warning text-dark"><span class="bi bi-shield-slash-fill me-1"></span> Disabled</span>
-                }
-                <a href="@(Constants.GitHubUrl)" target="_blank" class="text-muted text-decoration-none small">
+                
+                <div class="form-check form-switch d-flex align-items-center gap-2 mb-0 border-start ps-3 ms-1">
+                    <input class="form-check-input" type="checkbox" role="switch" id="ribbonBlocking" checked="@DnsWorker.ProtectionEnabled" @onchange="ToggleBlocking" />
+                    <label class="form-check-label small fw-bold mt-1" for="ribbonBlocking">Protection</label>
+                </div>
+
+                <div class="form-check form-switch d-flex align-items-center gap-2 mb-0 border-start ps-3 ms-1">
+                    <input class="form-check-input" type="checkbox" role="switch" id="ribbonDnssec" checked="@DnsWorker.EnforceDnssec" @onchange="ToggleDnssec" />
+                    <label class="form-check-label small fw-bold mt-1" for="ribbonDnssec">Enforce DNSSEC</label>
+                </div>
+
+                <a href="@(Constants.GitHubUrl)" target="_blank" class="text-muted text-decoration-none small border-start ps-3">
                     <span class="bi bi-github"></span> GitHub
                 </a>
             </div>
@@ -54,6 +57,24 @@
     protected override void OnInitialized()
     {
         ThemeService.OnThemeChanged += StateHasChanged;
+    }
+
+    private void ToggleBlocking(ChangeEventArgs e)
+    {
+        if (e.Value is bool enabled)
+        {
+            DnsWorker.ProtectionEnabled = enabled;
+            StateHasChanged();
+        }
+    }
+
+    private void ToggleDnssec(ChangeEventArgs e)
+    {
+        if (e.Value is bool enabled)
+        {
+            DnsWorker.EnforceDnssec = enabled;
+            StateHasChanged();
+        }
     }
 
     public void Dispose()

@@ -30,6 +30,11 @@ namespace DNSAgent.Service.Services
         private readonly IOptions<DnsAgentSettings> _settings;
 
         public bool ProtectionEnabled { get; set; } = true;
+        public bool EnforceDnssec 
+        { 
+            get => _settings.Value.EnforceDnssec; 
+            set => _settings.Value.EnforceDnssec = value; 
+        }
 
         public DnsWorker(ILogger<DnsWorker> logger, IServiceScopeFactory scopeFactory, Microsoft.Extensions.Options.IOptions<DnsAgentSettings> settings)
         {
