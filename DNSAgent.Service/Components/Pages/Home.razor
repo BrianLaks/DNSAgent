@@ -18,7 +18,7 @@
 
     <div class="row">
         <!-- Total Queries -->
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card text-white bg-primary mb-3">
                 <div class="card-header">Total Queries (24h)</div>
                 <div class="card-body">
@@ -28,7 +28,7 @@
         </div>
 
         <!-- Blocked Queries -->
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card text-white bg-danger mb-3">
                 <div class="card-header">Blocked (24h)</div>
                 <div class="card-body">
@@ -38,14 +38,32 @@
             </div>
         </div>
 
-        <!-- Allowed Queries -->
-        <div class="col-md-4">
-            <div class="card text-white bg-success mb-3">
-                <div class="card-header">Allowed (24h)</div>
+        <!-- YouTube Ads Blocked -->
+        <div class="col-md-3">
+            <div class="card text-white bg-warning mb-3">
+                <div class="card-header">YouTube Ads Blocked</div>
                 <div class="card-body">
-                    <h2 class="card-title">@_stats.AllowedQueries</h2>
+                    <h2 class="card-title">@_stats.YouTubeAdsBlocked</h2>
+                    <p class="card-text">Total across network</p>
                 </div>
             </div>
+        </div>
+
+        <!-- Time Saved -->
+        <div class="col-md-3">
+            <div class="card text-white bg-info mb-3">
+                <div class="card-header">YouTube Time Saved</div>
+                <div class="card-body">
+                    <h2 class="card-title">@FormatTime(_stats.TimeSavedSeconds)</h2>
+                    <p class="card-text">Sponsors skipped: @_stats.SponsorsSkipped</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-2 mb-4">
+        <div class="col-12 text-center">
+            <a href="admin/youtube-stats" class="btn btn-outline-primary btn-sm">View Detailed YouTube Stats 📊</a>
         </div>
     </div>
 
@@ -80,21 +98,37 @@
         {
             var since = DateTime.Now.AddHours(-24);
             
-            // Note: For high volume, these counts should be cached or optimized
-            var q = await Db.QueryLogs
+            // DNS Stats
+            var queries = await Db.QueryLogs
                 .Where(x => x.Timestamp >= since)
+                .Select(x => x.Status)
                 .ToListAsync();
 
-            _stats.TotalQueries = q.Count;
-            _stats.BlockedQueries = q.Count(x => x.Status == "Blocked");
-            _stats.AllowedQueries = q.Count(x => x.Status == "Allowed");
+            _stats.TotalQueries = queries.Count;
+            _stats.BlockedQueries = queries.Count(s => s == "Blocked");
+            _stats.AllowedQueries = queries.Count(s => s == "Allowed");
+
+            // YouTube Stats
+            try 
+            {
+                _stats.YouTubeAdsBlocked = await Db.YouTubeStats.SumAsync(s => s.AdsBlocked);
+                _stats.SponsorsSkipped = await Db.YouTubeStats.SumAsync(s => s.SponsorsSkipped);
+                _stats.TimeSavedSeconds = await Db.YouTubeStats.SumAsync(s => s.TimeSavedSeconds);
+            }
+            catch { /* Table might not exist yet */ }
         }
         catch (Exception ex)
         {
-            // Database might be empty or not initialized yet
             Console.WriteLine($"Error loading stats: {ex.Message}");
             _stats = new DashboardStats();
         }
+    }
+
+    private string FormatTime(double seconds)
+    {
+        if (seconds < 60) return $"{seconds:F0}s";
+        if (seconds < 3600) return $"{seconds / 60:F1}m";
+        return $"{seconds / 3600:F1}h";
     }
 
     public void Dispose()
@@ -107,6 +141,9 @@
         public int TotalQueries { get; set; }
         public int BlockedQueries { get; set; }
         public int AllowedQueries { get; set; }
+        public int YouTubeAdsBlocked { get; set; }
+        public int SponsorsSkipped { get; set; }
+        public double TimeSavedSeconds { get; set; }
         public double BlockedPercentage => TotalQueries == 0 ? 0 : (double)BlockedQueries / TotalQueries * 100;
     }
 }

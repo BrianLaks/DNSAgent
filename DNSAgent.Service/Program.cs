@@ -91,11 +91,25 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<DnsDbContext>();
     db.Database.EnsureCreated();
     
-    // Manual migration for v1.3 features
+    // Manual migration for v1.3 - v1.5 features
     try {
         db.Database.ExecuteSqlRaw("ALTER TABLE QueryLogs ADD COLUMN Transport TEXT DEFAULT 'UDP'");
         db.Database.ExecuteSqlRaw("ALTER TABLE QueryLogs ADD COLUMN IsDnssec INTEGER DEFAULT 0");
     } catch { /* Columns already exist */ }
+
+    try {
+        db.Database.ExecuteSqlRaw(@"
+            CREATE TABLE IF NOT EXISTS YouTubeStats (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                Timestamp TEXT NOT NULL,
+                AdsBlocked INTEGER NOT NULL,
+                AdsFailed INTEGER NOT NULL,
+                SponsorsSkipped INTEGER NOT NULL,
+                TimeSavedSeconds REAL NOT NULL,
+                DeviceName TEXT,
+                FilterVersion TEXT
+            );");
+    } catch { /* Table likely already exists or other DB error */ }
     
     // Seed default admin user
     await DbInitializer.SeedDefaultAdminAsync(scope.ServiceProvider);

@@ -78,15 +78,12 @@ function Upgrade-DNSAgentService {
             Start-Sleep -Seconds 2
         }
         
-        # Backup and recreate database (handles schema changes)
+        # Backup database (migrations handled by app code)
         $dbPath = "$PSScriptRoot\dnsagent.db"
         if (Test-Path $dbPath) {
             $backupPath = "$PSScriptRoot\dnsagent.db.backup-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
-            Write-Host "Backing up database to: $backupPath" -ForegroundColor Yellow
+            Write-Host "Backing up database for safety: $backupPath" -ForegroundColor Yellow
             Copy-Item $dbPath $backupPath
-            
-            Write-Host "Removing old database (will be recreated with new schema)..." -ForegroundColor Yellow
-            Remove-Item $dbPath -Force
         }
         
         Write-Host "Service files updated. Starting service..." -ForegroundColor Cyan
