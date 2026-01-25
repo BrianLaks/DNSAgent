@@ -1,0 +1,92 @@
+@page "/logs"
+@using DNSAgent.Web.Data
+@using DNSAgent.Web.Services
+@using Microsoft.EntityFrameworkCore
+@inject DnsDbContext Db
+@inject DnsWorker DnsWorker
+@inject NavigationManager Nav
+
+<h3>Query Logs</h3>
+
+<div class="row mb-3">
+    <div class="col">
+        <button class="btn btn-outline-primary" @onclick="LoadLogs">Refresh</button>
+        <button class="btn btn-outline-danger" @onclick="ClearLogs">Clear Logs</button>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-sm table-hover">
+        <thead>
+            <tr>
+                <th>Time</th>
+                <th>Source IP</th>
+                <th>Domain</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var log in logs)
+            {
+                <tr class="@GetRowClass(log.Status)">
+                    <td>@log.Timestamp.ToString("HH:mm:ss")</td>
+                    <td>@log.SourceIP</td>
+                    <td>@log.Domain</td>
+                    <td>@log.Status</td>
+                    <td>
+                        @if (log.Status == "Blocked")
+                        {
+                            <button class="btn btn-sm btn-success" @onclick="() => WhitelistDomain(log.Domain)">Whitelist</button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    private List<QueryLog> logs = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadLogs();
+    }
+
+    private async Task LoadLogs()
+    {
+        // Show last 100 logs
+        logs = await Db.QueryLogs
+            .OrderByDescending(x => x.Id)
+            .Take(100)
+            .ToListAsync();
+    }
+
+    private async Task ClearLogs()
+    {
+        Db.QueryLogs.RemoveRange(Db.QueryLogs);
+        await Db.SaveChangesAsync();
+        await LoadLogs();
+    }
+
+    private async Task WhitelistDomain(string domain)
+    {
+        if (!await Db.WhitelistedDomains.AnyAsync(x => x.Domain == domain))
+        {
+            Db.WhitelistedDomains.Add(new WhitelistedDomain 
+            { 
+                Domain = domain, 
+                AddedAt = DateTime.Now 
+            });
+            await Db.SaveChangesAsync();
+            await DnsWorker.RefreshWhitelistAsync();
+            await LoadLogs(); // Refresh to see if status changes? (Old logs won't change status, but good feedback)
+        }
+    }
+
+    private string GetRowClass(string status)
+    {
+        return status == "Blocked" ? "table-danger" : "";
+    }
+}

@@ -1,0 +1,101 @@
+﻿@page "/"
+@using DNSAgent.Web.Data
+@using Microsoft.EntityFrameworkCore
+@inject DnsDbContext Db
+@implements IDisposable
+
+<PageTitle>DNS Agent Dashboard</PageTitle>
+
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h1>DNS Agent Dashboard</h1>
+            <p class="text-muted">Real-time network protection stats</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Total Queries -->
+        <div class="col-md-4">
+            <div class="card text-white bg-primary mb-3">
+                <div class="card-header">Total Queries (24h)</div>
+                <div class="card-body">
+                    <h2 class="card-title">@_stats.TotalQueries</h2>
+                </div>
+            </div>
+        </div>
+
+        <!-- Blocked Queries -->
+        <div class="col-md-4">
+            <div class="card text-white bg-danger mb-3">
+                <div class="card-header">Blocked (24h)</div>
+                <div class="card-body">
+                    <h2 class="card-title">@_stats.BlockedQueries</h2>
+                    <p class="card-text">@_stats.BlockedPercentage.ToString("0.0")%</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Allowed Queries -->
+        <div class="col-md-4">
+            <div class="card text-white bg-success mb-3">
+                <div class="card-header">Allowed (24h)</div>
+                <div class="card-body">
+                    <h2 class="card-title">@_stats.AllowedQueries</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <button class="btn btn-primary" @onclick="RefreshStats">Refresh Stats</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    private DashboardStats _stats = new();
+    private System.Threading.Timer? _timer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshStats();
+        // Auto-refresh every 5 seconds
+        _timer = new System.Threading.Timer(async _ => 
+        {
+            await InvokeAsync(async () => 
+            {
+                await RefreshStats();
+                StateHasChanged();
+            });
+        }, null, 5000, 5000);
+    }
+
+    private async Task RefreshStats()
+    {
+        var since = DateTime.Now.AddHours(-24);
+        
+        // Note: For high volume, these counts should be cached or optimized
+        var q = await Db.QueryLogs
+            .Where(x => x.Timestamp >= since)
+            .ToListAsync();
+
+        _stats.TotalQueries = q.Count;
+        _stats.BlockedQueries = q.Count(x => x.Status == "Blocked");
+        _stats.AllowedQueries = q.Count(x => x.Status == "Allowed");
+    }
+
+    public void Dispose()
+    {
+        _timer?.Dispose();
+    }
+
+    public class DashboardStats
+    {
+        public int TotalQueries { get; set; }
+        public int BlockedQueries { get; set; }
+        public int AllowedQueries { get; set; }
+        public double BlockedPercentage => TotalQueries == 0 ? 0 : (double)BlockedQueries / TotalQueries * 100;
+    }
+}
