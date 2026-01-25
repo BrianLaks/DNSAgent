@@ -38,7 +38,7 @@ namespace DNSAgent.Tray
             // Initialize Tray Icon
             _trayIcon = new NotifyIcon()
             {
-                Text = "DNS Agent v1.1",
+                Text = "DNS Agent v1.2",
                 ContextMenuStrip = contextMenu,
                 Visible = true
             };
