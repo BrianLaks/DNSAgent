@@ -7,6 +7,29 @@ console.log('[DNS Agent] Background service worker started');
 let dnsAgentUrl = 'http://localhost:5123';
 let connected = false;
 let contextDomain = null;
+let clientId = null;
+let machineName = 'Unknown machine';
+let userName = 'Unknown user';
+
+// Generate or retrieve Client ID
+async function getClientId() {
+    const result = await chrome.storage.local.get(['clientId']);
+    if (result.clientId) {
+        clientId = result.clientId;
+    } else {
+        clientId = self.crypto.randomUUID();
+        await chrome.storage.local.set({ clientId });
+    }
+    return clientId;
+}
+
+// Get basic system info (as much as possible from extension)
+async function getSystemInfo() {
+    // In a real extension, we might use chrome.identity or other APIs
+    // For now, we'll try to get some context or just use User Agent
+    machineName = `Machine-${clientId.substring(0, 8)}`;
+    userName = 'Standard User';
+}
 
 // Initialize state from storage
 chrome.storage.local.get(['dnsAgentUrl', 'connected'], (result) => {
@@ -15,15 +38,21 @@ chrome.storage.local.get(['dnsAgentUrl', 'connected'], (result) => {
     console.log('[DNS Agent] Initialized state from storage:', { dnsAgentUrl, connected });
 
     // Proactive check on startup
-    checkConnection();
+    getClientId().then(() => {
+        getSystemInfo();
+        checkConnection().then(sendHeartbeat);
+    });
 });
 
 // Check if current connection is still valid
 async function checkConnection() {
+    const state = await chrome.storage.local.get(['dnsAgentUrl', 'manualOverride']);
+    if (state.dnsAgentUrl) dnsAgentUrl = state.dnsAgentUrl;
+
     try {
         const response = await fetch(`${dnsAgentUrl}/api/status`, {
             method: 'GET',
-            signal: AbortSignal.timeout(3000)
+            signal: AbortSignal.timeout(connected ? 5000 : 2000)
         });
         if (response.ok) {
             connected = true;
@@ -31,20 +60,28 @@ async function checkConnection() {
             return true;
         }
     } catch (e) {
-        // Current host no longer reachable, try discovery
+        // Fallback to discovery only if NOT in manual override mode
+        if (state.manualOverride) {
+            connected = false;
+            chrome.storage.local.set({ connected: false });
+            return false;
+        }
     }
     return await discoverDnsAgent();
 }
 
 // Auto-discover DNS Agent on local network
 async function discoverDnsAgent() {
+    const state = await chrome.storage.local.get(['manualOverride']);
+    if (state.manualOverride) return false;
+
     // Determine possible hosts
     const possibleHosts = [
-        dnsAgentUrl, // Try last known URL first
+        dnsAgentUrl,
         'http://localhost:5123',
         'http://127.0.0.1:5123',
-        'http://192.168.1.1:5123', // Gateway
-        'http://192.168.0.1:5123',
+        'http://192.168.1.1:5123',
+        'http://192.168.1.168:5123', // Common server path
         'http://10.0.0.1:5123'
     ];
 
@@ -128,11 +165,34 @@ async function reportStats(stats) {
         await fetch(`${dnsAgentUrl}/api/youtube-stats`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+            body: JSON.stringify({
+                ...payload,
+                machineName: machineName
+            })
         });
         console.log('[DNS Agent] Reported stats:', payload);
     } catch (e) {
         console.error('[DNS Agent] Failed to report stats:', e);
+    }
+}
+
+// Send heartbeat to DNS Agent
+async function sendHeartbeat() {
+    if (!connected || !clientId) return;
+
+    try {
+        await fetch(`${dnsAgentUrl}/api/heartbeat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                clientId: clientId,
+                machineName: machineName,
+                userName: userName
+            })
+        });
+        console.log('[DNS Agent] Heartbeat sent');
+    } catch (e) {
+        console.error('[DNS Agent] Heartbeat failed:', e);
     }
 }
 
@@ -217,6 +277,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return true; // Async response
     }
 
+    if (message.action === 'checkConnection') {
+        checkConnection().then(sendResponse);
+        return true;
+    }
+
     if (message.action === 'getConnectionStatus') {
         const lastStatus = { connected, dnsAgentUrl };
         // Trigger a check in the background to refresh status
@@ -259,6 +324,9 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 
 // Auto-update filters every 6 hours
 setInterval(fetchFilters, 6 * 60 * 60 * 1000);
+
+// Heartbeat every 2 minutes
+setInterval(sendHeartbeat, 2 * 60 * 1000);
 
 // Initialize
 chrome.runtime.onInstalled.addListener(() => {

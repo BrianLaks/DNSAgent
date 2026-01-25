@@ -2,8 +2,8 @@
 # This script automates the publishing and packaging of DNS Agent v1.2
 
 $ErrorActionPreference = "Stop"
-$Version = "1.3"
-$ReleaseName = "DNSAgent_v$Version"
+$Version = "2.0"
+$ReleaseName = "DNSAgent_v$($Version)_V2"
 $ProjectRoot = Get-Location
 $ReleasePath = Join-Path $ProjectRoot "Release"
 $DistPath = Join-Path $ReleasePath "Dist"
@@ -28,12 +28,19 @@ dotnet publish "DNSAgent.Tray\DNSAgent.Tray.csproj" -c Release -o "$DistPath" --
 # 4. Copy Setup Scripts to Dist
 Write-Host "Copying setup scripts..." -ForegroundColor Yellow
 Copy-Item "Setup-DNSAgent.ps1" -Destination "$DistPath\"
+Copy-Item "Start-Setup.bat" -Destination "$DistPath\"
 
 if (!(Test-Path "$DistPath\install-service.ps1")) {
     Copy-Item "DNSAgent.Service\install-service.ps1" -Destination "$DistPath\"
 }
 
-# 5. Create ZIP Archive
+# 5. Copy Extension
+Write-Host "Copying Browser Extension..." -ForegroundColor Yellow
+$ExtDistPath = Join-Path $DistPath "extension"
+New-Item -Path $ExtDistPath -ItemType Directory -Force | Out-Null
+Copy-Item "extension\*" -Destination "$ExtDistPath\" -Recurse -Exclude ".git*"
+
+# 6. Create ZIP Archive
 Write-Host "Creating $ReleaseName.zip..." -ForegroundColor Green
 $ZipFile = Join-Path $ReleasePath "$ReleaseName.zip"
 Compress-Archive -Path "$DistPath\*" -DestinationPath $ZipFile -Force

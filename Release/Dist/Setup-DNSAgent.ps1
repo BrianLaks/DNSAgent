@@ -1,89 +1,36 @@
-# DNS Agent - Quick Setup Script 🛡️
-# This script installs and starts the DNS Agent service.
-
 $ErrorActionPreference = "Stop"
-
-# Ensure running as Administrator
-$currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
-if (!$currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-    Write-Error "Please run this script as Administrator!"
-    exit
-}
-
 Write-Host "--- DNS Agent Setup ---" -ForegroundColor Cyan
 
-# 1. Aggressive Process Cleanup
-Write-Host "Stopping any running DNS Agent processes..." -ForegroundColor Gray
-sc.exe stop DNSAgent 2>$null
-taskkill /F /IM DNSAgent.Service.exe /T 2>$null
-taskkill /F /IM DNSAgent.Tray.exe /T 2>$null
-taskkill /F /IM dotnet.exe /T 2>$null # Close any active dotnet runners
-Start-Sleep -Seconds 2
-
-# 2. Check for .NET 9 Runtime
-Write-Host "Verifying .NET 9 Runtime..." -ForegroundColor Gray
+# 1. Check for .NET 9
 try {
     $runtimes = dotnet --list-runtimes 2>$null
-    $hasDotNet9 = $runtimes -match "Microsoft.AspNetCore.App 9\."
-    
-    if (!$hasDotNet9) {
-        Write-Host "`n❌ Error: .NET 9 ASP.NET Core Runtime (Hosting Bundle) is MISSING!" -ForegroundColor Red
-        Write-Host "The DNS Agent Service requires the ASP.NET Core 9.0 Runtime to function." -ForegroundColor Red
-        Write-Host "`nPlease install the 'ASP.NET Core Runtime 9.0.x' (Hosting Bundle recommended):" -ForegroundColor Yellow
-        Write-Host "🔗 https://dotnet.microsoft.com/en-us/download/dotnet/9.0" -ForegroundColor Cyan
-        Write-Host "`nSearch for 'ASP.NET Core Runtime' -> 'Windows' -> 'Hosting Bundle' or 'x64'."
-        Write-Host "`nExiting setup. Please install the runtime and try again."
-        pause
+    if (!($runtimes -match "Microsoft.AspNetCore.App 9\.")) {
+        Write-Host "ERROR: .NET 9 Runtime not found. Please install it first." -ForegroundColor Red
         exit
     }
-    Write-Host "✅ .NET 9 Runtime detected." -ForegroundColor Green
 }
 catch {
-    Write-Host "`n❌ Error: 'dotnet' command not found or execution failed." -ForegroundColor Red
-    Write-Host "Please install the .NET 9 ASP.NET Core Runtime (Hosting Bundle)." -ForegroundColor Yellow
-    Write-Host "🔗 https://dotnet.microsoft.com/en-us/download/dotnet/9.0" -ForegroundColor Cyan
-    pause
+    Write-Host "ERROR: dotnet command not found." -ForegroundColor Red
     exit
 }
 
-# Determine if we are in a ZIP/Release folder or Source tree
+# 2. Find paths
 $scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Definition
-$publishPath = ""
+if ($scriptPath -eq "") { $scriptPath = Get-Location }
+Set-Location $scriptPath
 
-if (Test-Path "$scriptPath\DNSAgent.Service.dll") {
-    # We are inside the publish folder already
-    $publishPath = $scriptPath
-}
-elseif (Test-Path "$scriptPath\DNSAgent.Service\publish\DNSAgent.Service.dll") {
-    # We are in the root of the source tree
-    $publishPath = "$scriptPath\DNSAgent.Service\publish"
+# 3. Run the installer
+if (Test-Path "install-service.ps1") {
+    & ".\install-service.ps1" install
 }
 else {
-    Write-Error "Could not find DNSAgent.Service.dll. Please ensure you are running this from the extracted ZIP or compiled source folders."
-    exit
+    Write-Host "ERROR: install-service.ps1 not found in $scriptPath" -ForegroundColor Red
 }
 
-Set-Location $publishPath
-
-# Verify install-service.ps1 exists
-if (!(Test-Path "install-service.ps1")) {
-    Write-Error "Missing install-service.ps1 in $publishPath"
-    exit
+# 4. Start Tray App
+if (Test-Path "DNSAgent.Tray.exe") {
+    Start-Process "DNSAgent.Tray.exe"
 }
 
-Write-Host "Running installation script from $publishPath..." -ForegroundColor Yellow
-& ".\install-service.ps1" install
-
-Write-Host "`n✅ DNS Agent has been installed successfully!" -ForegroundColor Green
-Write-Host "📊 Dashboard: http://localhost:5123" -ForegroundColor Cyan
-Write-Host "🛡️ Tray App: Running (check your system tray)" -ForegroundColor Cyan
-Write-Host "`nTo manage the service in the future, use the tray icon or the scripts in:"
-Write-Host "$publishPath"
-
-# Try to start the tray app
-$trayApp = Join-Path $publishPath "DNSAgent.Tray.exe"
-if (Test-Path $trayApp) {
-    Start-Process $trayApp
-}
-
+Write-Host "Setup Complete." -ForegroundColor Green
 pause

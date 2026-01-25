@@ -4,7 +4,7 @@
 
 param(
     [Parameter(Mandatory = $false)]
-    [string]$Version = "1.3",
+    [string]$Version = "2.0",
     
     [Parameter(Mandatory = $false)]
     [string]$GitHubToken = $env:GITHUB_TOKEN,
@@ -142,7 +142,7 @@ Write-Host "Creating release..." -ForegroundColor Cyan
 $releaseData = @{
     tag_name         = "v$Version"
     target_commitish = "main"
-    name             = "v$Version - Security Hardening"
+    name             = "v$Version - Advanced Reporting & Control"
     body             = $releaseNotes
     draft            = $false
     prerelease       = $false
