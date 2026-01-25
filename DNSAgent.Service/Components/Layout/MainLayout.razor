@@ -17,17 +17,19 @@
     <main>
         <div class="top-row px-4 d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center gap-3">
-                <span class="badge bg-secondary opacity-75">v@(Constants.AppVersion)</span>
-                
-                <div class="form-check form-switch d-flex align-items-center gap-2 mb-0 border-start ps-3 ms-1">
-                    <input class="form-check-input" type="checkbox" role="switch" id="ribbonBlocking" checked="@DnsWorker.ProtectionEnabled" @onchange="ToggleBlocking" />
-                    <label class="form-check-label small fw-bold mt-1" for="ribbonBlocking">Protection</label>
-                </div>
+                <AuthorizeView>
+                    <Authorized>
+                        <div class="form-check form-switch d-flex align-items-center gap-2 mb-0">
+                            <input class="form-check-input" type="checkbox" role="switch" id="ribbonBlocking" checked="@DnsWorker.ProtectionEnabled" @onchange="ToggleBlocking" />
+                            <label class="form-check-label small fw-bold mt-1" for="ribbonBlocking">Protection</label>
+                        </div>
 
-                <div class="form-check form-switch d-flex align-items-center gap-2 mb-0 border-start ps-3 ms-1">
-                    <input class="form-check-input" type="checkbox" role="switch" id="ribbonDnssec" checked="@DnsWorker.EnforceDnssec" @onchange="ToggleDnssec" />
-                    <label class="form-check-label small fw-bold mt-1" for="ribbonDnssec">Enforce DNSSEC</label>
-                </div>
+                        <div class="form-check form-switch d-flex align-items-center gap-2 mb-0 border-start ps-3 ms-1">
+                            <input class="form-check-input" type="checkbox" role="switch" id="ribbonDnssec" checked="@DnsWorker.EnforceDnssec" @onchange="ToggleDnssec" />
+                            <label class="form-check-label small fw-bold mt-1" for="ribbonDnssec">Enforce DNSSEC</label>
+                        </div>
+                    </Authorized>
+                </AuthorizeView>
 
                 <a href="@(Constants.GitHubUrl)" target="_blank" class="text-muted text-decoration-none small border-start ps-3">
                     <span class="bi bi-github"></span> GitHub
