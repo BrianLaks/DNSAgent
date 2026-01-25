@@ -2,7 +2,7 @@ namespace DNSAgent.Service.Configuration
 {
     public static class Constants
     {
-        public const string AppVersion = "1.3";
-        public const string GitHubUrl = "https://github.com/BrianLaks/DNSAgent";
+        public const string AppVersion = "1.4";
+        public const string AppName = "DNS Agent - Network Ad Blocker";
     }
 }
