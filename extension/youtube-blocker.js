@@ -14,6 +14,7 @@ let stats = {
     adsBlocked: 0,
     adsFailed: 0,
     sponsorsSkipped: 0,
+    timeSavedSeconds: 0,
     filterVersion: 'unknown'
 };
 
@@ -204,8 +205,8 @@ function monitorVideoPlayer() {
 function updateStats() {
     chrome.storage.local.set({ youtubeStats: stats });
 
-    // Report to background script every 10 ads
-    if (stats.adsBlocked % 10 === 0) {
+    // Report to background script every 5 events
+    if ((stats.adsBlocked + stats.sponsorsSkipped) % 5 === 0) {
         chrome.runtime.sendMessage({
             action: 'reportStats',
             stats: stats
@@ -306,12 +307,13 @@ function monitorSponsorSegments() {
 
                     // Update stats
                     stats.sponsorsSkipped++;
+                    const duration = end - start;
+                    stats.timeSavedSeconds += duration;
                     updateStats();
 
                     // Show notification
-                    const duration = end - start;
-                    const category = sponsorBlockClient.getCategoryName(segment.category);
-                    showSkipNotification(category, duration);
+                    const categoryName = sponsorBlockClient.getCategoryName(segment.category);
+                    showSkipNotification(categoryName, duration);
 
                     console.log(`[SponsorBlock] Skipped ${segment.category}: ${start.toFixed(1)}s - ${end.toFixed(1)}s (${duration.toFixed(1)}s saved)`);
                 }

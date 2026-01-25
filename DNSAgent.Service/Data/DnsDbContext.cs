@@ -13,6 +13,19 @@ namespace DNSAgent.Service.Data
 
         public DbSet<QueryLog> QueryLogs { get; set; }
         public DbSet<WhitelistedDomain> WhitelistedDomains { get; set; }
+        public DbSet<YouTubeStat> YouTubeStats { get; set; }
+    }
+
+    public class YouTubeStat
+    {
+        public int Id { get; set; }
+        public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+        public int AdsBlocked { get; set; }
+        public int AdsFailed { get; set; }
+        public int SponsorsSkipped { get; set; }
+        public double TimeSavedSeconds { get; set; }
+        public string? DeviceName { get; set; }
+        public string FilterVersion { get; set; } = string.Empty;
     }
 
     public class QueryLog

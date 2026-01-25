@@ -175,10 +175,24 @@ namespace DNSAgent.Service.Controllers
         /// POST /api/youtube-stats - Report YouTube ad blocking statistics
         /// </summary>
         [HttpPost("youtube-stats")]
-        public IActionResult ReportYouTubeStats([FromBody] YouTubeStatsRequest request)
+        public async Task<IActionResult> ReportYouTubeStats([FromBody] YouTubeStatsRequest request)
         {
-            // Log stats (could be stored in database for analytics)
-            Console.WriteLine($"[YouTube Stats] Blocked: {request.AdsBlocked}, Failed: {request.AdsFailed}, Version: {request.FilterVersion}");
+            // Log for visibility
+            Console.WriteLine($"[YouTube Stats] Blocked: {request.AdsBlocked}, Sponsors: {request.SponsorsSkipped}, Saved: {request.TimeSavedSeconds}s");
+
+            // Persist to database
+            var stat = new YouTubeStat
+            {
+                AdsBlocked = request.AdsBlocked,
+                AdsFailed = request.AdsFailed,
+                SponsorsSkipped = request.SponsorsSkipped,
+                TimeSavedSeconds = request.TimeSavedSeconds,
+                FilterVersion = request.FilterVersion,
+                DeviceName = Request.Headers["User-Agent"].ToString() ?? "Unknown Extension"
+            };
+
+            _db.YouTubeStats.Add(stat);
+            await _db.SaveChangesAsync();
 
             return Ok(new { success = true, received = DateTime.UtcNow });
         }
@@ -218,6 +232,8 @@ namespace DNSAgent.Service.Controllers
     {
         public int AdsBlocked { get; set; }
         public int AdsFailed { get; set; }
+        public int SponsorsSkipped { get; set; }
+        public double TimeSavedSeconds { get; set; }
         public string FilterVersion { get; set; } = string.Empty;
     }
 }

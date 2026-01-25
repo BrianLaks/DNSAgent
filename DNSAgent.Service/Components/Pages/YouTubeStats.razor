@@ -123,42 +123,55 @@
 
 @code {
     private int totalAdsBlocked = 0;
+    private int totalSponsorsSkipped = 0;
+    private double totalTimeSaved = 0;
     private int adsBlockedToday = 0;
     private string extensionVersion = "2026.01.25.1";
     private int connectedExtensions = 0;
     private string lastReportTime = "Never";
-    private List<YouTubeStatEntry> recentStats = new();
+    private List<YouTubeStat> recentStats = new();
 
     protected override async Task OnInitializedAsync()
     {
-        // TODO: Store YouTube stats in database
-        // For now, showing placeholder data
+        totalAdsBlocked = await Db.YouTubeStats.SumAsync(s => s.AdsBlocked);
+        totalSponsorsSkipped = await Db.YouTubeStats.SumAsync(s => s.SponsorsSkipped);
+        totalTimeSaved = await Db.YouTubeStats.SumAsync(s => s.TimeSavedSeconds);
         
-        // In future, query from YouTubeStats table:
-        // totalAdsBlocked = await Db.YouTubeStats.SumAsync(s => s.AdsBlocked);
-        // adsBlockedToday = await Db.YouTubeStats
-        //     .Where(s => s.Timestamp >= DateTime.Today)
-        //     .SumAsync(s => s.AdsBlocked);
-        
-        recentStats = new List<YouTubeStatEntry>
+        var today = DateTime.UtcNow.Date;
+        adsBlockedToday = await Db.YouTubeStats
+            .Where(s => s.Timestamp >= today)
+            .SumAsync(s => s.AdsBlocked);
+            
+        recentStats = await Db.YouTubeStats
+            .OrderByDescending(s => s.Timestamp)
+            .Take(20)
+            .ToListAsync();
+            
+        var lastStat = recentStats.FirstOrDefault();
+        if (lastStat != null)
         {
-            // Placeholder - will be replaced with real data from API
-        };
+            lastReportTime = lastStat.Timestamp.ToLocalTime().ToString("MM/dd HH:mm:ss");
+        }
+
+        connectedExtensions = await Db.YouTubeStats
+            .Where(s => s.Timestamp >= DateTime.UtcNow.AddMinutes(-10))
+            .Select(s => s.DeviceName)
+            .Distinct()
+            .CountAsync();
     }
 
-    private int GetEffectiveness(YouTubeStatEntry stat)
+    private string FormatTime(double seconds)
+    {
+        if (seconds < 60) return $"{seconds:F1}s";
+        if (seconds < 3600) return $"{seconds / 60:F1}m";
+        return $"{seconds / 3600:F1}h";
+    }
+
+    private int GetEffectiveness(YouTubeStat stat)
     {
         var total = stat.AdsBlocked + stat.AdsFailed;
         if (total == 0) return 0;
         return (int)((double)stat.AdsBlocked / total * 100);
-    }
-
-    private class YouTubeStatEntry
-    {
-        public DateTime Timestamp { get; set; }
-        public int AdsBlocked { get; set; }
-        public int AdsFailed { get; set; }
-        public string FilterVersion { get; set; } = "";
     }
 }
 

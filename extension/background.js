@@ -82,12 +82,20 @@ async function reportStats(stats) {
     if (!connected) return;
 
     try {
+        const payload = {
+            adsBlocked: stats.adsBlocked || 0,
+            adsFailed: stats.adsFailed || 0,
+            sponsorsSkipped: stats.sponsorsSkipped || 0,
+            timeSavedSeconds: stats.timeSavedSeconds || 0,
+            filterVersion: stats.filterVersion || 'unknown'
+        };
+
         await fetch(`${dnsAgentUrl}/api/youtube-stats`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(stats)
+            body: JSON.stringify(payload)
         });
-        console.log('[DNS Agent] Reported stats:', stats);
+        console.log('[DNS Agent] Reported stats:', payload);
     } catch (e) {
         console.error('[DNS Agent] Failed to report stats:', e);
     }
