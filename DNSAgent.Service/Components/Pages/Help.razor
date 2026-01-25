@@ -10,52 +10,50 @@
             <h1 class="mb-4">Setup & Help Guide 📖</h1>
             
             <div class="accordion" id="helpAccordion">
-                <!-- Router Setup -->
+                <!-- Installation Guide -->
                 <div class="accordion-item shadow-sm mb-3 border-0">
                     <h2 class="accordion-header">
-                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#routerSetup">
-                            <span class="bi bi-router me-2"></span> 🌐 Option 1: Network-Wide Protection (Recommended)
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#installGuide">
+                            <span class="bi bi-download me-2"></span> 🚀 Quick Installation
                         </button>
                     </h2>
-                    <div id="routerSetup" class="accordion-collapse collapse show" data-bs-parent="#helpAccordion">
+                    <div id="installGuide" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
                         <div class="accordion-body">
-                            <p>Protect every device on your network (Phones, TVs, Laptops) by configuring your router to use this server as its primary DNS.</p>
+                            <p>Installation is designed to be simple and automated.</p>
                             <ol>
-                                <li>Log in to your router's web interface (usually <code>192.168.1.1</code>).</li>
-                                <li>Find the <strong>DHCP Server</strong> or <strong>WAN</strong> settings.</li>
-                                <li>Look for <strong>Static DNS</strong> or <strong>Primary DNS</strong>.</li>
-                                <li>Enter the IP address of this machine: <code>@CurrentIP</code></li>
-                                <li>Save settings and restart your devices.</li>
+                                <li>Extract the <strong>DNSAgent.zip</strong> contents to a permanent folder.</li>
+                                <li>Right-click <strong>Start-Setup.bat</strong> and select <strong>Run as Administrator</strong>.</li>
+                                <li>The setup will automatically:
+                                    <ul>
+                                        <li>Register the Windows Service.</li>
+                                        <li>Open Firewall ports (5123 and 53).</li>
+                                        <li>Configure the System Tray icon for auto-start.</li>
+                                    </ul>
+                                </li>
                             </ol>
-                            <div class="alert alert-info">
-                                <small><strong>Note:</strong> Ensure this machine has a static IP so it doesn't change!</small>
-                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Manual PC Setup -->
+                <!-- Firewall Troubleshooting -->
                 <div class="accordion-item shadow-sm mb-3 border-0">
                     <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#manualSetup">
-                            <span class="bi bi-pc-display me-2"></span> 💻 Option 2: Individual Windows PC Setup
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#troubleshootHelp">
+                            <span class="bi bi-shield-lock me-2"></span> 🔥 Firewall & Access Issues
                         </button>
                     </h2>
-                    <div id="manualSetup" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                    <div id="troubleshootHelp" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
                         <div class="accordion-body">
-                            <p>If you can't access your router, run this PowerShell script (as Administrator) on any Windows machine to point it to this DNS Agent.</p>
-                            
+                            <p>If you cannot reach this dashboard from your phone or another PC, the Windows Firewall might be blocking the connection.</p>
+                            <p>Run this command in an <strong>Administrator PowerShell</strong> on the server to open the ports manually:</p>
                             <div class="bg-dark p-3 rounded position-relative">
-                                <pre class="text-success mb-0" id="psScript"><code>$dnsServer = "@CurrentIP"
-$interfaces = Get-NetIPInterface -AddressFamily IPv4 | Where-Object { $_.ConnectionState -eq "Connected" }
-foreach ($interface in $interfaces) {
-    Set-DnsClientServerAddress -InterfaceIndex $interface.InterfaceIndex -ServerAddresses $dnsServer
-    Write-Host "DNS updated to $dnsServer for interface: $($interface.InterfaceAlias)"
-}</code></pre>
-                                <button class="btn btn-sm btn-outline-light position-absolute top-0 end-0 m-2" @onclick="CopyScript">
+                                <pre class="text-warning mb-0" id="fwScript"><code>New-NetFirewallRule -DisplayName "DNS Agent Web" -Direction Inbound -LocalPort 5123 -Protocol TCP -Action Allow; 
+New-NetFirewallRule -DisplayName "DNS Agent DNS" -Direction Inbound -LocalPort 53 -Protocol UDP,TCP -Action Allow</code></pre>
+                                <button class="btn btn-sm btn-outline-light position-absolute top-0 end-0 m-2" @onclick="CopyFwScript">
                                     <span class="bi bi-clipboard"></span> Copy
                                 </button>
                             </div>
+                            <p class="mt-3 small text-muted"><strong>Required Ports:</strong> Port 5123 (TCP) for Web UI, Port 53 (UDP/TCP) for DNS queries.</p>
                         </div>
                     </div>
                 </div>
@@ -64,17 +62,19 @@ foreach ($interface in $interfaces) {
                 <div class="accordion-item shadow-sm border-0">
                     <h2 class="accordion-header">
                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#serviceHelp">
-                            <span class="bi bi-gear-fill me-2"></span> ⚙️ Service Management
+                            <span class="bi bi-gear-fill me-2"></span> 🛠️ Manual Service Controls
                         </button>
                     </h2>
                     <div id="serviceHelp" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
                         <div class="accordion-body">
-                            <p>You can manage the core engine using the <strong>install-service.ps1</strong> script located in the installation folder.</p>
+                            <p>For advanced management, use the <strong>install-service.ps1</strong> script:</p>
                             <ul>
-                                <li><code>.\install-service.ps1 start</code> - Starts the protection engine.</li>
-                                <li><code>.\install-service.ps1 stop</code> - Disables the protection engine.</li>
-                                <li><code>.\install-service.ps1 upgrade</code> - Applies the latest updates without losing logs.</li>
+                                <li><code>.\install-service.ps1 install</code> - Fully registers and starts the service.</li>
+                                <li><code>.\install-service.ps1 uninstall</code> - Safely removes the service.</li>
                             </ul>
+                            <div class="alert alert-warning py-2">
+                                <small><strong>Tip:</strong> Always run these from an Administrator command prompt!</small>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -107,6 +107,13 @@ foreach ($interface in $interfaces) {
                     "    Set-DnsClientServerAddress -InterfaceIndex $interface.InterfaceIndex -ServerAddresses $dnsServer\r\n" +
                     "    Write-Host \"DNS updated to $dnsServer for interface: $($interface.InterfaceAlias)\"\r\n" +
                     "}";
+        await JS.InvokeVoidAsync("clipboardCopy.copyText", script);
+    }
+
+    private async Task CopyFwScript()
+    {
+        var script = "New-NetFirewallRule -DisplayName \"DNS Agent Web\" -Direction Inbound -LocalPort 5123 -Protocol TCP -Action Allow; \r\n" +
+                     "New-NetFirewallRule -DisplayName \"DNS Agent DNS\" -Direction Inbound -LocalPort 53 -Protocol UDP,TCP -Action Allow";
         await JS.InvokeVoidAsync("clipboardCopy.copyText", script);
     }
 }
