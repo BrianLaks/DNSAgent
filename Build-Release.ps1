@@ -24,6 +24,8 @@ New-Item -Path $TempTray -ItemType Directory -Force | Out-Null
 # 2. Build and Publish DNSAgent.Service
 Write-Host "Publishing DNSAgent.Service..." -ForegroundColor Yellow
 dotnet publish "DNSAgent.Service\DNSAgent.Service.csproj" -c Release -o "$TempService" --self-contained false
+Write-Host "TempService contents:"
+Get-ChildItem -Path $TempService | Select-Object Name
 Copy-Item "$TempService\*" -Destination "$DistPath\" -Recurse -Force
 
 # 3. Build and Publish DNSAgent.Tray
@@ -46,9 +48,9 @@ $ExtDistPath = Join-Path $DistPath "extension"
 New-Item -Path $ExtDistPath -ItemType Directory -Force | Out-Null
 Copy-Item "extension\*" -Destination "$ExtDistPath\" -Recurse -Exclude ".git*"
 
-# 6. Cleanup Temp Folders
-Remove-Item $TempService -Recurse -Force
-Remove-Item $TempTray -Recurse -Force
+# 6. Cleanup Temp Folders (COMMENTED OUT FOR DEBUG)
+# Remove-Item $TempService -Recurse -Force
+# Remove-Item $TempTray -Recurse -Force
 
 # 6. Create ZIP Archive
 Write-Host "Creating $ReleaseName.zip..." -ForegroundColor Green
