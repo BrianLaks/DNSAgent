@@ -39,8 +39,35 @@ Remove-NetFirewallRule -DisplayName "DNS Agent*" -ErrorAction SilentlyContinue
 New-NetFirewallRule -DisplayName "DNS Agent - Service" -Direction Inbound -Program "$BinaryPath" -Action Allow -Profile Any
 New-NetFirewallRule -DisplayName "DNS Agent - Tray" -Direction Inbound -Program "$TrayPath" -Action Allow -Profile Any
 
-# 2. Service Cleanup
-Write-Host "Cleaning up old service..." -ForegroundColor Gray
+# 2. Service Cleanup & Data Rescue
+Write-Host "Checking for existing installation..." -ForegroundColor Yellow
+$OldService = Get-WmiObject Win32_Service -Filter "Name='$ServiceName'" -ErrorAction SilentlyContinue
+
+if ($OldService) {
+    try {
+        # Extract binary path from ImagePath (handle quotes)
+        $OldBinPath = $OldService.PathName -replace '"', ''
+        $OldDir = Split-Path -Parent $OldBinPath
+        $OldDb = Join-Path $OldDir "dnsagent.db"
+        $NewDb = Join-Path $CurrentDir "dnsagent.db"
+
+        if (Test-Path $OldDb) {
+            if (-not (Test-Path $NewDb)) {
+                Write-Host "Found existing database at: $OldDb" -ForegroundColor Green
+                Write-Host "Importing database to new installation..." -ForegroundColor Green
+                Copy-Item $OldDb -Destination $NewDb -Force
+            }
+            else {
+                Write-Host "Database already exists in new folder. Skipping import." -ForegroundColor Gray
+            }
+        }
+    }
+    catch {
+        Write-Host "Warning: Could not import old database automatically." -ForegroundColor Red
+    }
+}
+
+Write-Host "Stopping and removing old service..." -ForegroundColor Gray
 Stop-Service $ServiceName -Force -ErrorAction SilentlyContinue
 & sc.exe delete $ServiceName 2>$null
 Start-Sleep -Seconds 2
