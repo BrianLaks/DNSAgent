@@ -1,0 +1,106 @@
+@page "/help"
+
+<PageTitle>Setup & Help - DNS Agent</PageTitle>
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            <h1 class="mb-4">Setup & Help Guide 📖</h1>
+            
+            <div class="accordion" id="helpAccordion">
+                <!-- Router Setup -->
+                <div class="accordion-item shadow-sm mb-3 border-0">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#routerSetup">
+                            <span class="bi bi-router me-2"></span> 🌐 Option 1: Network-Wide Protection (Recommended)
+                        </button>
+                    </h2>
+                    <div id="routerSetup" class="accordion-collapse collapse show" data-bs-parent="#helpAccordion">
+                        <div class="accordion-body">
+                            <p>Protect every device on your network (Phones, TVs, Laptops) by configuring your router to use this server as its primary DNS.</p>
+                            <ol>
+                                <li>Log in to your router's web interface (usually <code>192.168.1.1</code>).</li>
+                                <li>Find the <strong>DHCP Server</strong> or <strong>WAN</strong> settings.</li>
+                                <li>Look for <strong>Static DNS</strong> or <strong>Primary DNS</strong>.</li>
+                                <li>Enter the IP address of this machine: <code>@CurrentIP</code></li>
+                                <li>Save settings and restart your devices.</li>
+                            </ol>
+                            <div class="alert alert-info">
+                                <small><strong>Note:</strong> Ensure this machine has a static IP so it doesn't change!</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Manual PC Setup -->
+                <div class="accordion-item shadow-sm mb-3 border-0">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#manualSetup">
+                            <span class="bi bi-pc-display me-2"></span> 💻 Option 2: Individual Windows PC Setup
+                        </button>
+                    </h2>
+                    <div id="manualSetup" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                        <div class="accordion-body">
+                            <p>If you can't access your router, run this PowerShell script (as Administrator) on any Windows machine to point it to this DNS Agent.</p>
+                            
+                            <div class="bg-dark p-3 rounded position-relative">
+                                <pre class="text-success mb-0" id="psScript"><code>$dnsServer = "@CurrentIP"
+$interfaces = Get-NetIPInterface -AddressFamily IPv4 | Where-Object { $_.ConnectionState -eq "Connected" }
+foreach ($interface in $interfaces) {
+    Set-DnsClientServerAddress -InterfaceIndex $interface.InterfaceIndex -ServerAddresses $dnsServer
+    Write-Host "DNS updated to $dnsServer for interface: $($interface.InterfaceAlias)"
+}</code></pre>
+                                <button class="btn btn-sm btn-outline-light position-absolute top-0 end-0 m-2" @onclick="CopyScript">
+                                    <span class="bi bi-clipboard"></span> Copy
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Service Troubleshooting -->
+                <div class="accordion-item shadow-sm border-0">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#serviceHelp">
+                            <span class="bi bi-gear-fill me-2"></span> ⚙️ Service Management
+                        </button>
+                    </h2>
+                    <div id="serviceHelp" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                        <div class="accordion-body">
+                            <p>You can manage the core engine using the <strong>install-service.ps1</strong> script located in the installation folder.</p>
+                            <ul>
+                                <li><code>.\install-service.ps1 start</code> - Starts the protection engine.</li>
+                                <li><code>.\install-service.ps1 stop</code> - Disables the protection engine.</li>
+                                <li><code>.\install-service.ps1 upgrade</code> - Applies the latest updates without losing logs.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string CurrentIP = "Loading...";
+
+    protected override void OnInitialized()
+    {
+        try 
+        {
+            var host = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName());
+            CurrentIP = host.AddressList.FirstOrDefault(ip => ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)?.ToString() ?? "127.0.0.1";
+        }
+        catch
+        {
+            CurrentIP = "127.0.0.1";
+        }
+    }
+
+    private async Task CopyScript()
+    {
+        // Simple JS interop for clipboard could be added here
+        // For now, we'll assume the user selects and copies, or we can use a small JS helper
+        await Task.CompletedTask;
+    }
+}

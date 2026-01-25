@@ -64,12 +64,16 @@ a,
 
 .dashboard-watermark {
     position: fixed;
-    bottom: -50px;
-    right: -50px;
-    opacity: 0.08;
+    top: 50%;
+    left: 60%;
+    /* Offset for sidebar */
+    transform: translate(-50%, -50%) rotate(-10deg);
+    opacity: 0.03;
+    /* Extremely subtle */
     z-index: -1;
     pointer-events: none;
-    transform: rotate(-15deg);
+    width: 800px;
+    filter: grayscale(100%);
 }
 
 .content {
