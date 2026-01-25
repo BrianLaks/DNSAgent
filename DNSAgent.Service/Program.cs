@@ -142,6 +142,15 @@ using (var scope = app.Services.CreateScope())
             db.SaveChanges();
         }
 
+        // Migration for existing tables
+        db.Database.ExecuteSqlRaw("ALTER TABLE QueryLogs ADD COLUMN ClientId TEXT;");
+        db.Database.ExecuteSqlRaw("ALTER TABLE QueryLogs ADD COLUMN Transport TEXT;");
+        db.Database.ExecuteSqlRaw("ALTER TABLE QueryLogs ADD COLUMN IsDnssec INTEGER NOT NULL DEFAULT 0;");
+    }
+    catch { /* Columns might already exist */ }
+
+    try
+    {
         db.Database.ExecuteSqlRaw(@"
             CREATE TABLE IF NOT EXISTS YouTubeStats (
                 Id INTEGER PRIMARY KEY AUTOINCREMENT,

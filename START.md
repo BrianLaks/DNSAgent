@@ -27,6 +27,27 @@ This guide outlines the standard patterns for setting up the development environ
    - Installs the **DNSAgent Service** on your machine.
    - Launches the **DNSAgent Tray** application.
 
+## ⚙️ Host Configuration (Ethernet 2)
+
+If you are using **Ethernet 2** as your primary adapter, use this command to set the DNS to loopback for system-wide protection:
+
+```powershell
+Set-DnsClientServerAddress -InterfaceAlias "Ethernet 2" -ServerAddresses ("127.0.0.1")
+ipconfig /flushdns
+```
+
+To revert to automatic DNS:
+```powershell
+Set-DnsClientServerAddress -InterfaceAlias "Ethernet 2" -ResetServerAddresses
+```
+
+## 🛠️ Version Maintenance
+
+When preparing a new release, ensure the version is synchronized in the following locations:
+1.  **`DNSAgent.Service/Configuration/Constants.cs`**: Update `AppVersion`.
+2.  **`DNSAgent.Service/DNSAgent.Service.csproj`**: Update `<Version>` tag.
+3.  **`Build-Release.ps1`**: Update `$Version` variable.
+
 ## 🌐 Accessing the Dashboards
 
 - **Web UI**: `http://localhost:5123`
