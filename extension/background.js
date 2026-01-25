@@ -8,18 +8,53 @@ let dnsAgentUrl = 'http://localhost:5123';
 let connected = false;
 let contextDomain = null;
 
+// Initialize state from storage
+chrome.storage.local.get(['dnsAgentUrl', 'connected'], (result) => {
+    if (result.dnsAgentUrl) dnsAgentUrl = result.dnsAgentUrl;
+    if (result.connected) connected = result.connected;
+    console.log('[DNS Agent] Initialized state from storage:', { dnsAgentUrl, connected });
+
+    // Proactive check on startup
+    checkConnection();
+});
+
+// Check if current connection is still valid
+async function checkConnection() {
+    try {
+        const response = await fetch(`${dnsAgentUrl}/api/status`, {
+            method: 'GET',
+            signal: AbortSignal.timeout(3000)
+        });
+        if (response.ok) {
+            connected = true;
+            chrome.storage.local.set({ connected: true });
+            return true;
+        }
+    } catch (e) {
+        // Current host no longer reachable, try discovery
+    }
+    return await discoverDnsAgent();
+}
+
 // Auto-discover DNS Agent on local network
 async function discoverDnsAgent() {
+    // Determine possible hosts
     const possibleHosts = [
+        dnsAgentUrl, // Try last known URL first
         'http://localhost:5123',
         'http://127.0.0.1:5123',
-        'http://192.168.1.1:5123', // Common router IPs
+        'http://192.168.1.1:5123', // Gateway
         'http://192.168.0.1:5123',
         'http://10.0.0.1:5123'
     ];
 
-    for (const host of possibleHosts) {
+    // Remove duplicates
+    const uniqueHosts = [...new Set(possibleHosts)];
+
+    for (const host of uniqueHosts) {
+        if (!host) continue;
         try {
+            console.log('[DNS Agent] Probing host:', host);
             const response = await fetch(`${host}/api/status`, {
                 method: 'GET',
                 signal: AbortSignal.timeout(2000)
@@ -149,7 +184,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
 
     if (message.action === 'getConnectionStatus') {
-        sendResponse({ connected, dnsAgentUrl });
+        const lastStatus = { connected, dnsAgentUrl };
+        // Trigger a check in the background to refresh status
+        checkConnection();
+        sendResponse(lastStatus);
     }
 });
 
@@ -192,16 +230,16 @@ setInterval(fetchFilters, 6 * 60 * 60 * 1000);
 chrome.runtime.onInstalled.addListener(() => {
     console.log('[DNS Agent] Extension installed');
     createContextMenu();
-    discoverDnsAgent();
+    checkConnection();
 });
 
 // Try to connect on startup
 createContextMenu();
-discoverDnsAgent();
+checkConnection();
 
 // Periodic connection check (every 5 minutes)
 setInterval(async () => {
     if (!connected) {
-        await discoverDnsAgent();
+        await checkConnection();
     }
 }, 5 * 60 * 1000);
