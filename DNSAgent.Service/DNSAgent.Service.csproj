@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <OutputType>Exe</OutputType>
     <Version>2.1.1</Version>
-    <DefaultItemExcludes>$(DefaultItemExcludes);publish\**;production\**</DefaultItemExcludes>
+    <DefaultItemExcludes>$(DefaultItemExcludes);publish\**;production\**;dnsagent.db;*.db-shm;*.db-wal</DefaultItemExcludes>
   </PropertyGroup>
 
   <ItemGroup>

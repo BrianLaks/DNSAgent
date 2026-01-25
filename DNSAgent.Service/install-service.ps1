@@ -52,18 +52,20 @@ if ($OldService) {
         $NewDb = Join-Path $CurrentDir "dnsagent.db"
 
         if (Test-Path $OldDb) {
-            if (-not (Test-Path $NewDb)) {
-                Write-Host "Found existing database at: $OldDb" -ForegroundColor Green
-                Write-Host "Importing database to new installation..." -ForegroundColor Green
-                Copy-Item $OldDb -Destination $NewDb -Force
+            # Check if the "new" DB is just a placeholder (small size) or we just want to rescue the old one anyway
+            if (Test-Path $NewDb) {
+                Write-Host "A database file already exists in the new folder." -ForegroundColor Yellow
+                Write-Host "Backing up empty/new database to .bak..." -ForegroundColor Gray
+                Rename-Item $NewDb -NewName "dnsagent.db.bak.$(Get-Date -Format 'yyyyMMddHHmmss')" -Force
             }
-            else {
-                Write-Host "Database already exists in new folder. Skipping import." -ForegroundColor Gray
-            }
+            
+            Write-Host "Found existing database at: $OldDb" -ForegroundColor Green
+            Write-Host "Importing database to new installation..." -ForegroundColor Green
+            Copy-Item $OldDb -Destination $NewDb -Force
         }
     }
     catch {
-        Write-Host "Warning: Could not import old database automatically." -ForegroundColor Red
+        Write-Host "Warning: Could not import old database automatically. You may need to copy dnsagent.db manually." -ForegroundColor Red
     }
 }
 
