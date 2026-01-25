@@ -205,8 +205,8 @@ function monitorVideoPlayer() {
 function updateStats() {
     chrome.storage.local.set({ youtubeStats: stats });
 
-    // Report to background script every 5 events
-    if ((stats.adsBlocked + stats.sponsorsSkipped) % 5 === 0) {
+    // Report to background script every event for real-time testing
+    if ((stats.adsBlocked + stats.sponsorsSkipped) > 0) {
         chrome.runtime.sendMessage({
             action: 'reportStats',
             stats: stats
