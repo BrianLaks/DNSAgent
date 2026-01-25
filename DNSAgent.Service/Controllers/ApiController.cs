@@ -166,7 +166,7 @@ namespace DNSAgent.Service.Controllers
         {
             var filters = new
             {
-                version = "2026.01.25.1",
+                version = "2026.01.25.2",
                 lastUpdated = DateTime.UtcNow,
                 cssSelectors = new[]
                 {
@@ -239,7 +239,7 @@ namespace DNSAgent.Service.Controllers
             await _db.SaveChangesAsync();
             await _dnsWorker.RefreshDeviceMapAsync();
 
-            return Ok(new { success = true, registeredAs = device.MachineName });
+            return Ok(new { success = true, registeredAs = device.MachineName, serverVersion = Constants.AppVersion });
         }
 
         /// <summary>

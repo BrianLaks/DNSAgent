@@ -2,6 +2,7 @@
 @using Microsoft.EntityFrameworkCore
 @using DNSAgent.Service.Data
 @inject DnsDbContext Db
+@attribute [Authorize(Roles = "Admin")]
 @rendermode InteractiveServer
 
 <PageTitle>YouTube Ad Blocking Stats - DNS Agent</PageTitle>
@@ -136,9 +137,9 @@
     private int totalThumbnailsReplaced = 0;
     private double totalTimeSaved = 0;
     private int adsBlockedToday = 0;
-    private string extensionVersion = "2026.01.25.1";
     private int connectedExtensions = 0;
     private string lastReportTime = "Never";
+    private string serverVersion = "v2.0.2";
     private List<YouTubeStat> recentStats = new();
 
     protected override async Task OnInitializedAsync()
@@ -165,10 +166,8 @@
             lastReportTime = lastStat.Timestamp.ToLocalTime().ToString("MM/dd HH:mm:ss");
         }
 
-        connectedExtensions = await Db.YouTubeStats
-            .Where(s => s.Timestamp >= DateTime.UtcNow.AddMinutes(-10))
-            .Select(s => s.DeviceName)
-            .Distinct()
+        connectedExtensions = await Db.Devices
+            .Where(s => s.LastSeen >= DateTime.UtcNow.AddMinutes(-10))
             .CountAsync();
     }
 

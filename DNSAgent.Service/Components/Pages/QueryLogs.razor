@@ -130,17 +130,23 @@
             </table>
         </div>
 
-        <div class="d-flex justify-content-between align-items-center mt-3 mb-5">
-            <div class="text-muted small">
-                Showing page @(PageIndex + 1)
+        <div class="card-footer bg-white border-top d-flex justify-content-between align-items-center py-3">
+            <div class="small text-muted">
+                Showing page <strong>@((PageIndex ?? 0) + 1)</strong> of <strong>@TotalPages</strong> (@TotalCount total)
             </div>
-            <div class="btn-group">
-                <button class="btn btn-outline-primary" disabled="@(PageIndex == 0)" @onclick="PreviousPage">
-                    <span class="bi bi-chevron-left"></span> Previous
-                </button>
-                <button class="btn btn-outline-primary" disabled="@(logs.Count < PageSize)" @onclick="NextPage">
-                    Next <span class="bi bi-chevron-right"></span>
-                </button>
+            <div class="d-flex align-items-center gap-3">
+                <div class="input-group input-group-sm" style="width: 150px;">
+                    <span class="input-group-text">Go to</span>
+                    <input type="number" class="form-control" min="1" max="@TotalPages" @bind="JumpPage" @bind:event="oninput" @onchange="HandleJumpToPage" />
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-outline-primary btn-sm" disabled="@(PageIndex == 0)" @onclick="PreviousPage">
+                        <span class="bi bi-chevron-left"></span> Previous
+                    </button>
+                    <button class="btn btn-outline-primary btn-sm" disabled="@(PageIndex >= TotalPages - 1)" @onclick="NextPage">
+                        Next <span class="bi bi-chevron-right"></span>
+                    </button>
+                </div>
             </div>
         </div>
     }
@@ -156,6 +162,9 @@
     private DateTime EndDate { get; set; } = DateTime.Today.AddDays(1);
 
     private int PageIndex { get; set; } = 0;
+    private int TotalPages { get; set; } = 1;
+    private int TotalCount { get; set; } = 0;
+    private int JumpPage { get; set; } = 1;
     private const int PageSize = 50;
 
     private List<QueryLog>? logs;
@@ -198,6 +207,11 @@
             query = query.Where(l => l.Domain.Contains(SearchTerm));
         }
 
+        TotalCount = await query.CountAsync();
+        TotalPages = (int)Math.Ceiling((double)TotalCount / PageSize);
+        if (TotalPages == 0) TotalPages = 1;
+        JumpPage = PageIndex + 1;
+
         logs = await query
             .OrderByDescending(x => x.Id)
             .Skip(PageIndex * PageSize)
@@ -207,6 +221,15 @@
         // Load devices for names
         var deviceIds = logs.Where(x => x.ClientId != null).Select(x => x.ClientId).Distinct().ToList();
         devices = await Db.Devices.Where(x => deviceIds.Contains(x.Id)).ToDictionaryAsync(x => x.Id);
+    }
+
+    private async Task HandleJumpToPage()
+    {
+        if (JumpPage >= 1 && JumpPage <= TotalPages)
+        {
+            PageIndex = JumpPage - 1;
+            await LoadLogs();
+        }
     }
 
     private async Task NextPage()

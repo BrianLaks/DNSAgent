@@ -44,24 +44,24 @@
             </div>
         </div>
 
-        <!-- YouTube Ads Blocked -->
+        <!-- Connected Agents -->
         <div class="col-md-3 mb-3">
-            <div class="card h-100 shadow-sm border-0 bg-warning text-white">
+            <div class="card h-100 shadow-sm border-0 bg-success text-white">
                 <div class="card-body py-3">
-                    <h6 class="card-title opacity-75 small">YouTube Ads Blocked</h6>
-                    <h3 class="mb-0">@_stats.YouTubeAdsBlocked</h3>
-                    <div class="small opacity-75">Total saved</div>
+                    <h6 class="card-title opacity-75 small">Connected Agents</h6>
+                    <h3 class="mb-0">@_stats.ConnectedAgents</h3>
+                    <div class="small opacity-75">Active heartbeats</div>
                 </div>
             </div>
         </div>
 
-        <!-- Time Saved -->
+        <!-- YouTube Time Saved -->
         <div class="col-md-3 mb-3">
             <div class="card h-100 shadow-sm border-0 bg-info text-white">
                 <div class="card-body py-3">
                     <h6 class="card-title opacity-75 small">YouTube Time Saved</h6>
                     <h3 class="mb-0">@FormatTime(_stats.TimeSavedSeconds)</h3>
-                    <div class="small opacity-75">Sponsors: @_stats.SponsorsSkipped</div>
+                    <div class="small opacity-75">Ads: @_stats.YouTubeAdsBlocked</div>
                 </div>
             </div>
         </div>
@@ -96,53 +96,67 @@
     </div>
 
     <div class="row">
-        <!-- Top Blocked -->
-        <div class="col-md-6 mb-4">
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-white border-bottom-0 pt-3">
-                    <h5 class="card-title mb-0">Top Blocked Domains</h5>
-                </div>
-                <div class="card-body">
-                    @if (_stats.TopBlocked == null || !_stats.TopBlocked.Any())
-                    {
-                        <p class="text-muted small">No blocked domains recorded recently.</p>
-                    }
-                    else
-                    {
-                        <div class="list-group list-group-flush">
-                            @foreach (var item in _stats.TopBlocked)
+        <!-- Top Blocked (Admin Only) -->
+        <AuthorizeView Roles="Admin">
+            <Authorized>
+                <div class="col-md-6 mb-4">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-white border-bottom-0 pt-3">
+                            <h5 class="card-title mb-0">Top Blocked Domains</h5>
+                        </div>
+                        <div class="card-body">
+                            @if (_stats.TopBlocked == null || !_stats.TopBlocked.Any())
                             {
-                                <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
-                                    <span class="text-truncate small" style="max-width: 70%;" title="@item.Domain">@item.Domain</span>
-                                    <span class="badge bg-danger rounded-pill">@item.Count</span>
+                                <p class="text-muted small">No blocked domains recorded recently.</p>
+                            }
+                            else
+                            {
+                                <div class="list-group list-group-flush">
+                                    @foreach (var item in _stats.TopBlocked)
+                                    {
+                                        <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
+                                            <span class="text-truncate small" style="max-width: 70%;" title="@item.Domain">@item.Domain</span>
+                                            <span class="badge bg-danger rounded-pill">@item.Count</span>
+                                        </div>
+                                    }
                                 </div>
                             }
                         </div>
-                    }
+                    </div>
                 </div>
-            </div>
-        </div>
+            </Authorized>
+            <NotAuthorized>
+                <div class="col-md-6 mb-4">
+                    <div class="card shadow-sm border-0 bg-light">
+                        <div class="card-body text-center py-5">
+                            <span class="bi bi-lock-fill fs-2 text-muted"></span>
+                            <h6 class="mt-2">Analytics Restricted</h6>
+                            <p class="small text-muted">Login as Admin to see domain statistics.</p>
+                        </div>
+                    </div>
+                </div>
+            </NotAuthorized>
+        </AuthorizeView>
 
         <!-- Quick Info -->
         <div class="col-md-6 mb-4">
-            <div class="card shadow-sm border-0 bg-light">
+            <div class="card shadow-sm border-0 bg-light h-100">
                 <div class="card-body">
                     <h5 class="card-title">Network Guard</h5>
                     <p class="small text-muted mb-3">Your network is being protected by DNS Agent. All connected devices using this server as their primary DNS are currently safe from trackers and ads.</p>
                     <div class="d-flex gap-2">
-                        <a href="logs" class="btn btn-sm btn-outline-primary">View Real-time Logs</a>
-                        <a href="hosts" class="btn btn-sm btn-outline-secondary">Device Analytics</a>
+                        <AuthorizeView Roles="Admin">
+                            <Authorized>
+                                <a href="logs" class="btn btn-sm btn-outline-primary">View Real-time Logs</a>
+                                <a href="hosts" class="btn btn-sm btn-outline-secondary">Device Analytics</a>
+                            </Authorized>
+                        </AuthorizeView>
                     </div>
                 </div>
             </div>
-            
-            <div class="mt-4 text-center">
-                <a href="admin/youtube-stats" class="btn btn-warning btn-sm shadow-sm ps-3 pe-3 rounded-pill text-white fw-bold">
-                    <span class="bi bi-play-circle-fill me-1"></span> YouTube Intelligence Data
-                </a>
-            </div>
         </div>
     </div>
+</div>
 </div>
 
 @code {
@@ -212,6 +226,12 @@
             }
             catch { }
 
+            // Connected Agents (Active heartbeats in last 10 mins)
+            var heartbeatCutoff = DateTime.UtcNow.AddMinutes(-10);
+            _stats.ConnectedAgents = await Db.Devices
+                .Where(d => d.LastSeen >= heartbeatCutoff)
+                .CountAsync();
+
             _stats.ShouldRenderCharts = true;
             StateHasChanged();
         }
@@ -257,6 +277,7 @@
         public int TotalQueries { get; set; }
         public int BlockedQueries { get; set; }
         public int AllowedQueries { get; set; }
+        public int ConnectedAgents { get; set; }
         public int YouTubeAdsBlocked { get; set; }
         public int SponsorsSkipped { get; set; }
         public double TimeSavedSeconds { get; set; }

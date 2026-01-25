@@ -18,10 +18,11 @@ This guide outlines the standard patterns for setting up the development environ
 
 2. **Quick Setup (Recommended)**
    Right-click **`Start-Setup.bat`** and select **Run as Administrator**.
-   This batch file handles:
+   This is the **official and most robust** deployment method. It handles:
    - Setting PowerShell execution policy to bypass.
-   - Automatically cleaning up hung processes/ports from previous versions.
-   - Running the primary `Setup-DNSAgent.ps1` script.
+   - Automatically unblocking package files (SmartScreen fix).
+   - Cleaning up hung processes/ports from previous versions.
+   - Running the primary `Setup-DNSAgent.ps1` script to install the service.
 
 3. **What `Setup-DNSAgent.ps1` Does**
    - Verifies the .NET 9 runtime.

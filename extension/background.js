@@ -23,12 +23,11 @@ async function getClientId() {
     return clientId;
 }
 
-// Get basic system info (as much as possible from extension)
 async function getSystemInfo() {
-    // In a real extension, we might use chrome.identity or other APIs
-    // For now, we'll try to get some context or just use User Agent
-    machineName = `Machine-${clientId.substring(0, 8)}`;
-    userName = 'Standard User';
+    // Use browser info to make machine name more descriptive
+    const browserInfo = navigator.userAgent.split(' ').pop();
+    machineName = `Machine-${clientId.substring(0, 8)} (${browserInfo})`;
+    userName = 'Extension User';
 }
 
 // Initialize state from storage
