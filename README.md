@@ -2,6 +2,8 @@
 
 DNS Agent is a lightweight, high-performance network-wide DNS server designed for advertisement blocking, tracker protection, and per-device analytics. It features a modern Blazor dashboard and a convenient Windows System Tray monitor.
 
+**✨ [Check out our full Feature Showcase with Screenshots!](FEATURES.md)**
+
 ## 🚀 Features
 - **AD & Tracker Blocking**: Real-time filtering based on community-sourced blocklists.
 - **Glassmorphic Dashboard**: A professional, blue-themed UI for statistics and logs.
