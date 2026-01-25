@@ -12,27 +12,36 @@ if (!$currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Adminis
 
 Write-Host "--- DNS Agent Setup ---" -ForegroundColor Cyan
 
-# Check for .NET 9 Runtime
+# 1. Aggressive Process Cleanup
+Write-Host "Stopping any running DNS Agent processes..." -ForegroundColor Gray
+sc.exe stop DNSAgent 2>$null
+taskkill /F /IM DNSAgent.Service.exe /T 2>$null
+taskkill /F /IM DNSAgent.Tray.exe /T 2>$null
+taskkill /F /IM dotnet.exe /T 2>$null # Close any active dotnet runners
+Start-Sleep -Seconds 2
+
+# 2. Check for .NET 9 Runtime
 Write-Host "Verifying .NET 9 Runtime..." -ForegroundColor Gray
 try {
     $runtimes = dotnet --list-runtimes 2>$null
     $hasDotNet9 = $runtimes -match "Microsoft.AspNetCore.App 9\."
     
     if (!$hasDotNet9) {
-        Write-Host "❌ Error: .NET 9 ASP.NET Core Runtime is not installed!" -ForegroundColor Red
-        Write-Host "This is required to run the DNS Agent service." -ForegroundColor Red
-        Write-Host "`nPlease download and install the '.NET 9 ASP.NET Core Runtime (Hosting Bundle)' from:" -ForegroundColor Yellow
-        Write-Host "👉 https://dotnet.microsoft.com/en-us/download/dotnet/9.0" -ForegroundColor Cyan
-        Write-Host "`nAfter installing, please run this setup script again."
+        Write-Host "`n❌ Error: .NET 9 ASP.NET Core Runtime (Hosting Bundle) is MISSING!" -ForegroundColor Red
+        Write-Host "The DNS Agent Service requires the ASP.NET Core 9.0 Runtime to function." -ForegroundColor Red
+        Write-Host "`nPlease install the 'ASP.NET Core Runtime 9.0.x' (Hosting Bundle recommended):" -ForegroundColor Yellow
+        Write-Host "🔗 https://dotnet.microsoft.com/en-us/download/dotnet/9.0" -ForegroundColor Cyan
+        Write-Host "`nSearch for 'ASP.NET Core Runtime' -> 'Windows' -> 'Hosting Bundle' or 'x64'."
+        Write-Host "`nExiting setup. Please install the runtime and try again."
         pause
         exit
     }
     Write-Host "✅ .NET 9 Runtime detected." -ForegroundColor Green
 }
 catch {
-    Write-Host "❌ Error: 'dotnet' command not found." -ForegroundColor Red
+    Write-Host "`n❌ Error: 'dotnet' command not found or execution failed." -ForegroundColor Red
     Write-Host "Please install the .NET 9 ASP.NET Core Runtime (Hosting Bundle)." -ForegroundColor Yellow
-    Write-Host "👉 https://dotnet.microsoft.com/en-us/download/dotnet/9.0" -ForegroundColor Cyan
+    Write-Host "🔗 https://dotnet.microsoft.com/en-us/download/dotnet/9.0" -ForegroundColor Cyan
     pause
     exit
 }
