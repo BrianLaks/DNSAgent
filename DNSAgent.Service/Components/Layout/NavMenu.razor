@@ -1,6 +1,11 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿@using Microsoft.AspNetCore.Components.Authorization
+
+<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">DNS Agent</a>
+        <a class="navbar-brand" href="">
+            <img src="logo.png" alt="Logo" style="height: 32px; margin-right: 8px;" />
+            DNS Agent
+        </a>
     </div>
 </div>
 
@@ -14,9 +19,24 @@
             </NavLink>
         </div>
 
+        <AuthorizeView Roles="Admin">
+            <Authorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="logs">
+                        <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Query Logs
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="admin/settings">
+                        <span class="bi bi-gear-nav-menu" aria-hidden="true"></span> Settings
+                    </NavLink>
+                </div>
+            </Authorized>
+        </AuthorizeView>
+
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="logs">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Query Logs
+            <NavLink class="nav-link" href="hosts">
+                <span class="bi bi-hdd-network-nav-menu" aria-hidden="true"></span> Hosts Analytics
             </NavLink>
         </div>
         
@@ -25,5 +45,22 @@
                 <span class="bi bi-shield-check-nav-menu" aria-hidden="true"></span> Whitelist
             </NavLink>
         </div>
+
+        <AuthorizeView>
+            <Authorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="logout">
+                        <span class="bi bi-box-arrow-right" aria-hidden="true"></span> Logout
+                    </NavLink>
+                </div>
+            </Authorized>
+            <NotAuthorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="login">
+                        <span class="bi bi-box-arrow-in-right" aria-hidden="true"></span> Login
+                    </NavLink>
+                </div>
+            </NotAuthorized>
+        </AuthorizeView>
     </nav>
 </div>

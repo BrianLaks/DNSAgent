@@ -1,0 +1,97 @@
+@page "/admin/settings"
+@rendermode InteractiveServer
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
+@using DNSAgent.Service.Services
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration Config
+@inject DnsWorker DnsWorker
+
+<PageTitle>Admin Settings - DNS Agent</PageTitle>
+
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>Admin Settings</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Blocklist Management</h5>
+                </div>
+                <div class="card-body">
+                    <p>Current Source: <code>@blocklistUrl</code></p>
+                    <button class="btn btn-primary" @onclick="UpdateBlocklist" disabled="@isUpdating">
+                        @if (isUpdating)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                            <span>Updating...</span>
+                        }
+                        else
+                        {
+                            <span class="bi bi-arrow-repeat me-2"></span>
+                            <span>Update Blocklist Now</span>
+                        }
+                    </button>
+                    @if (!string.IsNullOrEmpty(updateMessage))
+                    {
+                        <div class="alert alert-info mt-3 py-2">
+                            @updateMessage
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Data Retention</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Log Retention Period (Days)</label>
+                        <input type="number" class="form-control" @bind="retentionDays" readonly />
+                        <small class="text-muted">Currently configured in <code>appsettings.json</code></small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string blocklistUrl = "";
+    private int retentionDays;
+    private bool isUpdating = false;
+    private string? updateMessage;
+
+    protected override void OnInitialized()
+    {
+        blocklistUrl = Config.GetValue<string>("DnsAgent:BlocklistUrl") ?? "Default";
+        retentionDays = Config.GetValue<int>("DnsAgent:LogRetentionDays", 5);
+    }
+
+    private async Task UpdateBlocklist()
+    {
+        isUpdating = true;
+        updateMessage = "Update started...";
+        StateHasChanged();
+
+        try
+        {
+            await DnsWorker.LoadBlockListAsync();
+            updateMessage = $"Blocklist updated successfully at {DateTime.Now.ToString("HH:mm:ss")}";
+        }
+        catch (Exception ex)
+        {
+            updateMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            isUpdating = false;
+        }
+    }
+}

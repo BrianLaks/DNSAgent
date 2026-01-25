@@ -23,12 +23,22 @@ cd c:\Users\BRIAN\source\repos\DNSAgent\DNSAgent.Service\bin\Debug\net9.0
 
 ### ✅ Currently Implemented
 - **DNS Blocking**: 69,986 domains from StevenBlack blocklist
+- **Authentication**: Login system with Admin/User roles
 - **Web Dashboard**: Real-time statistics and monitoring
-- **Query Logs**: View all DNS requests with filtering
+- **Query Logs**: View all DNS requests (Admin only)
 - **Domain Whitelisting**: Allow specific domains globally
 - **Windows Service**: Auto-start on boot, runs in background
 - **SQLite Database**: Persistent logs and configuration
 - **Configurable**: Edit settings via `appsettings.json`
+
+---
+
+## 🔐 Default Login Credentials
+
+**Username**: `Admin`  
+**Password**: `Admin`
+
+> ⚠️ **Security Note**: The Query Logs page is protected and only accessible to Admin users. Change the default password after first login!
 
 ### 🚧 Planned Features
 - **Authentication**: Admin/User role-based access

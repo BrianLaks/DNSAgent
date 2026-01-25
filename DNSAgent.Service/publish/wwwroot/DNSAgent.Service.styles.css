@@ -10,7 +10,8 @@ main[b-u25wdy5k27] {
 }
 
 .sidebar[b-u25wdy5k27] {
-    background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%);
+    background: linear-gradient(180deg, #1e90ff 0%, #000080 100%);
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
 }
 
 .top-row[b-u25wdy5k27] {
@@ -22,27 +23,30 @@ main[b-u25wdy5k27] {
     align-items: center;
 }
 
-    .top-row[b-u25wdy5k27]  a, .top-row[b-u25wdy5k27]  .btn-link {
-        white-space: nowrap;
-        margin-left: 1.5rem;
-        text-decoration: none;
-    }
+.top-row[b-u25wdy5k27]  a,
+.top-row[b-u25wdy5k27]  .btn-link {
+    white-space: nowrap;
+    margin-left: 1.5rem;
+    text-decoration: none;
+}
 
-    .top-row[b-u25wdy5k27]  a:hover, .top-row[b-u25wdy5k27]  .btn-link:hover {
-        text-decoration: underline;
-    }
+.top-row[b-u25wdy5k27]  a:hover,
+.top-row[b-u25wdy5k27]  .btn-link:hover {
+    text-decoration: underline;
+}
 
-    .top-row[b-u25wdy5k27]  a:first-child {
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
+.top-row[b-u25wdy5k27]  a:first-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 
 @media (max-width: 640.98px) {
     .top-row[b-u25wdy5k27] {
         justify-content: space-between;
     }
 
-    .top-row[b-u25wdy5k27]  a, .top-row[b-u25wdy5k27]  .btn-link {
+    .top-row[b-u25wdy5k27]  a,
+    .top-row[b-u25wdy5k27]  .btn-link {
         margin-left: 0;
     }
 }
@@ -71,7 +75,8 @@ main[b-u25wdy5k27] {
         width: 0;
     }
 
-    .top-row[b-u25wdy5k27], article[b-u25wdy5k27] {
+    .top-row[b-u25wdy5k27],
+    article[b-u25wdy5k27] {
         padding-left: 2rem !important;
         padding-right: 1.5rem !important;
     }
@@ -91,12 +96,12 @@ main[b-u25wdy5k27] {
     z-index: 1000;
 }
 
-    #blazor-error-ui .dismiss[b-u25wdy5k27] {
-        cursor: pointer;
-        position: absolute;
-        right: 0.75rem;
-        top: 0.5rem;
-    }
+#blazor-error-ui .dismiss[b-u25wdy5k27] {
+    cursor: pointer;
+    position: absolute;
+    right: 0.75rem;
+    top: 0.5rem;
+}
 /* _content/DNSAgent.Service/Components/Layout/NavMenu.razor.rz.scp.css */
 .navbar-toggler[b-47gz6o5iym] {
     appearance: none;
@@ -117,7 +122,7 @@ main[b-u25wdy5k27] {
 
 .top-row[b-47gz6o5iym] {
     min-height: 3.5rem;
-    background-color: rgba(0,0,0,0.4);
+    background-color: rgba(0, 0, 0, 0.2) !important;
 }
 
 .navbar-brand[b-47gz6o5iym] {
@@ -151,33 +156,33 @@ main[b-u25wdy5k27] {
     padding-bottom: 0.5rem;
 }
 
-    .nav-item:first-of-type[b-47gz6o5iym] {
-        padding-top: 1rem;
-    }
+.nav-item:first-of-type[b-47gz6o5iym] {
+    padding-top: 1rem;
+}
 
-    .nav-item:last-of-type[b-47gz6o5iym] {
-        padding-bottom: 1rem;
-    }
+.nav-item:last-of-type[b-47gz6o5iym] {
+    padding-bottom: 1rem;
+}
 
-    .nav-item[b-47gz6o5iym]  .nav-link {
-        color: #d7d7d7;
-        background: none;
-        border: none;
-        border-radius: 4px;
-        height: 3rem;
-        display: flex;
-        align-items: center;
-        line-height: 3rem;
-        width: 100%;
-    }
+.nav-item[b-47gz6o5iym]  .nav-link {
+    color: #d7d7d7;
+    background: none;
+    border: none;
+    border-radius: 4px;
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    line-height: 3rem;
+    width: 100%;
+}
 
 .nav-item[b-47gz6o5iym]  a.active {
-    background-color: rgba(255,255,255,0.37);
+    background-color: rgba(255, 255, 255, 0.37);
     color: white;
 }
 
 .nav-item[b-47gz6o5iym]  .nav-link:hover {
-    background-color: rgba(255,255,255,0.1);
+    background-color: rgba(255, 255, 255, 0.1);
     color: white;
 }
 
@@ -185,7 +190,7 @@ main[b-u25wdy5k27] {
     display: none;
 }
 
-.navbar-toggler:checked ~ .nav-scrollable[b-47gz6o5iym] {
+.navbar-toggler:checked~.nav-scrollable[b-47gz6o5iym] {
     display: block;
 }
 

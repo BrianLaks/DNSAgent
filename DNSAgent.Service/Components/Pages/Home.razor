@@ -1,10 +1,15 @@
 @page "/"
+@rendermode InteractiveServer
 @using DNSAgent.Service.Data
 @using Microsoft.EntityFrameworkCore
 @inject DnsDbContext Db
 @implements IDisposable
 
 <PageTitle>DNS Agent Dashboard</PageTitle>
+
+<div class="dashboard-watermark text-end">
+    <img src="logo.png" style="width: 500px;" alt="" />
+</div>
 
 <div class="container mt-4">
     <div class="row mb-4">
@@ -74,16 +79,25 @@
 
     private async Task RefreshStats()
     {
-        var since = DateTime.Now.AddHours(-24);
-        
-        // Note: For high volume, these counts should be cached or optimized
-        var q = await Db.QueryLogs
-            .Where(x => x.Timestamp >= since)
-            .ToListAsync();
+        try
+        {
+            var since = DateTime.Now.AddHours(-24);
+            
+            // Note: For high volume, these counts should be cached or optimized
+            var q = await Db.QueryLogs
+                .Where(x => x.Timestamp >= since)
+                .ToListAsync();
 
-        _stats.TotalQueries = q.Count;
-        _stats.BlockedQueries = q.Count(x => x.Status == "Blocked");
-        _stats.AllowedQueries = q.Count(x => x.Status == "Allowed");
+            _stats.TotalQueries = q.Count;
+            _stats.BlockedQueries = q.Count(x => x.Status == "Blocked");
+            _stats.AllowedQueries = q.Count(x => x.Status == "Allowed");
+        }
+        catch (Exception ex)
+        {
+            // Database might be empty or not initialized yet
+            Console.WriteLine($"Error loading stats: {ex.Message}");
+            _stats = new DashboardStats();
+        }
     }
 
     public void Dispose()

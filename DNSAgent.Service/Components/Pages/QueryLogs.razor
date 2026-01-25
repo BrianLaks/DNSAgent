@@ -1,4 +1,6 @@
 @page "/logs"
+@rendermode InteractiveServer
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
 @using DNSAgent.Service.Data
 @using DNSAgent.Service.Services
 @using Microsoft.EntityFrameworkCore
@@ -6,58 +8,119 @@
 @inject DnsWorker DnsWorker
 @inject NavigationManager Nav
 
-<h3>Query Logs</h3>
+<PageTitle>Query Logs - DNS Agent</PageTitle>
 
-<div class="row mb-3">
-    <div class="col">
-        <button class="btn btn-outline-primary" @onclick="LoadLogs">Refresh</button>
-        <button class="btn btn-outline-danger" @onclick="ClearLogs">Clear Logs</button>
+<div class="container mt-4">
+    <div class="row mb-4 align-items-center">
+        <div class="col">
+            <h1>Query Logs @(string.IsNullOrEmpty(SearchIP) ? "" : $"for {SearchIP}")</h1>
+            <p class="text-muted">Last 100 queries processed by the server</p>
+        </div>
+        <div class="col-auto d-flex">
+            <div class="input-group me-2">
+                <span class="input-group-text bg-white border-end-0"><span class="bi bi-search"></span></span>
+                <input type="text" class="form-control border-start-0" placeholder="Search domain..." @bind="SearchTerm" @bind:event="oninput" @onkeyup="HandleKeyUp" />
+            </div>
+            <button class="btn btn-outline-primary me-2" @onclick="LoadLogs">
+                <span class="bi bi-arrow-repeat"></span> Refresh
+            </button>
+            <button class="btn btn-outline-danger" @onclick="ClearLogs">
+                <span class="bi bi-trash"></span> Clear All
+            </button>
+        </div>
     </div>
-</div>
 
-<div class="table-responsive">
-    <table class="table table-sm table-hover">
-        <thead>
-            <tr>
-                <th>Time</th>
-                <th>Source IP</th>
-                <th>Domain</th>
-                <th>Status</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var log in logs)
-            {
-                <tr class="@GetRowClass(log.Status)">
-                    <td>@log.Timestamp.ToString("HH:mm:ss")</td>
-                    <td>@log.SourceIP</td>
-                    <td>@log.Domain</td>
-                    <td>@log.Status</td>
-                    <td>
-                        @if (log.Status == "Blocked")
-                        {
-                            <button class="btn btn-sm btn-success" @onclick="() => WhitelistDomain(log.Domain)">Whitelist</button>
-                        }
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    @if (logs == null)
+    {
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover shadow-sm">
+                <thead>
+                    <tr class="table-primary text-white">
+                        <th>Time</th>
+                        <th>Source (IP / Host)</th>
+                        <th>Domain</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var log in logs)
+                    {
+                        <tr class="@GetRowClass(log.Status)">
+                            <td>@log.Timestamp.ToString("HH:mm:ss")</td>
+                            <td>
+                                <div><strong>@log.SourceIP</strong></div>
+                                @if (!string.IsNullOrEmpty(log.SourceHostname) && log.SourceHostname != log.SourceIP)
+                                {
+                                    <small class="text-muted">@log.SourceHostname</small>
+                                }
+                            </td>
+                            <td><code class="text-dark">@log.Domain</code></td>
+                            <td>
+                                <span class="badge @(log.Status == "Blocked" ? "bg-danger" : "bg-success")">
+                                    @log.Status
+                                </span>
+                            </td>
+                            <td>
+                                @if (log.Status == "Blocked")
+                                {
+                                    <button class="btn btn-sm btn-outline-success" @onclick="() => WhitelistDomain(log.Domain)">
+                                        <span class="bi bi-shield-check"></span> Whitelist
+                                    </button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
 </div>
 
 @code {
-    private List<QueryLog> logs = new();
+    [SupplyParameterFromQuery(Name = "ip")]
+    public string? SearchIP { get; set; }
+    
+    private string? SearchTerm { get; set; }
+
+    private List<QueryLog>? logs;
 
     protected override async Task OnInitializedAsync()
     {
         await LoadLogs();
     }
 
+    private async Task HandleKeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await LoadLogs();
+        }
+    }
+
     private async Task LoadLogs()
     {
-        // Show last 100 logs
-        logs = await Db.QueryLogs
+        var query = Db.QueryLogs.AsQueryable();
+
+        if (!string.IsNullOrEmpty(SearchIP))
+        {
+            query = query.Where(l => l.SourceIP == SearchIP);
+        }
+
+        if (!string.IsNullOrEmpty(SearchTerm))
+        {
+            query = query.Where(l => l.Domain.Contains(SearchTerm));
+        }
+
+        logs = await query
             .OrderByDescending(x => x.Id)
             .Take(100)
             .ToListAsync();
@@ -81,12 +144,12 @@
             });
             await Db.SaveChangesAsync();
             await DnsWorker.RefreshWhitelistAsync();
-            await LoadLogs(); // Refresh to see if status changes? (Old logs won't change status, but good feedback)
+            await LoadLogs();
         }
     }
 
     private string GetRowClass(string status)
     {
-        return status == "Blocked" ? "table-danger" : "";
+        return status == "Blocked" ? "table-danger opacity-75" : "";
     }
 }

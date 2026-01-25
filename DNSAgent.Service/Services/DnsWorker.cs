@@ -47,6 +47,18 @@ namespace DNSAgent.Service.Services
                 using var listener = new UdpClient(localEndPoint);
                 _logger.LogInformation("Listening on 0.0.0.0:53");
 
+                // Background Tasks loop
+                _ = Task.Run(async () => 
+                {
+                    while (!stoppingToken.IsCancellationRequested)
+                    {
+                        await CleanupOldLogsAsync();
+                        // Also auto-refresh blocklist daily
+                        await LoadBlockListAsync();
+                        await Task.Delay(TimeSpan.FromHours(24), stoppingToken);
+                    }
+                }, stoppingToken);
+
                 while (!stoppingToken.IsCancellationRequested)
                 {
                     try
@@ -67,18 +79,20 @@ namespace DNSAgent.Service.Services
             }
         }
 
-        private async Task LoadBlockListAsync()
+        public async Task LoadBlockListAsync()
         {
             _logger.LogInformation("Loading blocklist...");
             try
             {
-                // TODO: Store this URL in DB/Settings
-                string url = "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts";
+                using var scope = _scopeFactory.CreateScope();
+                var config = scope.ServiceProvider.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>();
+                var url = config.GetValue<string>("DnsAgent:BlocklistUrl") ?? "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts";
+                
                 using var client = new HttpClient();
                 var content = await client.GetStringAsync(url);
                 
                 using var reader = new StringReader(content);
-                string line;
+                string? line;
                 int count = 0;
                 
                 lock (_listLock)
@@ -90,7 +104,7 @@ namespace DNSAgent.Service.Services
                         if (string.IsNullOrEmpty(line) || line.StartsWith("#")) continue;
                         
                         var parts = line.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-                        if (parts.Length >= 2 && parts[0] == "0.0.0.0" && parts[1] != "0.0.0.0")
+                        if (parts.Length >= 2 && (parts[0] == "0.0.0.0" || parts[0] == "127.0.0.1") && parts[1] != "0.0.0.0" && parts[1] != "127.0.0.1" && parts[1] != "localhost")
                         {
                             _blockedDomains.Add(parts[1]);
                             count++;
@@ -102,6 +116,32 @@ namespace DNSAgent.Service.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to load blocklist");
+            }
+        }
+
+        private async Task CleanupOldLogsAsync()
+        {
+            try
+            {
+                using var scope = _scopeFactory.CreateScope();
+                var db = scope.ServiceProvider.GetRequiredService<DnsDbContext>();
+                var config = scope.ServiceProvider.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>();
+                var days = config.GetValue<int>("DnsAgent:LogRetentionDays", 5);
+
+                var cutoff = DateTime.Now.AddDays(-days);
+                var oldLogs = db.QueryLogs.Where(l => l.Timestamp < cutoff);
+                
+                int count = await oldLogs.CountAsync();
+                if (count > 0)
+                {
+                    db.QueryLogs.RemoveRange(oldLogs);
+                    await db.SaveChangesAsync();
+                    _logger.LogInformation("Cleaned up {Count} logs older than {Days} days.", count, days);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to cleanup old logs");
             }
         }
 
@@ -160,16 +200,37 @@ namespace DNSAgent.Service.Services
             }
         }
 
+        private readonly ConcurrentDictionary<string, string> _hostnameCache = new();
+
+        private async Task<string> GetHostnameAsync(string ip)
+        {
+            if (_hostnameCache.TryGetValue(ip, out var cached)) return cached;
+
+            try
+            {
+                var entry = await Dns.GetHostEntryAsync(ip);
+                _hostnameCache[ip] = entry.HostName;
+                return entry.HostName;
+            }
+            catch
+            {
+                return ip; // Fallback to IP if lookup fails
+            }
+        }
+
         private async Task LogQueryAsync(string ip, string domain, string status)
         {
             try
             {
+                string hostname = await GetHostnameAsync(ip);
+
                 using var scope = _scopeFactory.CreateScope();
                 var db = scope.ServiceProvider.GetRequiredService<DnsDbContext>();
                 db.QueryLogs.Add(new QueryLog 
                 { 
                     Timestamp = DateTime.Now, 
                     SourceIP = ip, 
+                    SourceHostname = hostname,
                     Domain = domain, 
                     Status = status 
                 });

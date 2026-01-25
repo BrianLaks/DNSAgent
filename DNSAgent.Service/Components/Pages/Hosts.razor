@@ -1,0 +1,116 @@
+@page "/hosts"
+@rendermode InteractiveServer
+@using DNSAgent.Service.Data
+@using Microsoft.EntityFrameworkCore
+@inject DnsDbContext Db
+
+<PageTitle>Hosts Analytics - DNS Agent</PageTitle>
+
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>Hosts Analytics</h1>
+            <p class="text-muted">Query distribution across your network</p>
+        </div>
+    </div>
+
+    @if (hostStats == null)
+    {
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover shadow-sm">
+                <thead>
+                    <tr class="table-primary text-white">
+                        <th>Host Information</th>
+                        <th>Total Queries</th>
+                        <th>Blocked</th>
+                        <th>Allowed</th>
+                        <th>Block Rate</th>
+                        <th>Last Activity</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var host in hostStats)
+                    {
+                        <tr>
+                            <td>
+                                <div><strong>@host.Hostname</strong></div>
+                                <small class="text-muted">@host.IP</small>
+                            </td>
+                            <td>@host.TotalQueries</td>
+                            <td>
+                                <span class="badge bg-danger">@host.BlockedQueries</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-success">@host.AllowedQueries</span>
+                            </td>
+                            <td>
+                                <div class="progress" style="height: 10px; margin-top: 5px;">
+                                    <div class="progress-bar bg-danger" role="progressbar" 
+                                         style="width: @(host.BlockRate)%" 
+                                         aria-valuenow="@host.BlockRate" aria-valuemin="0" aria-valuemax="100">
+                                    </div>
+                                </div>
+                                <small>@(host.BlockRate.ToString("0.0"))%</small>
+                            </td>
+                            <td>@host.LastSeen.ToString("HH:mm:ss")</td>
+                            <td>
+                               <a href="logs?ip=@host.IP" class="btn btn-sm btn-outline-primary">
+                                   <span class="bi bi-search"></span> View Logs
+                               </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@code {
+    private List<HostStat>? hostStats;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadStats();
+    }
+
+    private async Task LoadStats()
+    {
+        // SQL-side grouping for performance
+        var query = Db.QueryLogs
+            .GroupBy(l => l.SourceIP)
+            .Select(g => new HostStat
+            {
+                IP = g.Key,
+                // We take the most recent hostname for this IP
+                Hostname = g.OrderByDescending(x => x.Timestamp).Select(x => x.SourceHostname).FirstOrDefault() ?? g.Key,
+                TotalQueries = g.Count(),
+                BlockedQueries = g.Count(l => l.Status == "Blocked"),
+                AllowedQueries = g.Count(l => l.Status == "Allowed"),
+                LastSeen = g.Max(l => l.Timestamp)
+            })
+            .OrderByDescending(h => h.TotalQueries);
+
+        hostStats = await query.ToListAsync();
+    }
+
+    public class HostStat
+    {
+        public string IP { get; set; } = "";
+        public string Hostname { get; set; } = "";
+        public int TotalQueries { get; set; }
+        public int BlockedQueries { get; set; }
+        public int AllowedQueries { get; set; }
+        public double BlockRate => TotalQueries == 0 ? 0 : (double)BlockedQueries / TotalQueries * 100;
+        public DateTime LastSeen { get; set; }
+    }
+}
