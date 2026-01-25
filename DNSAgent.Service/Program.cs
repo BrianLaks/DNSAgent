@@ -9,6 +9,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server;
 
+// Set current directory to executable location (CRITICAL for Service DB access)
+Directory.SetCurrentDirectory(AppContext.BaseDirectory);
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Configure Windows Service
@@ -16,9 +19,6 @@ builder.Services.AddWindowsService(options =>
 {
     options.ServiceName = "DNSAgent";
 });
-
-// Set current directory to executable location (CRITICAL for Service DB access)
-Directory.SetCurrentDirectory(AppContext.BaseDirectory);
 
 // Load configuration
 builder.Services.Configure<DnsAgentSettings>(
@@ -206,4 +206,13 @@ if (settings.EnableWebUI)
         .AddInteractiveServerRenderMode();
 }
 
-await app.RunAsync();
+try 
+{
+    await app.RunAsync();
+}
+catch (Exception ex)
+{
+    var logPath = Path.Combine(AppContext.BaseDirectory, "startup_error.txt");
+    File.WriteAllText(logPath, $"Fatal Startup Error ({DateTime.Now}): {ex}");
+    throw;
+}
