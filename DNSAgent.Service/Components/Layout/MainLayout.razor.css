@@ -42,8 +42,24 @@ main {
 }
 
 @media (max-width: 640.98px) {
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+    }
+
     .top-row {
-        justify-content: space-between;
+        height: auto;
+        min-height: 3.5rem;
+        flex-direction: column;
+        padding: 10px !important;
+        gap: 10px;
+    }
+
+    .top-row>div {
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
     }
 
     .top-row ::deep a,
@@ -68,12 +84,7 @@ main {
         position: sticky;
         top: 0;
         z-index: 1;
-    }
-
-    .top-row.auth ::deep a:first-child {
-        flex: 1;
-        text-align: right;
-        width: 0;
+        height: 3.5rem;
     }
 
     .top-row,
