@@ -1,0 +1,296 @@
+@page "/admin/youtube-stats"
+@using Microsoft.EntityFrameworkCore
+@using DNSAgent.Service.Data
+@inject DnsDbContext Db
+@rendermode InteractiveServer
+
+<PageTitle>YouTube Ad Blocking Stats - DNS Agent</PageTitle>
+
+<div class="page-header">
+    <h1>🎯 YouTube Ad Blocking Statistics</h1>
+    <p class="subtitle">Real-time metrics from browser extension</p>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon">🛡️</div>
+        <div class="stat-value">@totalAdsBlocked</div>
+        <div class="stat-label">Total Ads Blocked</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon">⚡</div>
+        <div class="stat-value">@adsBlockedToday</div>
+        <div class="stat-label">Blocked Today</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon">📊</div>
+        <div class="stat-value">@extensionVersion</div>
+        <div class="stat-label">Filter Version</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon">🌐</div>
+        <div class="stat-value">@connectedExtensions</div>
+        <div class="stat-label">Connected Extensions</div>
+    </div>
+</div>
+
+<div class="section">
+    <h2>📈 Recent Activity</h2>
+    <div class="activity-log">
+        @if (recentStats.Any())
+        {
+            <table class="stats-table">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Ads Blocked</th>
+                        <th>Ads Failed</th>
+                        <th>Filter Version</th>
+                        <th>Effectiveness</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var stat in recentStats)
+                    {
+                        <tr>
+                            <td>@stat.Timestamp.ToString("MM/dd HH:mm:ss")</td>
+                            <td class="success">@stat.AdsBlocked</td>
+                            <td class="warning">@stat.AdsFailed</td>
+                            <td>@stat.FilterVersion</td>
+                            <td>
+                                <div class="effectiveness-bar">
+                                    <div class="effectiveness-fill" style="width: @GetEffectiveness(stat)%"></div>
+                                    <span>@GetEffectiveness(stat)%</span>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="empty-state">
+                <p>📭 No statistics yet</p>
+                <p class="hint">Install the Chrome extension and watch YouTube videos to see stats here!</p>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="section">
+    <h2>🔧 Extension Status</h2>
+    <div class="status-grid">
+        <div class="status-item">
+            <span class="status-label">API Endpoint:</span>
+            <code>http://localhost:5123/api/youtube-stats</code>
+        </div>
+        <div class="status-item">
+            <span class="status-label">Last Report:</span>
+            <span>@lastReportTime</span>
+        </div>
+        <div class="status-item">
+            <span class="status-label">Extension Location:</span>
+            <code>Release\Dist\extension\</code>
+        </div>
+    </div>
+</div>
+
+<div class="section">
+    <h2>📝 How It Works</h2>
+    <div class="info-cards">
+        <div class="info-card">
+            <h3>1. Extension Detects Ads</h3>
+            <p>The Chrome extension monitors YouTube for ads using 4-layer detection</p>
+        </div>
+        <div class="info-card">
+            <h3>2. Ads Are Blocked</h3>
+            <p>CSS hiding, auto-skip, and 16x speed-through eliminate ads</p>
+        </div>
+        <div class="info-card">
+            <h3>3. Stats Reported</h3>
+            <p>Every 10 ads, the extension reports statistics to this API</p>
+        </div>
+        <div class="info-card">
+            <h3>4. Dashboard Updates</h3>
+            <p>Real-time metrics show blocking effectiveness</p>
+        </div>
+    </div>
+</div>
+
+@code {
+    private int totalAdsBlocked = 0;
+    private int adsBlockedToday = 0;
+    private string extensionVersion = "2026.01.25.1";
+    private int connectedExtensions = 0;
+    private string lastReportTime = "Never";
+    private List<YouTubeStatEntry> recentStats = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // TODO: Store YouTube stats in database
+        // For now, showing placeholder data
+        
+        // In future, query from YouTubeStats table:
+        // totalAdsBlocked = await Db.YouTubeStats.SumAsync(s => s.AdsBlocked);
+        // adsBlockedToday = await Db.YouTubeStats
+        //     .Where(s => s.Timestamp >= DateTime.Today)
+        //     .SumAsync(s => s.AdsBlocked);
+        
+        recentStats = new List<YouTubeStatEntry>
+        {
+            // Placeholder - will be replaced with real data from API
+        };
+    }
+
+    private int GetEffectiveness(YouTubeStatEntry stat)
+    {
+        var total = stat.AdsBlocked + stat.AdsFailed;
+        if (total == 0) return 0;
+        return (int)((double)stat.AdsBlocked / total * 100);
+    }
+
+    private class YouTubeStatEntry
+    {
+        public DateTime Timestamp { get; set; }
+        public int AdsBlocked { get; set; }
+        public int AdsFailed { get; set; }
+        public string FilterVersion { get; set; } = "";
+    }
+}
+
+<style>
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .stat-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+    }
+
+    .stat-icon {
+        font-size: 32px;
+        margin-bottom: 10px;
+    }
+
+    .stat-value {
+        font-size: 36px;
+        font-weight: bold;
+        color: var(--primary-color);
+        margin-bottom: 5px;
+    }
+
+    .stat-label {
+        font-size: 14px;
+        opacity: 0.7;
+    }
+
+    .stats-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .stats-table th {
+        background: var(--header-bg);
+        padding: 12px;
+        text-align: left;
+        border-bottom: 2px solid var(--border-color);
+    }
+
+    .stats-table td {
+        padding: 12px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .success {
+        color: #4ade80;
+        font-weight: bold;
+    }
+
+    .warning {
+        color: #fbbf24;
+    }
+
+    .effectiveness-bar {
+        position: relative;
+        background: var(--bg-secondary);
+        border-radius: 4px;
+        height: 24px;
+        overflow: hidden;
+    }
+
+    .effectiveness-fill {
+        background: linear-gradient(90deg, #4ade80, #22c55e);
+        height: 100%;
+        transition: width 0.3s;
+    }
+
+    .effectiveness-bar span {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 12px;
+        font-weight: bold;
+        color: white;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        opacity: 0.6;
+    }
+
+    .empty-state .hint {
+        font-size: 14px;
+        margin-top: 10px;
+    }
+
+    .status-grid {
+        display: grid;
+        gap: 15px;
+    }
+
+    .status-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px;
+        background: var(--card-bg);
+        border-radius: 8px;
+    }
+
+    .status-label {
+        font-weight: bold;
+        min-width: 120px;
+    }
+
+    .info-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+    }
+
+    .info-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 20px;
+    }
+
+    .info-card h3 {
+        margin-top: 0;
+        color: var(--primary-color);
+    }
+</style>
