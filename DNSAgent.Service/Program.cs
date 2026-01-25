@@ -90,28 +90,17 @@ if (settings.EnableWebUI)
 
 var app = builder.Build();
 
-// Ensure database is created and seed default admin
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<DnsDbContext>();
-    db.Database.EnsureCreated();
+    // --- DATABASE MIGRATION START ---
     
-    // Manual migration for v1.3 - v2.0 features
-    try {
-        db.Database.ExecuteSqlRaw("ALTER TABLE QueryLogs ADD COLUMN Transport TEXT DEFAULT 'UDP'");
-        db.Database.ExecuteSqlRaw("ALTER TABLE QueryLogs ADD COLUMN IsDnssec INTEGER DEFAULT 0");
-        db.Database.ExecuteSqlRaw("ALTER TABLE QueryLogs ADD COLUMN ClientId TEXT");
-    } catch { /* Columns already exist */ }
+    // 1. QueryLogs Table
+    try { db.Database.ExecuteSqlRaw("ALTER TABLE QueryLogs ADD COLUMN SourceHostname TEXT DEFAULT ''"); } catch { }
+    try { db.Database.ExecuteSqlRaw("ALTER TABLE QueryLogs ADD COLUMN ClientId TEXT"); } catch { }
+    try { db.Database.ExecuteSqlRaw("ALTER TABLE QueryLogs ADD COLUMN Transport TEXT DEFAULT 'UDP'"); } catch { }
+    try { db.Database.ExecuteSqlRaw("ALTER TABLE QueryLogs ADD COLUMN IsDnssec INTEGER NOT NULL DEFAULT 0"); } catch { }
+    try { db.Database.ExecuteSqlRaw("ALTER TABLE QueryLogs ADD COLUMN ResponseTimeMs INTEGER NOT NULL DEFAULT 0"); } catch { }
 
+    // 2. Devices Table (Create if not exists)
     try {
-        db.Database.ExecuteSqlRaw(@"
-            CREATE TABLE IF NOT EXISTS BlacklistedDomains (
-                Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                Domain TEXT NOT NULL,
-                Reason TEXT,
-                AddedAt TEXT NOT NULL
-            );");
-
         db.Database.ExecuteSqlRaw(@"
             CREATE TABLE IF NOT EXISTS Devices (
                 Id TEXT PRIMARY KEY,
@@ -120,44 +109,15 @@ using (var scope = app.Services.CreateScope())
                 LastIP TEXT NOT NULL,
                 LastSeen TEXT NOT NULL
             );");
+    } catch { }
+    
+    // Ensure Devices columns exist (for upgrades from earlier versions)
+    try { db.Database.ExecuteSqlRaw("ALTER TABLE Devices ADD COLUMN MachineName TEXT DEFAULT ''"); } catch { }
+    try { db.Database.ExecuteSqlRaw("ALTER TABLE Devices ADD COLUMN UserName TEXT DEFAULT ''"); } catch { }
+    try { db.Database.ExecuteSqlRaw("ALTER TABLE Devices ADD COLUMN LastIP TEXT DEFAULT ''"); } catch { }
 
-        db.Database.ExecuteSqlRaw(@"
-            CREATE TABLE IF NOT EXISTS DnsProviders (
-                Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                Name TEXT NOT NULL,
-                PrimaryIP TEXT NOT NULL,
-                SecondaryIP TEXT,
-                DoHUrl TEXT,
-                IsActive INTEGER NOT NULL DEFAULT 0,
-                IsPreset INTEGER NOT NULL DEFAULT 0
-            );");
-
-        // Seed default providers if table is empty
-        var hasProviders = db.DnsProviders.Any();
-        if (!hasProviders)
-        {
-            db.DnsProviders.AddRange(new List<DnsProvider>
-            {
-                new DnsProvider { Name = "Google DNS", PrimaryIP = "8.8.8.8", SecondaryIP = "8.8.4.4", DoHUrl = "https://dns.google/dns-query", IsActive = true, IsPreset = true },
-                new DnsProvider { Name = "Cloudflare", PrimaryIP = "1.1.1.1", SecondaryIP = "1.0.0.1", DoHUrl = "https://cloudflare-dns.com/dns-query", IsActive = false, IsPreset = true },
-                new DnsProvider { Name = "Quad9", PrimaryIP = "9.9.9.9", SecondaryIP = "149.112.112.112", DoHUrl = "https://dns.quad9.net/dns-query", IsActive = false, IsPreset = true }
-            });
-            db.SaveChanges();
-        }
-
-        // Robust migration for QueryLogs table
-        try { db.Database.ExecuteSqlRaw("ALTER TABLE QueryLogs ADD COLUMN ClientId TEXT;"); } catch { }
-        try { db.Database.ExecuteSqlRaw("ALTER TABLE QueryLogs ADD COLUMN Transport TEXT;"); } catch { }
-        try { db.Database.ExecuteSqlRaw("ALTER TABLE QueryLogs ADD COLUMN IsDnssec INTEGER NOT NULL DEFAULT 0;"); } catch { }
-        try { db.Database.ExecuteSqlRaw("ALTER TABLE QueryLogs ADD COLUMN ResponseTimeMs INTEGER NOT NULL DEFAULT 0;"); } catch { }
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Migration error: {ex.Message}");
-    }
-
-    try
-    {
+    // 3. YouTubeStats Table
+    try {
         db.Database.ExecuteSqlRaw(@"
             CREATE TABLE IF NOT EXISTS YouTubeStats (
                 Id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -171,11 +131,54 @@ using (var scope = app.Services.CreateScope())
                 DeviceName TEXT,
                 FilterVersion TEXT
             );");
-        
-        // Ensure new columns exist for existing tables
-        try { db.Database.ExecuteSqlRaw("ALTER TABLE YouTubeStats ADD COLUMN TitlesCleaned INTEGER NOT NULL DEFAULT 0"); } catch { }
-        try { db.Database.ExecuteSqlRaw("ALTER TABLE YouTubeStats ADD COLUMN ThumbnailsReplaced INTEGER NOT NULL DEFAULT 0"); } catch { }
-    } catch { /* Table likely already exists or other DB error */ }
+    } catch { }
+
+    // Ensure YouTubeStats columns
+    try { db.Database.ExecuteSqlRaw("ALTER TABLE YouTubeStats ADD COLUMN TitlesCleaned INTEGER NOT NULL DEFAULT 0"); } catch { }
+    try { db.Database.ExecuteSqlRaw("ALTER TABLE YouTubeStats ADD COLUMN ThumbnailsReplaced INTEGER NOT NULL DEFAULT 0"); } catch { }
+    try { db.Database.ExecuteSqlRaw("ALTER TABLE YouTubeStats ADD COLUMN DeviceName TEXT"); } catch { }
+
+    // 4. Other tables
+    try {
+        db.Database.ExecuteSqlRaw(@"
+            CREATE TABLE IF NOT EXISTS BlacklistedDomains (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                Domain TEXT NOT NULL,
+                Reason TEXT,
+                AddedAt TEXT NOT NULL
+            );");
+    } catch { }
+
+    try {
+        db.Database.ExecuteSqlRaw(@"
+            CREATE TABLE IF NOT EXISTS DnsProviders (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                Name TEXT NOT NULL,
+                PrimaryIP TEXT NOT NULL,
+                SecondaryIP TEXT,
+                DoHUrl TEXT,
+                IsActive INTEGER NOT NULL DEFAULT 0,
+                IsPreset INTEGER NOT NULL DEFAULT 0
+            );");
+    } catch { }
+
+    // --- DATABASE MIGRATION END ---
+
+    // Seed default providers if table is empty
+    try 
+    {
+        var hasProviders = db.DnsProviders.Any();
+        if (!hasProviders)
+        {
+            db.DnsProviders.AddRange(new List<DnsProvider>
+            {
+                new DnsProvider { Name = "Google DNS", PrimaryIP = "8.8.8.8", SecondaryIP = "8.8.4.4", DoHUrl = "https://dns.google/dns-query", IsActive = true, IsPreset = true },
+                new DnsProvider { Name = "Cloudflare", PrimaryIP = "1.1.1.1", SecondaryIP = "1.0.0.1", DoHUrl = "https://cloudflare-dns.com/dns-query", IsActive = false, IsPreset = true },
+                new DnsProvider { Name = "Quad9", PrimaryIP = "9.9.9.9", SecondaryIP = "149.112.112.112", DoHUrl = "https://dns.quad9.net/dns-query", IsActive = false, IsPreset = true }
+            });
+            db.SaveChanges();
+        }
+    } catch { }
     
     // Seed default admin user
     await DbInitializer.SeedDefaultAdminAsync(scope.ServiceProvider);

@@ -208,7 +208,13 @@
         }
         catch (Exception ex)
         {
+            var logPath = Path.Combine(AppContext.BaseDirectory, "reports_error.txt");
+            try { File.AppendAllText(logPath, $"[{DateTime.Now}] Error in LoadData: {ex}\n"); } catch { }
             Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+             isLoading = false;
         }
     }
 
