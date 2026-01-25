@@ -137,7 +137,7 @@
             <div class="d-flex align-items-center gap-3">
                 <div class="input-group input-group-sm" style="width: 150px;">
                     <span class="input-group-text">Go to</span>
-                    <input type="number" class="form-control" min="1" max="@TotalPages" @bind="JumpPage" @bind:event="oninput" @onchange="HandleJumpToPage" />
+                    <input type="number" class="form-control" min="1" max="@TotalPages" value="@JumpPage" @onchange="OnJumpPageChanged" />
                 </div>
                 <div class="btn-group">
                     <button class="btn btn-outline-primary btn-sm" disabled="@(PageIndex == 0)" @onclick="PreviousPage">
@@ -223,12 +223,16 @@
         devices = await Db.Devices.Where(x => deviceIds.Contains(x.Id)).ToDictionaryAsync(x => x.Id);
     }
 
-    private async Task HandleJumpToPage()
+    private async Task OnJumpPageChanged(ChangeEventArgs e)
     {
-        if (JumpPage >= 1 && JumpPage <= TotalPages)
+        if (int.TryParse(e.Value?.ToString(), out var newPage))
         {
-            PageIndex = JumpPage - 1;
-            await LoadLogs();
+            if (newPage >= 1 && newPage <= TotalPages)
+            {
+                JumpPage = newPage;
+                PageIndex = JumpPage - 1;
+                await LoadLogs();
+            }
         }
     }
 
