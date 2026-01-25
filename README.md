@@ -6,6 +6,7 @@ DNS Agent is a lightweight, high-performance network-wide DNS server designed fo
 
 ## 🚀 Features
 - **AD & Tracker Blocking**: Real-time filtering based on community-sourced blocklists.
+- **YouTube Intelligence Hub**: (NEW v1.6) Collaborative ad-blocking, SponsorBlock skipping, and DeArrow clickbait cleaning via our hybrid browser extension.
 - **Glassmorphic Dashboard**: A professional, blue-themed UI for statistics and logs.
 - **Per-Device Analytics**: Monitor traffic distribution across your network.
 - **System Tray Monitor**: Stay informed with real-time status and quick controls.

@@ -8,6 +8,14 @@
   - Dynamic ad detection
   - Video player manipulation
 
+- **Experience Cleaning (DeArrow)**
+  - Replaces clickbait thumbnails
+  - Restores honest, community-voted titles
+
+- **SponsorBlock Integration**
+  - Automatically skips sponsored segments, intros, and outros
+  - Visual timeline markers for segments
+
 - **Network-Wide Protection**
   - Syncs with local DNS Agent
   - Block domains across all devices
@@ -114,7 +122,9 @@ Forces video player to skip unskippable ads.
 extension/
 ├── manifest.json          # Extension configuration
 ├── background.js          # Service worker (API communication)
-├── youtube-blocker.js     # Content script (ad blocking)
+├── youtube-blocker.js     # Content script (ad blocking & logic)
+├── sponsorblock-client.js # SponsorBlock API client
+├── dearrow-client.js      # DeArrow API client
 ├── popup.html            # Extension popup UI
 ├── popup.js              # Popup logic
 ├── styles.css            # Popup styling
