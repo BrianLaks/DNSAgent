@@ -93,7 +93,7 @@ function injectAdBlockCSS() {
     const existing = document.getElementById('dns-agent-ad-blocker');
     if (existing) existing.remove();
 
-    document.head.appendChild(style);
+    (document.head || document.documentElement).appendChild(style);
     console.log('[DNS Agent] CSS ad blocking applied');
 }
 
