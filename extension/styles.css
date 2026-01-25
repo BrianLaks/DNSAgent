@@ -175,6 +175,66 @@ body {
     opacity: 1;
 }
 
+.settings-view {
+    padding-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.settings-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.settings-group label {
+    font-size: 12px;
+    font-weight: 600;
+    opacity: 0.9;
+}
+
+.input-group {
+    display: flex;
+    gap: 8px;
+}
+
+.input-group input {
+    flex: 1;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    font-size: 13px;
+    outline: none;
+}
+
+.input-group input:focus {
+    border-color: #4ade80;
+}
+
+.btn-small {
+    padding: 8px 15px;
+    font-size: 11px;
+    background: #4ade80;
+    color: #1f2937;
+}
+
+.btn-full {
+    width: 100%;
+}
+
+.help-text {
+    font-size: 10px;
+    opacity: 0.7;
+    font-style: italic;
+}
+
+.hidden {
+    display: none !important;
+}
+
 .version {
     opacity: 0.6;
 }

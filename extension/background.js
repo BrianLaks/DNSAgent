@@ -20,10 +20,13 @@ chrome.storage.local.get(['dnsAgentUrl', 'connected'], (result) => {
 
 // Check if current connection is still valid
 async function checkConnection() {
+    const state = await chrome.storage.local.get(['dnsAgentUrl', 'manualOverride']);
+    if (state.dnsAgentUrl) dnsAgentUrl = state.dnsAgentUrl;
+
     try {
         const response = await fetch(`${dnsAgentUrl}/api/status`, {
             method: 'GET',
-            signal: AbortSignal.timeout(3000)
+            signal: AbortSignal.timeout(connected ? 5000 : 2000)
         });
         if (response.ok) {
             connected = true;
@@ -31,20 +34,28 @@ async function checkConnection() {
             return true;
         }
     } catch (e) {
-        // Current host no longer reachable, try discovery
+        // Fallback to discovery only if NOT in manual override mode
+        if (state.manualOverride) {
+            connected = false;
+            chrome.storage.local.set({ connected: false });
+            return false;
+        }
     }
     return await discoverDnsAgent();
 }
 
 // Auto-discover DNS Agent on local network
 async function discoverDnsAgent() {
+    const state = await chrome.storage.local.get(['manualOverride']);
+    if (state.manualOverride) return false;
+
     // Determine possible hosts
     const possibleHosts = [
-        dnsAgentUrl, // Try last known URL first
+        dnsAgentUrl,
         'http://localhost:5123',
         'http://127.0.0.1:5123',
-        'http://192.168.1.1:5123', // Gateway
-        'http://192.168.0.1:5123',
+        'http://192.168.1.1:5123',
+        'http://192.168.1.168:5123', // Common server path
         'http://10.0.0.1:5123'
     ];
 
@@ -215,6 +226,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === 'blockDomain') {
         blockDomain(message.domain, message.reason).then(sendResponse);
         return true; // Async response
+    }
+
+    if (message.action === 'checkConnection') {
+        checkConnection().then(sendResponse);
+        return true;
     }
 
     if (message.action === 'getConnectionStatus') {

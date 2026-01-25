@@ -38,6 +38,58 @@ document.addEventListener('DOMContentLoaded', async () => {
             alert('DNS Agent is not connected. Please ensure it is running on your local network.');
         }
     });
+
+    // Settings navigation
+    const mainView = document.querySelector('.main-view');
+    const settingsView = document.getElementById('settings-view');
+    const statsSection = document.querySelector('.stats-section');
+
+    document.getElementById('settings-link').addEventListener('click', (e) => {
+        e.preventDefault();
+        mainView.classList.add('hidden');
+        statsSection.classList.add('hidden');
+        settingsView.style.display = 'flex';
+
+        // Load current URL into input
+        chrome.storage.local.get(['dnsAgentUrl'], (result) => {
+            if (result.dnsAgentUrl) {
+                document.getElementById('server-url').value = result.dnsAgentUrl;
+            }
+        });
+    });
+
+    document.getElementById('back-to-main').addEventListener('click', () => {
+        settingsView.style.display = 'none';
+        mainView.classList.remove('hidden');
+        statsSection.classList.remove('hidden');
+    });
+
+    // Save settings
+    document.getElementById('save-settings').addEventListener('click', async () => {
+        const url = document.getElementById('server-url').value.trim();
+        if (!url) return;
+
+        const saveBtn = document.getElementById('save-settings');
+        saveBtn.disabled = true;
+        saveBtn.textContent = '...';
+
+        // Save and notify background
+        await chrome.storage.local.set({ dnsAgentUrl: url, manualOverride: true });
+        await chrome.runtime.sendMessage({ action: 'checkConnection' });
+
+        setTimeout(async () => {
+            const newStatus = await chrome.runtime.sendMessage({ action: 'getConnectionStatus' });
+            updateConnectionStatus(newStatus);
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Save';
+
+            if (newStatus.connected) {
+                // Flash success
+                saveBtn.style.background = '#4ade80';
+                setTimeout(() => { saveBtn.style.background = ''; }, 2000);
+            }
+        }, 500);
+    });
 });
 
 function updateConnectionStatus(status) {
@@ -52,6 +104,6 @@ function updateConnectionStatus(status) {
     } else {
         statusDot.className = 'status-dot disconnected';
         statusText.textContent = 'Disconnected';
-        statusDetails.textContent = 'DNS Agent not found on local network';
+        statusDetails.textContent = 'Service not found. Check settings.';
     }
 }
