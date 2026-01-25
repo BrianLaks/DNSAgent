@@ -12,18 +12,29 @@ DNS Agent is a lightweight, high-performance network-wide DNS server designed fo
 - **System Tray Monitor**: Stay informed with real-time status and quick controls.
 - **Whitelist Management**: Easily unblock false positives.
 
-## ⚡ Quick Start (No Coding Required)
+## ⚡ Quick Start (Public Release v1.6.2)
 
 If you just want to run DNS Agent without cloning the code:
-1. **Download the latest `DNSAgent.zip`** from this repo.
+1. **Download `DNSAgent.zip`** from the `Release` folder in this repo.
 2. Right-click the folder and **Extract All**.
-3. Right-click `Start-Setup.bat` and select **Run as Administrator**.
-   - *This handles all permissions, firewall rules, and .NET checks automatically.*
-4. 🎉 Your DNS Shield is now active! Visit `http://localhost:5123` to see your stats.
+3. Right-click **`Start-Setup.bat`** and select **Run as Administrator**.
+   - *This script handles PowerShell permissions, .NET 9 validation, and Firewall configuration automatically.*
+4. Visit `http://localhost:5123` to access your Dashboard.
 
 ---
 
-## 🛠️ Developer Installation (From Source)
+## 🛠️ Troubleshooting
+
+### Dashboard is not accessible from other devices
+If the server is running but you cannot reach the dashboard from another machine (e.g., `http://192.168.1.168:5123`), the Windows Firewall may be blocking traffic. 
+
+Run this command in an **Administrator PowerShell** to fix it instantly:
+```powershell
+New-NetFirewallRule -DisplayName "DNS Agent Web" -Direction Inbound -LocalPort 5123 -Protocol TCP -Action Allow; New-NetFirewallRule -DisplayName "DNS Agent DNS" -Direction Inbound -LocalPort 53 -Protocol UDP -Action Allow
+```
+
+### Dashboard looks unstyled (No graphics)
+Ensure you extracted **all files** from the ZIP before running the setup. The `wwwroot` folder must be in the same directory as `DNSAgent.Service.exe`.
 
 To install and run DNS Agent on your Windows machine, follow these steps:
 

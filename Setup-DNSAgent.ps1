@@ -1,55 +1,36 @@
-# DNS Agent - Quick Setup Script 🛡️
-# This script installs and starts the DNS Agent service.
-
 $ErrorActionPreference = "Stop"
-
-# Ensure running as Administrator
-$currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
-if (!$currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-    Write-Error "Please run this script as Administrator!"
-    exit
-}
-
 Write-Host "--- DNS Agent Setup ---" -ForegroundColor Cyan
 
-# Determine if we are in a ZIP/Release folder or Source tree
-$scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Definition
-$publishPath = ""
-
-if (Test-Path "$scriptPath\DNSAgent.Service.dll") {
-    # We are inside the publish folder already
-    $publishPath = $scriptPath
+# 1. Check for .NET 9
+try {
+    $runtimes = dotnet --list-runtimes 2>$null
+    if (!($runtimes -match "Microsoft.AspNetCore.App 9\.")) {
+        Write-Host "ERROR: .NET 9 Runtime not found. Please install it first." -ForegroundColor Red
+        exit
+    }
 }
-elseif (Test-Path "$scriptPath\DNSAgent.Service\publish\DNSAgent.Service.dll") {
-    # We are in the root of the source tree
-    $publishPath = "$scriptPath\DNSAgent.Service\publish"
+catch {
+    Write-Host "ERROR: dotnet command not found." -ForegroundColor Red
+    exit
+}
+
+# 2. Find paths
+$scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Definition
+if ($scriptPath -eq "") { $scriptPath = Get-Location }
+Set-Location $scriptPath
+
+# 3. Run the installer
+if (Test-Path "install-service.ps1") {
+    & ".\install-service.ps1" install
 }
 else {
-    Write-Error "Could not find DNSAgent.Service.dll. Please ensure you are running this from the extracted ZIP or compiled source folders."
-    exit
+    Write-Host "ERROR: install-service.ps1 not found in $scriptPath" -ForegroundColor Red
 }
 
-Set-Location $publishPath
-
-# Verify install-service.ps1 exists
-if (!(Test-Path "install-service.ps1")) {
-    Write-Error "Missing install-service.ps1 in $publishPath"
-    exit
+# 4. Start Tray App
+if (Test-Path "DNSAgent.Tray.exe") {
+    Start-Process "DNSAgent.Tray.exe"
 }
 
-Write-Host "Running installation script from $publishPath..." -ForegroundColor Yellow
-& ".\install-service.ps1" install
-
-Write-Host "`n✅ DNS Agent has been installed successfully!" -ForegroundColor Green
-Write-Host "📊 Dashboard: http://localhost:5123" -ForegroundColor Cyan
-Write-Host "🛡️ Tray App: Running (check your system tray)" -ForegroundColor Cyan
-Write-Host "`nTo manage the service in the future, use the tray icon or the scripts in:"
-Write-Host "$publishPath"
-
-# Try to start the tray app
-$trayApp = Join-Path $publishPath "DNSAgent.Tray.exe"
-if (Test-Path $trayApp) {
-    Start-Process $trayApp
-}
-
+Write-Host "Setup Complete." -ForegroundColor Green
 pause
