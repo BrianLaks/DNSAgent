@@ -90,6 +90,12 @@ if (settings.EnableWebUI)
 
 var app = builder.Build();
 
+// Ensure database is created and seed default admin
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<DnsDbContext>();
+    db.Database.EnsureCreated();
+
     // --- DATABASE MIGRATION START ---
     
     // 1. QueryLogs Table
