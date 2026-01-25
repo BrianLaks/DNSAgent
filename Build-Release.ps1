@@ -24,8 +24,12 @@ New-Item -Path $TempTray -ItemType Directory -Force | Out-Null
 # 2. Build and Publish DNSAgent.Service
 Write-Host "Publishing DNSAgent.Service..." -ForegroundColor Yellow
 dotnet publish "DNSAgent.Service\DNSAgent.Service.csproj" -c Release -o "$TempService" --self-contained false
-Write-Host "TempService contents:"
-Get-ChildItem -Path $TempService | Select-Object Name
+if ($LASTEXITCODE -ne 0) {
+    Write-Error "Publishing DNSAgent.Service failed with exit code $LASTEXITCODE"
+    exit $LASTEXITCODE
+}
+Write-Host "TempService contents (Full Path: $TempService):"
+Get-ChildItem -Path "$TempService" -Recurse | Select-Object FullName
 Copy-Item "$TempService\*" -Destination "$DistPath\" -Recurse -Force
 
 # 3. Build and Publish DNSAgent.Tray
