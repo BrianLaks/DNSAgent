@@ -23,6 +23,8 @@ namespace DNSAgent.Service.Data
         public int AdsBlocked { get; set; }
         public int AdsFailed { get; set; }
         public int SponsorsSkipped { get; set; }
+        public int TitlesCleaned { get; set; }
+        public int ThumbnailsReplaced { get; set; }
         public double TimeSavedSeconds { get; set; }
         public string? DeviceName { get; set; }
         public string FilterVersion { get; set; } = string.Empty;

@@ -14,9 +14,18 @@ let stats = {
     adsBlocked: 0,
     adsFailed: 0,
     sponsorsSkipped: 0,
+    titlesCleaned: 0,
+    thumbnailsReplaced: 0,
     timeSavedSeconds: 0,
     filterVersion: 'unknown'
 };
+
+// DeArrow integration
+let deArrowClient = null;
+if (typeof DeArrowClient !== 'undefined') {
+    deArrowClient = new DeArrowClient();
+    console.log('[DeArrow] Client initialized');
+}
 
 // SponsorBlock integration
 let sponsorBlockClient = null;
@@ -146,6 +155,11 @@ function autoSkipAds() {
 
 // Layer 3: Mutation Observer
 function observeDOMChanges() {
+    if (!document.body) {
+        setTimeout(observeDOMChanges, 100);
+        return;
+    }
+
     const observer = new MutationObserver((mutations) => {
         for (const mutation of mutations) {
             for (const node of mutation.addedNodes) {
@@ -206,13 +220,74 @@ function updateStats() {
     chrome.storage.local.set({ youtubeStats: stats });
 
     // Report to background script every event for real-time testing
-    if ((stats.adsBlocked + stats.sponsorsSkipped) > 0) {
+    if ((stats.adsBlocked + stats.sponsorsSkipped + stats.titlesCleaned) > 0) {
         chrome.runtime.sendMessage({
             action: 'reportStats',
             stats: stats
         });
     }
 }
+
+// Layer 4: DeArrow Title/Thumbnail Replacement
+async function applyDeArrow() {
+    if (!deArrowClient) return;
+
+    // 1. Process main video title on watch page
+    const watchTitle = document.querySelector('h1.ytd-watch-metadata yt-formatted-string');
+    if (watchTitle && !watchTitle.dataset.dearrowApplied) {
+        const videoID = new URLSearchParams(window.location.search).get('v');
+        if (videoID) {
+            const data = await deArrowClient.getBranding(videoID);
+            if (data && data.title) {
+                console.log('[DeArrow] Cleaning title:', watchTitle.textContent, '->', data.title);
+                watchTitle.textContent = data.title;
+                watchTitle.dataset.dearrowApplied = 'true';
+                stats.titlesCleaned++;
+                updateStats();
+            }
+        }
+    }
+
+    // 2. Process thumbnails and titles in search/related
+    const videoItems = document.querySelectorAll('ytd-video-renderer, ytd-grid-video-renderer, ytd-compact-video-renderer');
+    for (const item of videoItems) {
+        if (item.dataset.dearrowApplied) continue;
+
+        const link = item.querySelector('a#video-title, a#thumbnail');
+        if (!link) continue;
+
+        const videoID = new URL(link.href).searchParams.get('v');
+        if (!videoID) continue;
+
+        // Fetch titles only for now (thumbnails are more complex)
+        const data = await deArrowClient.getBranding(videoID);
+        if (data && data.title) {
+            const titleEl = item.querySelector('#video-title, #video-title-link');
+            if (titleEl && titleEl.textContent.trim() !== data.title) {
+                titleEl.textContent = data.title;
+                item.dataset.dearrowApplied = 'true';
+                stats.titlesCleaned++;
+                updateStats();
+            }
+        }
+    }
+}
+
+// Watch for DOM changes to apply DeArrow
+function startDeArrowObserver() {
+    if (!document.body) {
+        setTimeout(startDeArrowObserver, 100);
+        return;
+    }
+
+    const deArrowObserver = new MutationObserver(() => {
+        applyDeArrow();
+    });
+
+    deArrowObserver.observe(document.body, { childList: true, subtree: true });
+}
+
+startDeArrowObserver();
 
 // Context menu: Block domain
 document.addEventListener('contextmenu', (e) => {
@@ -389,4 +464,8 @@ function showSkipNotification(category, duration) {
 }
 
 // Initialize
-applyAdBlocking();
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', applyAdBlocking);
+} else {
+    applyAdBlocking();
+}

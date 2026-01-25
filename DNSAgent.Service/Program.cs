@@ -49,7 +49,9 @@ builder.Services.ConfigureApplicationCookie(options =>
 });
 
 // Register Services
+builder.Services.AddHttpClient();
 builder.Services.AddSingleton<ThemeService>();
+builder.Services.AddSingleton<DeArrowService>();
 builder.Services.AddSingleton<DnsWorker>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<DnsWorker>());
 
@@ -105,10 +107,16 @@ using (var scope = app.Services.CreateScope())
                 AdsBlocked INTEGER NOT NULL,
                 AdsFailed INTEGER NOT NULL,
                 SponsorsSkipped INTEGER NOT NULL,
+                TitlesCleaned INTEGER NOT NULL DEFAULT 0,
+                ThumbnailsReplaced INTEGER NOT NULL DEFAULT 0,
                 TimeSavedSeconds REAL NOT NULL,
                 DeviceName TEXT,
                 FilterVersion TEXT
             );");
+        
+        // Ensure new columns exist for existing tables
+        try { db.Database.ExecuteSqlRaw("ALTER TABLE YouTubeStats ADD COLUMN TitlesCleaned INTEGER NOT NULL DEFAULT 0"); } catch { }
+        try { db.Database.ExecuteSqlRaw("ALTER TABLE YouTubeStats ADD COLUMN ThumbnailsReplaced INTEGER NOT NULL DEFAULT 0"); } catch { }
     } catch { /* Table likely already exists or other DB error */ }
     
     // Seed default admin user

@@ -136,6 +136,30 @@ async function reportStats(stats) {
     }
 }
 
+// DeArrow Proxy: Fetch crowdsourced titles
+async function getDeArrowTitles(hashPrefix) {
+    if (!connected) return null;
+    try {
+        const response = await fetch(`${dnsAgentUrl}/api/dearrow/branding/${hashPrefix}`);
+        if (response.ok) return await response.json();
+    } catch (e) {
+        console.error('[DNS Agent] DeArrow Proxy Error (Branding):', e);
+    }
+    return null;
+}
+
+// DeArrow Proxy: Fetch crowdsourced thumbnails
+async function getDeArrowThumbnail(videoID) {
+    if (!connected) return null;
+    try {
+        const response = await fetch(`${dnsAgentUrl}/api/dearrow/v1/getThumbnail?videoID=${videoID}`);
+        if (response.ok) return await response.json();
+    } catch (e) {
+        console.error('[DNS Agent] DeArrow Proxy Error (Thumbnail):', e);
+    }
+    return null;
+}
+
 // Block domain via API
 async function blockDomain(domain, reason = 'Blocked from extension') {
     if (!connected) {
@@ -172,6 +196,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
     if (message.action === 'reportStats') {
         reportStats(message.stats);
+    }
+
+    if (message.action === 'getDeArrowTitles') {
+        getDeArrowTitles(message.hashPrefix).then(sendResponse);
+        return true;
+    }
+
+    if (message.action === 'getDeArrowThumbnail') {
+        getDeArrowThumbnail(message.videoID).then(sendResponse);
+        return true;
     }
 
     if (message.action === 'setContextDomain') {

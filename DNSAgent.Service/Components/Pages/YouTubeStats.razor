@@ -35,6 +35,12 @@
         <div class="stat-value">@connectedExtensions</div>
         <div class="stat-label">Connected Extensions</div>
     </div>
+
+    <div class="stat-card">
+        <div class="stat-icon">🎭</div>
+        <div class="stat-value">@totalTitlesCleaned</div>
+        <div class="stat-label">Titles Cleaned</div>
+    </div>
 </div>
 
 <div class="section">
@@ -47,8 +53,9 @@
                     <tr>
                         <th>Timestamp</th>
                         <th>Ads Blocked</th>
-                        <th>Ads Failed</th>
-                        <th>Filter Version</th>
+                        <th>Sponsors</th>
+                        <th>Titles Cleaned</th>
+                        <th>Filter</th>
                         <th>Effectiveness</th>
                     </tr>
                 </thead>
@@ -58,7 +65,8 @@
                         <tr>
                             <td>@stat.Timestamp.ToString("MM/dd HH:mm:ss")</td>
                             <td class="success">@stat.AdsBlocked</td>
-                            <td class="warning">@stat.AdsFailed</td>
+                            <td class="info">@stat.SponsorsSkipped</td>
+                            <td class="primary">@stat.TitlesCleaned</td>
                             <td>@stat.FilterVersion</td>
                             <td>
                                 <div class="effectiveness-bar">
@@ -124,6 +132,8 @@
 @code {
     private int totalAdsBlocked = 0;
     private int totalSponsorsSkipped = 0;
+    private int totalTitlesCleaned = 0;
+    private int totalThumbnailsReplaced = 0;
     private double totalTimeSaved = 0;
     private int adsBlockedToday = 0;
     private string extensionVersion = "2026.01.25.1";
@@ -135,6 +145,8 @@
     {
         totalAdsBlocked = await Db.YouTubeStats.SumAsync(s => s.AdsBlocked);
         totalSponsorsSkipped = await Db.YouTubeStats.SumAsync(s => s.SponsorsSkipped);
+        totalTitlesCleaned = await Db.YouTubeStats.SumAsync(s => s.TitlesCleaned);
+        totalThumbnailsReplaced = await Db.YouTubeStats.SumAsync(s => s.ThumbnailsReplaced);
         totalTimeSaved = await Db.YouTubeStats.SumAsync(s => s.TimeSavedSeconds);
         
         var today = DateTime.UtcNow.Date;
@@ -227,6 +239,16 @@
 
     .success {
         color: #4ade80;
+        font-weight: bold;
+    }
+
+    .primary {
+        color: var(--primary-color);
+        font-weight: bold;
+    }
+
+    .info {
+        color: #3b82f6;
         font-weight: bold;
     }
 

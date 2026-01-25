@@ -13,11 +13,13 @@ namespace DNSAgent.Service.Controllers
     {
         private readonly DnsWorker _dnsWorker;
         private readonly DnsDbContext _db;
+        private readonly DeArrowService _deArrowService;
 
-        public ApiController(DnsWorker dnsWorker, DnsDbContext db)
+        public ApiController(DnsWorker dnsWorker, DnsDbContext db, DeArrowService deArrowService)
         {
             _dnsWorker = dnsWorker;
             _db = db;
+            _deArrowService = deArrowService;
         }
 
         /// <summary>
@@ -116,6 +118,33 @@ namespace DNSAgent.Service.Controllers
             });
         }
 
+        // DeArrow Proxy Endpoints
+        [HttpGet("dearrow/branding/{hashPrefix}")]
+        public async Task<IActionResult> GetDeArrowBranding(string hashPrefix)
+        {
+            var result = await _deArrowService.GetBrandingAsync(hashPrefix);
+            if (string.IsNullOrEmpty(result)) return NotFound();
+            return Content(result, "application/json");
+        }
+
+        [HttpGet("dearrow/v1/getThumbnail")]
+        public async Task<IActionResult> GetDeArrowThumbnail([FromQuery] string videoID)
+        {
+            var query = new Dictionary<string, string> { { "videoID", videoID } };
+            var result = await _deArrowService.ProxyV1Async("getThumbnail", query);
+            if (string.IsNullOrEmpty(result)) return NotFound();
+            return Content(result, "application/json");
+        }
+
+        [HttpGet("dearrow/v1/branding")]
+        public async Task<IActionResult> GetDeArrowV1Branding([FromQuery] string videoID)
+        {
+            var query = new Dictionary<string, string> { { "videoID", videoID } };
+            var result = await _deArrowService.ProxyV1Async("branding", query);
+            if (string.IsNullOrEmpty(result)) return NotFound();
+            return Content(result, "application/json");
+        }
+
         /// <summary>
         /// GET /api/youtube-filters - Get latest YouTube ad blocking selectors
         /// </summary>
@@ -186,6 +215,8 @@ namespace DNSAgent.Service.Controllers
                 AdsBlocked = request.AdsBlocked,
                 AdsFailed = request.AdsFailed,
                 SponsorsSkipped = request.SponsorsSkipped,
+                TitlesCleaned = request.TitlesCleaned,
+                ThumbnailsReplaced = request.ThumbnailsReplaced,
                 TimeSavedSeconds = request.TimeSavedSeconds,
                 FilterVersion = request.FilterVersion,
                 DeviceName = Request.Headers["User-Agent"].ToString() ?? "Unknown Extension"
@@ -233,6 +264,8 @@ namespace DNSAgent.Service.Controllers
         public int AdsBlocked { get; set; }
         public int AdsFailed { get; set; }
         public int SponsorsSkipped { get; set; }
+        public int TitlesCleaned { get; set; }
+        public int ThumbnailsReplaced { get; set; }
         public double TimeSavedSeconds { get; set; }
         public string FilterVersion { get; set; } = string.Empty;
     }
