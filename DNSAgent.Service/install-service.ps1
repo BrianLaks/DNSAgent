@@ -47,7 +47,22 @@ function Install-DNSAgentService {
     Write-Host "Starting Service..." -ForegroundColor Cyan
     Start-Service $ServiceName
     
-    if (Test-Path $TrayPath) { Start-Process $TrayPath }
+    # --- TRAY AUTO-START ---
+    if (Test-Path $TrayPath) {
+        Write-Host "Configuring Tray Icon auto-start..." -ForegroundColor Cyan
+        $startupFolder = [Environment]::GetFolderPath("Startup")
+        $shortcutPath = Join-Path $startupFolder "DNSAgentTray.lnk"
+        
+        $shell = New-Object -ComObject WScript.Shell
+        $shortcut = $shell.CreateShortcut($shortcutPath)
+        $shortcut.TargetPath = $TrayPath
+        $shortcut.WorkingDirectory = $CurrentDir
+        $shortcut.Description = "DNS Agent System Tray Monitor"
+        $shortcut.Save()
+        
+        # Start it now
+        Start-Process $TrayPath -WorkingDirectory $CurrentDir
+    }
     
     Write-Host "SUCCESS: DNS Agent installed and running." -ForegroundColor Green
     Write-Host "Dashboard: http://localhost:5123" -ForegroundColor Cyan
