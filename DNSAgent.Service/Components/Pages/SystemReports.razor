@@ -59,6 +59,47 @@
                 </div>
             </div>
         </div>
+    <div class="row">
+        <!-- Top Devices Table -->
+        <div class="col-lg-12 mb-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Top Devices by Volume (24h)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th>Machine Name</th>
+                                    <th>IP Address</th>
+                                    <th>Queries</th>
+                                    <th>Blocked</th>
+                                    <th>Protection Rate</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var device in topDevices)
+                                {
+                                    <tr>
+                                        <td><strong>@device.Name</strong></td>
+                                        <td><code>@device.IP</code></td>
+                                        <td>@device.Count</td>
+                                        <td><span class="text-danger">@device.Blocked</span></td>
+                                        <td>
+                                            <div class="progress" style="height: 6px;">
+                                                <div class="progress-bar bg-success" style="width: @(device.Count == 0 ? 0 : (double)device.Blocked/device.Count*100)%"></div>
+                                            </div>
+                                            <small class="text-muted">@((device.Count == 0 ? 0 : (double)device.Blocked/device.Count*100).ToString("0.0"))% blocked</small>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -124,15 +165,7 @@
                 logs.Count(x => !x.IsDnssec) 
             };
 
-            // Top Devices
-            var devices = await Db.Devices.ToDictionaryAsync(d => d.Id);
-            topDevices = logs.GroupBy(x => x.Timestamp > DateTime.Now.AddDays(-1) ? "Active" : "Recent") // Just example grouping
-                .SelectMany(g => logs) // This is wrong, let's just group by SourceIP for simplicity
-                .GroupBy(x => x.Timestamp) // I don't have SourceIP in the select above. D'oh.
-                .Select(g => new DeviceStat()) // Placeholder
-                .ToList();
-
-            // Actually let's get real top devices for last 24h
+            // Top Devices for last 24h
             var dayAgo = DateTime.Now.AddHours(-24);
             topDevices = await Db.QueryLogs
                 .Where(x => x.Timestamp >= dayAgo)
@@ -143,7 +176,7 @@
                     Blocked = g.Count(x => x.Status == "Blocked")
                 })
                 .OrderByDescending(x => x.Count)
-                .Take(5)
+                .Take(10)
                 .ToListAsync();
 
             foreach(var d in topDevices) {
