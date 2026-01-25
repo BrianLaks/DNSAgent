@@ -23,13 +23,24 @@
 
     <div class="row">
         <!-- traffic trend -->
-        <div class="col-lg-12 mb-4">
-            <div class="card shadow-sm border-0">
+        <div class="col-lg-8 mb-4">
+            <div class="card shadow-sm border-0 h-100">
                 <div class="card-header bg-white">
-                    <h5 class="mb-0">Network Traffic (Last 7 Days)</h5>
+                    <h5 class="mb-0">Network Traffic (7 Days)</h5>
                 </div>
                 <div class="card-body">
                     <div id="trafficTrendChart" style="height: 350px;"></div>
+                </div>
+            </div>
+        </div>
+        <!-- Top Devices Chart -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Device Volume (24h)</h5>
+                </div>
+                <div class="card-body">
+                    <div id="deviceVolumeChart" style="height: 350px;"></div>
                 </div>
             </div>
         </div>
@@ -184,11 +195,15 @@
                 if (device != null) d.Name = device.MachineName;
             }
 
+            var deviceLabels = topDevices.Select(x => x.Name).ToArray();
+            var deviceCounts = topDevices.Select(x => x.Count).ToArray();
+
             isLoading = false;
             await JSRuntime.InvokeVoidAsync("renderDetailedReports", 
                 trafficLabels, trafficData, 
                 ytLabels, adsData, sponsorsData, 
-                securityLabels, securityData);
+                securityLabels, securityData,
+                deviceLabels, deviceCounts);
         }
         catch (Exception ex)
         {

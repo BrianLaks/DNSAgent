@@ -65,7 +65,7 @@
             window.distChartInstance.render();
         };
 
-        window.renderDetailedReports = (trafficLabels, trafficData, youtubeLabels, adsData, sponsorsData, securityLabels, securityData) => {
+        window.renderDetailedReports = (trafficLabels, trafficData, youtubeLabels, adsData, sponsorsData, securityLabels, securityData, deviceLabels, deviceData) => {
             // 1. Traffic Trend (7 Days)
             const trafficOptions = {
                 series: [{ name: 'Queries', data: trafficData }],
@@ -111,6 +111,21 @@
                 if (window.secChart) window.secChart.destroy();
                 window.secChart = new ApexCharts(secEl, secOptions);
                 window.secChart.render();
+            }
+
+            // 4. Device Volume
+            const devOptions = {
+                series: [{ name: 'Queries', data: deviceData }],
+                chart: { type: 'bar', height: 350 },
+                plotOptions: { bar: { horizontal: true } },
+                xaxis: { categories: deviceLabels },
+                colors: ['#6f42c1']
+            };
+            const devEl = document.querySelector("#deviceVolumeChart");
+            if (devEl) {
+                if (window.devChart) window.devChart.destroy();
+                window.devChart = new ApexCharts(devEl, devOptions);
+                window.devChart.render();
             }
         };
     </script>
