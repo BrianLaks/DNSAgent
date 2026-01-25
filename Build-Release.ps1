@@ -2,7 +2,7 @@
 # This script automates the publishing and packaging of DNS Agent v1.2
 
 $ErrorActionPreference = "Stop"
-$Version = "2.1.0"
+$Version = "2.1.2"
 $ReleaseName = "DNSAgent_V2.1"
 $ProjectRoot = Get-Location
 $ReleasePath = Join-Path $ProjectRoot "Release"
@@ -24,12 +24,6 @@ New-Item -Path $TempTray -ItemType Directory -Force | Out-Null
 # 2. Build and Publish DNSAgent.Service
 Write-Host "Publishing DNSAgent.Service..." -ForegroundColor Yellow
 dotnet publish "DNSAgent.Service\DNSAgent.Service.csproj" -c Release -o "$TempService" --self-contained false
-if ($LASTEXITCODE -ne 0) {
-    Write-Error "Publishing DNSAgent.Service failed with exit code $LASTEXITCODE"
-    exit $LASTEXITCODE
-}
-Write-Host "TempService contents (Full Path: $TempService):"
-Get-ChildItem -Path "$TempService" -Recurse | Select-Object FullName
 Copy-Item "$TempService\*" -Destination "$DistPath\" -Recurse -Force
 
 # 3. Build and Publish DNSAgent.Tray
@@ -52,11 +46,11 @@ $ExtDistPath = Join-Path $DistPath "extension"
 New-Item -Path $ExtDistPath -ItemType Directory -Force | Out-Null
 Copy-Item "extension\*" -Destination "$ExtDistPath\" -Recurse -Exclude ".git*"
 
-# 6. Cleanup Temp Folders (COMMENTED OUT FOR DEBUG)
-# Remove-Item $TempService -Recurse -Force
-# Remove-Item $TempTray -Recurse -Force
+# 6. Cleanup Temp Folders
+Remove-Item $TempService -Recurse -Force
+Remove-Item $TempTray -Recurse -Force
 
-# 6. Create ZIP Archive
+# 7. Create ZIP Archive
 Write-Host "Creating $ReleaseName.zip..." -ForegroundColor Green
 $ZipFile = Join-Path $ReleasePath "$ReleaseName.zip"
 Compress-Archive -Path "$DistPath\*" -DestinationPath $ZipFile -Force
