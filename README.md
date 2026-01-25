@@ -15,10 +15,10 @@ DNS Agent is a lightweight, high-performance network-wide DNS server designed fo
 ## ⚡ Quick Start (No Coding Required)
 
 If you just want to run DNS Agent without cloning the code:
-1. **Download the latest release ZIP** (or the `publish` folder from this repo).
+1. **Download the latest release ZIP** (e.g., `DNSAgent_v1.6.2.zip`).
 2. Right-click the folder and **Extract All**.
 3. Right-click `Start-Setup.bat` and select **Run as Administrator**.
-   - *This will automatically handle all PowerShell permissions and .NET version checks.*
+   - *This handles all permissions, firewall rules, and .NET checks automatically.*
 4. 🎉 Your DNS Shield is now active! Visit `http://localhost:5123` to see your stats.
 
 ---
