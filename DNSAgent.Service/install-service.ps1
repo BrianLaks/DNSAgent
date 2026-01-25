@@ -6,9 +6,32 @@ $DisplayName = "DNS Agent - Network Ad Blocker"
 $CurrentDir = (Get-Location).Path
 $BinaryPath = Join-Path $CurrentDir "DNSAgent.Service.exe"
 $TrayPath = Join-Path $CurrentDir "DNSAgent.Tray.exe"
-$WwwRoot = Join-Path $CurrentDir "wwwroot"
 
 Write-Host "--- DNS Agent Master Setup ---" -ForegroundColor Cyan
+
+# 0. Cleanup: Kill processes listening on critical ports (53, 5123)
+Write-Host "Checking for hung processes on critical ports..." -ForegroundColor Yellow
+$PortsToClean = @(53, 5123)
+foreach ($port in $PortsToClean) {
+    $processes = Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess
+    $processes += Get-NetUDPEndpoint -LocalPort $port -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess
+    
+    foreach ($pid in ($processes | Select-Object -Unique)) {
+        try {
+            $p = Get-Process -Id $pid -ErrorAction SilentlyContinue
+            if ($p) {
+                Write-Host "Terminating process $($p.Name) (PID: $pid) listening on port $port..." -ForegroundColor Gray
+                Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue
+            }
+        }
+        catch { }
+    }
+}
+
+# Also kill by name just in case they aren't listening yet
+Stop-Process -Name "DNSAgent.Service" -Force -ErrorAction SilentlyContinue
+Stop-Process -Name "DNSAgent.Tray" -Force -ErrorAction SilentlyContinue
+Start-Sleep -Seconds 1
 
 # 1. Firewall Fix: Allow the Application itself (not just ports)
 Write-Host "Configuring Application Firewall rules..." -ForegroundColor Yellow

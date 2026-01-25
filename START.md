@@ -20,6 +20,7 @@ This guide outlines the standard patterns for setting up the development environ
    Right-click **`Start-Setup.bat`** and select **Run as Administrator**.
    This batch file handles:
    - Setting PowerShell execution policy to bypass.
+   - Automatically cleaning up hung processes/ports from previous versions.
    - Running the primary `Setup-DNSAgent.ps1` script.
 
 3. **What `Setup-DNSAgent.ps1` Does**
