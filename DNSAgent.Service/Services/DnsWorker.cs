@@ -13,6 +13,8 @@ using System.IO;
 using System.Net.Http;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using DNSAgent.Service.Configuration;
 
 namespace DNSAgent.Service.Services
 {
@@ -25,10 +27,16 @@ namespace DNSAgent.Service.Services
         // For now, reload occasionally or use a reader/writer lock.
         private readonly Lock _listLock = new(); 
 
-        public DnsWorker(ILogger<DnsWorker> logger, IServiceScopeFactory scopeFactory)
+        private readonly IOptions<DnsAgentSettings> _settings;
+
+        public bool ProtectionEnabled { get; set; } = true;
+
+        public DnsWorker(ILogger<DnsWorker> logger, IServiceScopeFactory scopeFactory, Microsoft.Extensions.Options.IOptions<DnsAgentSettings> settings)
         {
             _logger = logger;
             _scopeFactory = scopeFactory;
+            _settings = settings;
+            ProtectionEnabled = _settings.Value.EnableBlocking;
         }
 
 
@@ -169,16 +177,23 @@ namespace DNSAgent.Service.Services
             
             if (!string.IsNullOrEmpty(domain))
             {
-                lock (_listLock)
+                if (!ProtectionEnabled)
                 {
-                    // Whitelist takes precedence
-                    if (_whitelistedDomains.Contains(domain))
+                    blocked = false;
+                }
+                else
+                {
+                    lock (_listLock)
                     {
-                        blocked = false;
-                    }
-                    else if (_blockedDomains.Contains(domain))
-                    {
-                        blocked = true;
+                        // Whitelist takes precedence
+                        if (_whitelistedDomains.Contains(domain))
+                        {
+                            blocked = false;
+                        }
+                        else if (_blockedDomains.Contains(domain))
+                        {
+                            blocked = true;
+                        }
                     }
                 }
             }

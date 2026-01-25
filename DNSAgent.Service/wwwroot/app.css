@@ -97,7 +97,29 @@ body {
 .theme-aegis .card,
 .theme-sentry .card,
 .theme-ghost .card {
-    color: white;
+    background: rgba(0, 0, 0, 0.7) !important;
+    color: white !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.theme-aegis .card .text-muted,
+.theme-sentry .card .text-muted,
+.theme-ghost .card .text-muted {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.theme-aegis .card code,
+.theme-sentry .card code,
+.theme-ghost .card code {
+    color: var(--brand-accent) !important;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.theme-aegis .card-header,
+.theme-sentry .card-header,
+.theme-ghost .card-header {
+    background: rgba(0, 0, 0, 0.9) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .card:hover {

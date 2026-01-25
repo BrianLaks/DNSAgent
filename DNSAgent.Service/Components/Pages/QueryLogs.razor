@@ -16,16 +16,29 @@
             <h1>Query Logs @(string.IsNullOrEmpty(SearchIP) ? "" : $"for {SearchIP}")</h1>
             <p class="text-muted">Last 100 queries processed by the server</p>
         </div>
-        <div class="col-auto d-flex">
-            <div class="input-group me-2">
-                <span class="input-group-text bg-white border-end-0"><span class="bi bi-search"></span></span>
-                <input type="text" class="form-control border-start-0" placeholder="Search domain..." @bind="SearchTerm" @bind:event="oninput" @onkeyup="HandleKeyUp" />
+        <div class="col-auto d-flex gap-2 flex-wrap align-items-center">
+            <div class="d-flex align-items-center gap-1">
+                <span class="small text-muted">From:</span>
+                <input type="date" class="form-control form-control-sm w-auto" @bind="StartDate" />
             </div>
-            <button class="btn btn-outline-primary me-2" @onclick="LoadLogs">
-                <span class="bi bi-arrow-repeat"></span> Refresh
+            <div class="d-flex align-items-center gap-1">
+                <span class="small text-muted">To:</span>
+                <input type="date" class="form-control form-control-sm w-auto" @bind="EndDate" />
+            </div>
+            <select class="form-select form-select-sm w-auto" @bind="StatusFilter">
+                <option value="All">All Statuses</option>
+                <option value="Blocked">Blocked Only</option>
+                <option value="Allowed">Allowed Only</option>
+            </select>
+            <div class="input-group input-group-sm w-auto">
+                <span class="input-group-text bg-white border-end-0"><span class="bi bi-search"></span></span>
+                <input type="text" class="form-control border-start-0" placeholder="Search domain..." @bind="SearchTerm" @onkeyup="HandleKeyUp" />
+            </div>
+            <button class="btn btn-sm btn-primary d-flex align-items-center" @onclick="LoadLogs">
+                <span class="bi bi-arrow-repeat me-1"></span> Refresh
             </button>
-            <button class="btn btn-outline-danger" @onclick="ClearLogs">
-                <span class="bi bi-trash"></span> Clear All
+            <button class="btn btn-sm btn-outline-danger d-flex align-items-center" @onclick="ClearLogs">
+                <span class="bi bi-trash me-1"></span> Clear
             </button>
         </div>
     </div>
@@ -90,11 +103,15 @@
     public string? SearchIP { get; set; }
     
     private string? SearchTerm { get; set; }
+    private string StatusFilter { get; set; } = "All";
+    private DateTime StartDate { get; set; } = DateTime.Today;
+    private DateTime EndDate { get; set; } = DateTime.Today.AddDays(1);
 
     private List<QueryLog>? logs;
 
     protected override async Task OnInitializedAsync()
     {
+        // Load logs for today by default
         await LoadLogs();
     }
 
@@ -109,6 +126,14 @@
     private async Task LoadLogs()
     {
         var query = Db.QueryLogs.AsQueryable();
+
+        // Date range filter
+        query = query.Where(l => l.Timestamp >= StartDate && l.Timestamp < EndDate);
+
+        if (StatusFilter != "All")
+        {
+            query = query.Where(l => l.Status == StatusFilter);
+        }
 
         if (!string.IsNullOrEmpty(SearchIP))
         {

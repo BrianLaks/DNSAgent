@@ -62,7 +62,6 @@ function Install-DNSAgentService {
     Write-Host "`nDNS Agent is now running!" -ForegroundColor Green
     Write-Host "Web Interface: http://localhost:5123" -ForegroundColor Cyan
     Write-Host "Default Login: Admin / Admin" -ForegroundColor Yellow
-    Write-Host "Default Login: Admin / Admin" -ForegroundColor Yellow
     Write-Host "`nTo configure your network:"
     Write-Host "1. Set your router's DNS to this server's IP address"
     Write-Host "2. Or set individual device DNS to this server's IP"

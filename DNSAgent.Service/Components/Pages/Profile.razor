@@ -1,0 +1,103 @@
+@page "/admin/profile"
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<IdentityUser> UserManager
+@inject SignInManager<IdentityUser> SignInManager
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+<PageTitle>My Profile - DNS Agent</PageTitle>
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-body">
+                    <h3 class="card-title mb-4">Change Password 🔑</h3>
+                    
+                    @if (!string.IsNullOrEmpty(successMessage))
+                    {
+                        <div class="alert alert-success">@successMessage</div>
+                    }
+                    @if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        <div class="alert alert-danger">@errorMessage</div>
+                    }
+
+                    <EditForm Model="input" OnValidSubmit="HandleChangePassword" FormName="changeHash">
+                        <DataAnnotationsValidator />
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Current Password</label>
+                            <InputText type="password" class="form-control" @bind-Value="input.OldPassword" />
+                            <ValidationMessage For="@(() => input.OldPassword)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">New Password</label>
+                            <InputText type="password" class="form-control" @bind-Value="input.NewPassword" />
+                            <ValidationMessage For="@(() => input.NewPassword)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Confirm New Password</label>
+                            <InputText type="password" class="form-control" @bind-Value="input.ConfirmPassword" />
+                            <ValidationMessage For="@(() => input.ConfirmPassword)" />
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Update Password</button>
+                            <a href="/" class="btn btn-link">Cancel</a>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private ChangePasswordInput input = new();
+    private string? successMessage;
+    private string? errorMessage;
+
+    private async Task HandleChangePassword()
+    {
+        successMessage = null;
+        errorMessage = null;
+
+        var user = await UserManager.GetUserAsync(SignInManager.Context.User);
+        if (user == null)
+        {
+            errorMessage = "User not found.";
+            return;
+        }
+
+        var result = await UserManager.ChangePasswordAsync(user, input.OldPassword, input.NewPassword);
+        if (result.Succeeded)
+        {
+            await SignInManager.RefreshSignInAsync(user);
+            successMessage = "Password updated successfully!";
+            input = new();
+        }
+        else
+        {
+            errorMessage = string.Join(" ", result.Errors.Select(e => e.Description));
+        }
+    }
+
+    public class ChangePasswordInput
+    {
+        [Required]
+        [DataType(DataType.Password)]
+        public string OldPassword { get; set; } = "";
+
+        [Required]
+        [StringLength(100, MinimumLength = 5)]
+        [DataType(DataType.Password)]
+        public string NewPassword { get; set; } = "";
+
+        [DataType(DataType.Password)]
+        [Compare("NewPassword", ErrorMessage = "The new password and confirmation password do not match.")]
+        public string ConfirmPassword { get; set; } = "";
+    }
+}

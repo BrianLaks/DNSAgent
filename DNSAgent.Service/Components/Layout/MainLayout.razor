@@ -2,6 +2,9 @@
 @implements IDisposable
 @using DNSAgent.Service.Services
 @inject ThemeService ThemeService
+@using DNSAgent.Service.Configuration
+@using Microsoft.AspNetCore.Components.Authorization
+@inject DnsWorker DnsWorker
 
 <div class="page @ThemeService.GetThemeClass()" style="@ThemeService.GetInlineStyles()">
     <div class="dashboard-watermark">
@@ -12,8 +15,33 @@
     </div>
 
     <main>
-        <div class="top-row px-4">
-            <a href="about">About</a>
+        <div class="top-row px-4 d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-3">
+                <span class="badge bg-secondary opacity-75">v@(Constants.AppVersion)</span>
+                @if (DnsWorker.ProtectionEnabled)
+                {
+                    <span class="badge bg-success"><span class="bi bi-shield-fill-check me-1"></span> Protected</span>
+                }
+                else
+                {
+                    <span class="badge bg-warning text-dark"><span class="bi bi-shield-slash-fill me-1"></span> Disabled</span>
+                }
+                <a href="@(Constants.GitHubUrl)" target="_blank" class="text-muted text-decoration-none small">
+                    <span class="bi bi-github"></span> GitHub
+                </a>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <AuthorizeView>
+                    <Authorized>
+                        <span class="text-muted small">Logged in as: <a href="admin/profile" class="fw-bold text-decoration-none text-dark">@context.User.Identity?.Name</a></span>
+                        <a href="logout" class="btn btn-sm btn-outline-danger ms-2">Logout</a>
+                    </Authorized>
+                    <NotAuthorized>
+                        <a href="login" class="btn btn-sm btn-primary">Login</a>
+                    </NotAuthorized>
+                </AuthorizeView>
+                <a href="about" class="text-muted text-decoration-none border-start ps-3">About</a>
+            </div>
         </div>
 
         <article class="content px-4">
