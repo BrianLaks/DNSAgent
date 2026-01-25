@@ -39,6 +39,14 @@ namespace DNSAgent.Service.Services
             ProtectionEnabled = _settings.Value.EnableBlocking;
         }
 
+        public void UpdateSecuritySettings(string protocol, string dohUrl, bool dnssec)
+        {
+            _settings.Value.UpstreamProtocol = protocol;
+            _settings.Value.DoHUrl = dohUrl;
+            _settings.Value.EnforceDnssec = dnssec;
+            _logger.LogInformation("Security settings updated: Protocol={Protocol}, DNSSEC={DNSSEC}", protocol, dnssec);
+        }
+
 
         private readonly HashSet<string> _whitelistedDomains = new(StringComparer.OrdinalIgnoreCase);
 
@@ -89,41 +97,73 @@ namespace DNSAgent.Service.Services
 
         public async Task LoadBlockListAsync()
         {
-            _logger.LogInformation("Loading blocklist...");
+            _logger.LogInformation("Loading blocklists and threat feeds...");
             try
             {
                 using var scope = _scopeFactory.CreateScope();
                 var config = scope.ServiceProvider.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>();
-                var url = config.GetValue<string>("DnsAgent:BlocklistUrl") ?? "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts";
                 
+                var sources = new List<string> {
+                    config.GetValue<string>("DnsAgent:BlocklistUrl") ?? "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts",
+                    "https://small.oisd.nl/" // OISD Basic Threat Feed
+                };
+
+                int totalCount = 0;
                 using var client = new HttpClient();
-                var content = await client.GetStringAsync(url);
                 
-                using var reader = new StringReader(content);
-                string? line;
-                int count = 0;
-                
+                var newBlockedDomains = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+                foreach (var url in sources)
+                {
+                    try
+                    {
+                        _logger.LogInformation("Fetching source: {Url}", url);
+                        var content = await client.GetStringAsync(url);
+                        using var reader = new StringReader(content);
+                        string? line;
+                        
+                        while ((line = reader.ReadLine()) != null)
+                        {
+                            line = line.Trim();
+                            if (string.IsNullOrEmpty(line) || line.StartsWith("#")) continue;
+                            
+                            var parts = line.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                            
+                            // Handle standard hosts format (0.0.0.0 domain) or simple domain list (oisd)
+                            if (parts.Length >= 2 && (parts[0] == "0.0.0.0" || parts[0] == "127.0.0.1"))
+                            {
+                                if (parts[1] != "0.0.0.0" && parts[1] != "127.0.0.1" && parts[1] != "localhost")
+                                {
+                                    newBlockedDomains.Add(parts[1]);
+                                    totalCount++;
+                                }
+                            }
+                            else if (parts.Length == 1 && !parts[0].Contains("/"))
+                            {
+                                newBlockedDomains.Add(parts[0]);
+                                totalCount++;
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning("Failed to load source {Url}: {Message}", url, ex.Message);
+                    }
+                }
+
                 lock (_listLock)
                 {
                     _blockedDomains.Clear();
-                    while ((line = reader.ReadLine()) != null)
+                    foreach (var domain in newBlockedDomains)
                     {
-                        line = line.Trim();
-                        if (string.IsNullOrEmpty(line) || line.StartsWith("#")) continue;
-                        
-                        var parts = line.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-                        if (parts.Length >= 2 && (parts[0] == "0.0.0.0" || parts[0] == "127.0.0.1") && parts[1] != "0.0.0.0" && parts[1] != "127.0.0.1" && parts[1] != "localhost")
-                        {
-                            _blockedDomains.Add(parts[1]);
-                            count++;
-                        }
+                         _blockedDomains.Add(domain);
                     }
                 }
-                _logger.LogInformation("Loaded {Count} domains into blocklist.", count);
+                _logger.LogInformation("Total threat protection active: {Count} domains.", _blockedDomains.Count);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to load blocklist");
+                _logger.LogError(ex, "Failed to load blocklists");
             }
         }
 
@@ -199,8 +239,8 @@ namespace DNSAgent.Service.Services
             }
 
 
-            // Log to DB
-            _ = LogQueryAsync(clientEndPoint.Address.ToString(), domain, blocked ? "Blocked" : "Allowed");
+        // Log to DB
+            _ = LogQueryAsync(clientEndPoint.Address.ToString(), domain, blocked ? "Blocked" : "Allowed", "Local", false);
 
             if (blocked)
             {
@@ -233,7 +273,7 @@ namespace DNSAgent.Service.Services
             }
         }
 
-        private async Task LogQueryAsync(string ip, string domain, string status)
+        private async Task LogQueryAsync(string ip, string domain, string status, string transport, bool isDnssec)
         {
             try
             {
@@ -247,7 +287,9 @@ namespace DNSAgent.Service.Services
                     SourceIP = ip, 
                     SourceHostname = hostname,
                     Domain = domain, 
-                    Status = status 
+                    Status = status,
+                    Transport = transport,
+                    IsDnssec = isDnssec
                 });
                 await db.SaveChangesAsync();
             }
@@ -259,22 +301,64 @@ namespace DNSAgent.Service.Services
 
         private async Task ForwardToUpstreamAsync(UdpClient listener, byte[] buffer, IPEndPoint clientEndPoint)
         {
-             try
+            string domain = ParseDomain(buffer);
+            try
             {
-                using var upstreamClient = new UdpClient();
-                // Google DNS
-                await upstreamClient.SendAsync(buffer, buffer.Length, "8.8.8.8", 53);
-
-                var receiveTask = upstreamClient.ReceiveAsync();
-                var timeoutTask = Task.Delay(2000);
-
-                if (await Task.WhenAny(receiveTask, timeoutTask) == receiveTask)
+                if (_settings.Value.UpstreamProtocol == "DoH")
                 {
-                    var result = await receiveTask;
-                    await listener.SendAsync(result.Buffer, result.Buffer.Length, clientEndPoint);
+                    await ForwardToDoHAsync(listener, buffer, clientEndPoint);
+                }
+                else
+                {
+                    using var upstreamClient = new UdpClient();
+                    await upstreamClient.SendAsync(buffer, buffer.Length, _settings.Value.UpstreamDns, 53);
+
+                    var receiveTask = upstreamClient.ReceiveAsync();
+                    var timeoutTask = Task.Delay(2000);
+
+                    if (await Task.WhenAny(receiveTask, timeoutTask) == receiveTask)
+                    {
+                        var result = await receiveTask;
+                        bool isDnssec = (result.Buffer.Length > 3 && (result.Buffer[3] & 0x20) == 0x20);
+                        
+                        _ = LogQueryAsync(clientEndPoint.Address.ToString(), domain, "Allowed", "UDP", isDnssec);
+                        await listener.SendAsync(result.Buffer, result.Buffer.Length, clientEndPoint);
+                    }
                 }
             }
-            catch { /* Ignore */ }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to forward query to upstream");
+            }
+        }
+
+        private async Task ForwardToDoHAsync(UdpClient listener, byte[] buffer, IPEndPoint clientEndPoint)
+        {
+            string domain = ParseDomain(buffer);
+            try
+            {
+                using var client = new HttpClient();
+                var content = new ByteArrayContent(buffer);
+                content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/dns-message");
+
+                var response = await client.PostAsync(_settings.Value.DoHUrl, content);
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseData = await response.Content.ReadAsByteArrayAsync();
+                    bool isDnssec = (responseData.Length > 3 && (responseData[3] & 0x20) == 0x20);
+
+                    _ = LogQueryAsync(clientEndPoint.Address.ToString(), domain, "Allowed", "DoH", isDnssec);
+                    await listener.SendAsync(responseData, responseData.Length, clientEndPoint);
+                }
+                else
+                {
+                    _logger.LogWarning("DoH request failed with status: {Status}", response.StatusCode);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in DoH forwarding");
+            }
         }
 
         // --- Helpers from DnsPacket.cs (embedded here for simplicity/service access) ---

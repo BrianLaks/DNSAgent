@@ -23,6 +23,8 @@ namespace DNSAgent.Service.Data
         public string SourceHostname { get; set; } = string.Empty; // Reverse DNS lookup
         public string Domain { get; set; }
         public string Status { get; set; } // "Blocked" or "Allowed"
+        public string Transport { get; set; } = "UDP"; // "UDP" or "DoH"
+        public bool IsDnssec { get; set; } = false; // Validated via AD bit
         public long ResponseTimeMs { get; set; }
     }
 

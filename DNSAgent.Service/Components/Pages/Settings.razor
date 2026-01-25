@@ -64,7 +64,7 @@
         <div class="col-md-6">
             <div class="card shadow-sm mb-4">
                 <div class="card-header bg-dark text-white">
-                    <h5 class="mb-0">Data Retention</h5>
+                    <h5 class="mb-0">Data Retention & Security</h5>
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
@@ -72,6 +72,23 @@
                         <input type="number" class="form-control" @bind="retentionDays" readonly />
                         <small class="text-muted">Currently configured in <code>appsettings.json</code></small>
                     </div>
+                    <hr />
+                    <div class="mb-3">
+                        <label class="form-label">Upstream Protocol</label>
+                        <select class="form-select" @bind="upstreamProtocol">
+                            <option value="UDP">Standard UDP (Port 53)</option>
+                            <option value="DoH">DNS-over-HTTPS (Secure)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">DoH Endpoint</label>
+                        <input type="text" class="form-control" @bind="dohUrl" placeholder="https://dns.google/dns-query" />
+                    </div>
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" role="switch" @bind="enforceDnssec" />
+                        <label class="form-check-label">Enforce DNSSEC Validation</label>
+                    </div>
+                    <button class="btn btn-sm btn-outline-primary" @onclick="SaveSecuritySettings">Save Security Config</button>
                 </div>
             </div>
         </div>
@@ -83,11 +100,19 @@
     private int retentionDays;
     private bool isUpdating = false;
     private string? updateMessage;
+    
+    private string upstreamProtocol = "UDP";
+    private string dohUrl = "";
+    private bool enforceDnssec = false;
 
     protected override void OnInitialized()
     {
         blocklistUrl = Config.GetValue<string>("DnsAgent:BlocklistUrl") ?? "Default";
         retentionDays = Config.GetValue<int>("DnsAgent:LogRetentionDays", 5);
+        
+        upstreamProtocol = Config.GetValue<string>("DnsAgent:UpstreamProtocol") ?? "UDP";
+        dohUrl = Config.GetValue<string>("DnsAgent:DoHUrl") ?? "https://dns.google/dns-query";
+        enforceDnssec = Config.GetValue<bool>("DnsAgent:EnforceDnssec", false);
     }
 
     private void ToggleBlocking(ChangeEventArgs e)
@@ -119,5 +144,13 @@
         {
             isUpdating = false;
         }
+    }
+
+    private void SaveSecuritySettings()
+    {
+        // For v1.3 Prototype: Update DnsWorker properties directly if we had them public
+        // For now, update the DnsWorker's settings object proxy
+        DnsWorker.UpdateSecuritySettings(upstreamProtocol, dohUrl, enforceDnssec);
+        updateMessage = "Security settings updated (in-memory for this session).";
     }
 }

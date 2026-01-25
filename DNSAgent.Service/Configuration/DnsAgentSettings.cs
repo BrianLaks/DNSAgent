@@ -9,6 +9,11 @@ namespace DNSAgent.Service.Configuration
         public int WebUIPort { get; set; } = 5123;
         public bool EnableLogging { get; set; } = true;
         public int LogRetentionDays { get; set; } = 30;
-        public bool EnableBlocking { get; set; } = true; // Master switch for blocking
+        public bool EnableBlocking { get; set; } = true;
+
+        // Security v1.3 Features
+        public string UpstreamProtocol { get; set; } = "UDP"; // UDP, DoH
+        public string DoHUrl { get; set; } = "https://dns.google/dns-query";
+        public bool EnforceDnssec { get; set; } = false;
     }
 }

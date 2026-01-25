@@ -60,6 +60,8 @@
                         <th>Time</th>
                         <th>Source (IP / Host)</th>
                         <th>Domain</th>
+                        <th>Transport</th>
+                        <th>Security</th>
                         <th>Status</th>
                         <th>Action</th>
                     </tr>
@@ -77,6 +79,24 @@
                                 }
                             </td>
                             <td><code class="text-dark">@log.Domain</code></td>
+                            <td>
+                                <span class="badge @(log.Transport == "DoH" ? "bg-info" : "bg-secondary")">
+                                    <span class="bi @(log.Transport == "DoH" ? "bi-lock" : "bi-unlock") me-1"></span>
+                                    @log.Transport
+                                </span>
+                            </td>
+                            <td>
+                                @if (log.IsDnssec)
+                                {
+                                    <span class="badge bg-primary">
+                                        <span class="bi bi-shield-check me-1"></span> DNSSEC
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted small">None</span>
+                                }
+                            </td>
                             <td>
                                 <span class="badge @(log.Status == "Blocked" ? "bg-danger" : "bg-success")">
                                     @log.Status
