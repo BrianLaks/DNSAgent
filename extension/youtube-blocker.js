@@ -41,13 +41,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 function applyAdBlocking() {
     // Layer 1: CSS Injection (hide ad containers)
     injectAdBlockCSS();
-    
+
     // Layer 2: Auto-skip ads
     setInterval(autoSkipAds, 500);
-    
+
     // Layer 3: Mutation observer (detect dynamic ads)
     observeDOMChanges();
-    
+
     // Layer 4: Video player manipulation
     monitorVideoPlayer();
 }
@@ -64,15 +64,15 @@ function injectAdBlockCSS() {
             '.ytd-display-ad-renderer'
         ];
     }
-    
+
     const style = document.createElement('style');
     style.id = 'dns-agent-ad-blocker';
     style.textContent = filters.cssSelectors.map(s => `${s} { display: none !important; }`).join('\n');
-    
+
     // Remove existing style if present
     const existing = document.getElementById('dns-agent-ad-blocker');
     if (existing) existing.remove();
-    
+
     document.head.appendChild(style);
     console.log('[DNS Agent] CSS ad blocking applied');
 }
@@ -82,19 +82,46 @@ function autoSkipAds() {
     const skipSelectors = filters.skipButtonSelectors || [
         '.ytp-ad-skip-button',
         '.ytp-skip-ad-button',
-        '[class*="skip"][class*="button"]'
+        '[class*="skip"][class*="button"]',
+        '.ytp-ad-skip-button-modern'
     ];
-    
+
+    // Try to click skip button
     for (const selector of skipSelectors) {
         const skipButton = document.querySelector(selector);
         if (skipButton && skipButton.offsetParent !== null) {
             skipButton.click();
             stats.adsBlocked++;
-            console.log('[DNS Agent] Auto-skipped ad');
+            console.log('[DNS Agent] Auto-skipped ad via button');
             updateStats();
-            return;
+            return true;
         }
     }
+
+    // If no skip button, try to force skip by manipulating video
+    const video = document.querySelector('video');
+    const player = document.querySelector('.html5-video-player');
+
+    if (video && player && player.classList.contains('ad-showing')) {
+        // Method 1: Jump to end of ad
+        if (video.duration && !isNaN(video.duration) && video.duration < 120) {
+            video.currentTime = video.duration;
+            console.log('[DNS Agent] Forced ad to end');
+            stats.adsBlocked++;
+            updateStats();
+            return true;
+        }
+
+        // Method 2: Speed through ad at 16x
+        if (video.playbackRate < 16) {
+            video.playbackRate = 16;
+            video.muted = true;
+            console.log('[DNS Agent] Speeding through ad at 16x');
+            return true;
+        }
+    }
+
+    return false;
 }
 
 // Layer 3: Mutation Observer
@@ -114,7 +141,7 @@ function observeDOMChanges() {
             }
         }
     });
-    
+
     observer.observe(document.body, {
         childList: true,
         subtree: true
@@ -134,20 +161,20 @@ function monitorVideoPlayer() {
         setTimeout(monitorVideoPlayer, 1000);
         return;
     }
-    
+
     video.addEventListener('timeupdate', () => {
         const player = document.querySelector('.html5-video-player');
         if (player && player.classList.contains('ad-showing')) {
             console.log('[DNS Agent] Ad detected in player, forcing skip');
-            
+
             // Try to skip to end of ad
             if (video.duration && video.duration < 60) {
                 video.currentTime = video.duration;
             }
-            
+
             // Also try clicking skip button
             autoSkipAds();
-            
+
             stats.adsBlocked++;
             updateStats();
         }
@@ -157,7 +184,7 @@ function monitorVideoPlayer() {
 // Update statistics
 function updateStats() {
     chrome.storage.local.set({ youtubeStats: stats });
-    
+
     // Report to background script every 10 ads
     if (stats.adsBlocked % 10 === 0) {
         chrome.runtime.sendMessage({
