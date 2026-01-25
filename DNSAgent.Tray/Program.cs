@@ -32,13 +32,14 @@ namespace DNSAgent.Tray
             contextMenu.Items.Add(new ToolStripSeparator());
             contextMenu.Items.Add("Start Service", null, (s, e) => ControlService(ServiceControllerStatus.Running));
             contextMenu.Items.Add("Stop Service", null, (s, e) => ControlService(ServiceControllerStatus.Stopped));
+            contextMenu.Items.Add("Restart Service", null, (s, e) => RestartService());
             contextMenu.Items.Add(new ToolStripSeparator());
             contextMenu.Items.Add("Exit", null, (s, e) => Exit());
 
             // Initialize Tray Icon
             _trayIcon = new NotifyIcon()
             {
-                Text = "DNS Agent v1.2",
+                Text = "DNS Agent v1.3",
                 ContextMenuStrip = contextMenu,
                 Visible = true
             };
@@ -139,6 +140,26 @@ namespace DNSAgent.Tray
             catch (Exception ex)
             {
                 MessageBox.Show($"Failed to control service: {ex.Message}", "DNS Agent", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void RestartService()
+        {
+            try
+            {
+                using var sc = new ServiceController(ServiceName);
+                if (sc.Status == ServiceControllerStatus.Running)
+                {
+                    sc.Stop();
+                    sc.WaitForStatus(ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(10));
+                }
+                sc.Start();
+                sc.WaitForStatus(ServiceControllerStatus.Running, TimeSpan.FromSeconds(10));
+                MessageBox.Show("Service restarted successfully!", "DNS Agent", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to restart service: {ex.Message}\n\nPlease run the tray app as Administrator.", "DNS Agent", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
