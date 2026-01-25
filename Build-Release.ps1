@@ -3,7 +3,7 @@
 
 $ErrorActionPreference = "Stop"
 $Version = "2.0"
-$ReleaseName = "DNSAgent_v$($Version)_V2"
+$ReleaseName = "DNSAgent_V2"
 $ProjectRoot = Get-Location
 $ReleasePath = Join-Path $ProjectRoot "Release"
 $DistPath = Join-Path $ReleasePath "Dist"

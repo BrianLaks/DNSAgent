@@ -12,16 +12,11 @@ DNS Agent is a lightweight, high-performance network-wide DNS server designed fo
 - **System Tray Monitor**: Stay informed with real-time status and quick controls.
 - **Whitelist Management**: Easily unblock false positives.
 
-## ⚡ Quick Start (Public Release v1.6.2)
+## 🚀 Quick Start
+- **Users**: Follow the [Quick Start Guide](START.md) to install and run the agent.
+- **Developers**: See [START.md](START.md) for environment setup and [DEPLOY.md](DEPLOY.md) for release instructions.
 
-1. **Download `DNSAgent.zip`** from the `Release` folder in this repo.
-2. Right-click the folder and **Extract All**.
-3. Right-click **`Start-Setup.bat`** and select **Run as Administrator**.
-4. Visit `http://localhost:5123` to access your Dashboard.
-
----
-
-## 🔌 Browser Extension Support
+### 🦁 Browser Extension Support
 
 ### 🦁 Brave / 🌐 Chrome / 🧭 Microsoft Edge
 Our extension works on all Chromium-based browsers:
