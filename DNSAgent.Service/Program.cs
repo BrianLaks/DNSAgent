@@ -142,12 +142,16 @@ using (var scope = app.Services.CreateScope())
             db.SaveChanges();
         }
 
-        // Migration for existing tables
-        db.Database.ExecuteSqlRaw("ALTER TABLE QueryLogs ADD COLUMN ClientId TEXT;");
-        db.Database.ExecuteSqlRaw("ALTER TABLE QueryLogs ADD COLUMN Transport TEXT;");
-        db.Database.ExecuteSqlRaw("ALTER TABLE QueryLogs ADD COLUMN IsDnssec INTEGER NOT NULL DEFAULT 0;");
+        // Robust migration for QueryLogs table
+        try { db.Database.ExecuteSqlRaw("ALTER TABLE QueryLogs ADD COLUMN ClientId TEXT;"); } catch { }
+        try { db.Database.ExecuteSqlRaw("ALTER TABLE QueryLogs ADD COLUMN Transport TEXT;"); } catch { }
+        try { db.Database.ExecuteSqlRaw("ALTER TABLE QueryLogs ADD COLUMN IsDnssec INTEGER NOT NULL DEFAULT 0;"); } catch { }
+        try { db.Database.ExecuteSqlRaw("ALTER TABLE QueryLogs ADD COLUMN ResponseTimeMs INTEGER NOT NULL DEFAULT 0;"); } catch { }
     }
-    catch { /* Columns might already exist */ }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Migration error: {ex.Message}");
+    }
 
     try
     {

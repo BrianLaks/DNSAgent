@@ -58,7 +58,7 @@
                 <thead>
                     <tr class="table-primary text-white">
                         <th>Time</th>
-                        <th>Device / Host</th>
+                        <th>Device / User</th>
                         <th>Domain</th>
                         <th>Transport</th>
                         <th>Security</th>
@@ -73,10 +73,15 @@
                             <td>@log.Timestamp.ToString("HH:mm:ss")</td>
                             <td>
                                 @{
-                                    var deviceName = (log.ClientId != null && devices.TryGetValue(log.ClientId, out var d)) ? d.MachineName : null;
+                                    devices.TryGetValue(log.ClientId ?? "", out var d);
+                                    var displayName = d != null ? $"{d.MachineName} ({d.UserName})" : log.SourceIP;
                                 }
-                                <div><strong>@(deviceName ?? log.SourceIP)</strong></div>
-                                @if (!string.IsNullOrEmpty(log.SourceHostname) && log.SourceHostname != log.SourceIP && log.SourceHostname != deviceName)
+                                <div><strong>@displayName</strong></div>
+                                @if (d != null && d.LastIP != log.SourceIP)
+                                {
+                                    <small class="text-muted">@log.SourceIP</small>
+                                }
+                                else if (d == null && !string.IsNullOrEmpty(log.SourceHostname) && log.SourceHostname != log.SourceIP)
                                 {
                                     <small class="text-muted">@log.SourceHostname</small>
                                 }
