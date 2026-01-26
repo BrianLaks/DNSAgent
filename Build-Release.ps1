@@ -65,19 +65,34 @@ Remove-Item $TempService -Recurse -Force
 Remove-Item $TempTray -Recurse -Force
 
 # 7. Create ZIP Archive
+Write-Host "Calculating expected payload size..." -ForegroundColor Yellow
+$DistSize = (Get-ChildItem $DistPath -Recurse | Measure-Object -Property Length -Sum).Sum
+$FileCount = (Get-ChildItem $DistPath -Recurse | Where-Object { !$_.PSIsContainer }).Count
+Write-Host "Payload: $($DistSize / 1MB) MB ($FileCount files)" -ForegroundColor Cyan
+
 Write-Host "Creating $ReleaseName.zip..." -ForegroundColor Green
 $ZipFile = Join-Path $ReleasePath "$ReleaseName.zip"
+if (Test-Path $ZipFile) { Remove-Item $ZipFile -Force }
 Compress-Archive -Path "$DistPath\*" -DestinationPath $ZipFile -Force
 
-# 8. Integrity Validation (NEW)
+# 8. Integrity Validation (STRICT)
 Write-Host "Validating ZIP integrity..." -ForegroundColor Yellow
+Start-Sleep -Seconds 2 # Allow OS to finalize file handle
 $ZipSize = (Get-Item $ZipFile).Length
+Write-Host "Final ZIP Size: $($ZipSize / 1MB) MB" -ForegroundColor Cyan
+
 if ($ZipSize -lt 35MB) {
-    Write-Host "CRITICAL ERROR: ZIP size discrepancy detected ($($ZipSize / 1MB) MB). Expected > 35MB." -ForegroundColor Red
+    Write-Host "CRITICAL ERROR: ZIP size discrepancy detected ($($ZipSize / 1MB) MB)." -ForegroundColor Red
+    Write-Host "Expected > 35MB based on historical releases and payload weight." -ForegroundColor Red
+    Write-Host "Checking for missing large assets (runtimes, etc)..." -ForegroundColor Yellow
+    if (!(Test-Path (Join-Path $DistPath "runtimes"))) {
+        Write-Host "FAILURE: 'runtimes' folder is missing from distribution!" -ForegroundColor Red
+    }
     Write-Host "Build invalidated to prevent corrupt distribution." -ForegroundColor Red
     exit 1
 }
-Write-Host "ZIP Integrity Verified! Size: $($ZipSize / 1MB) MB" -ForegroundColor Green
+
+Write-Host "ZIP Integrity Verified! Ready for Git." -ForegroundColor Green
 
 Write-Host "`nRelease package created successfully!" -ForegroundColor Green
 Write-Host "Folder: $ReleasePath" -ForegroundColor Cyan
