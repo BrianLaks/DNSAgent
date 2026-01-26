@@ -61,3 +61,21 @@ To load the extension in a Chromium browser (Chrome/Edge/Brave):
 1. Navigate to your browser's extensions page.
 2. Enable **Developer Mode**.
 3. Click **Load unpacked** and select the `/extension` folder from this repository.
+
+## 💾 Database Persistence & Migration
+
+To prevent data loss during updates, the following mechanisms are required:
+
+1.  **Installer-Level Rescue (`install-service.ps1`)**:
+    *   The installer must detect if a previous version of the service exists.
+    *   It must verify the presence of `dnsagent.db` in the old installation directory.
+    *   It must copy the existing database to the new installation folder *before* starting the service.
+    *   If a database already exists in the destination (e.g. from testing), it must be backed up (renamed to `.bak`) before the old data is imported.
+
+2.  **Schema Auto-Migration (`Program.cs`)**:
+    *   On startup, the service must perform granular checks for all table schemas.
+    *   It must attempt to add any missing columns (e.g., `SourceHostname`, `IsDnssec`) individually using `try/catch` blocks to ensure partial failures do not crash the migration.
+    *   This ensures that an imported legacy database is automatically upgraded to the current version's schema without data loss.
+
+3.  **Build Exclusion**:
+    *   The `dnsagent.db` file must be explicitly excluded from the release build artifacts (`.csproj`) to prevent shipping a blank database that could accidentally overwrite user data.
