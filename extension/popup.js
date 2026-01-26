@@ -39,6 +39,34 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
+    // Test API button
+    document.getElementById('test-api').addEventListener('click', async () => {
+        const btn = document.getElementById('test-api');
+        btn.disabled = true;
+        btn.textContent = '🧪 Sending Test...';
+
+        // Send synthetic stats report
+        const testStats = {
+            adsBlocked: 1,
+            sponsorsSkipped: 1,
+            titlesCleaned: 1,
+            timeSavedSeconds: 10,
+            filterVersion: 'v2.3.13-TEST'
+        };
+
+        await chrome.runtime.sendMessage({ action: 'reportStats', stats: testStats });
+
+        setTimeout(() => {
+            btn.disabled = false;
+            btn.textContent = '✅ Success! check dashboard.';
+            btn.style.background = '#22c55e';
+            setTimeout(() => {
+                btn.textContent = '🧪 Test API Connection';
+                btn.style.background = '#a855f7';
+            }, 3000);
+        }, 1500);
+    });
+
     // Settings navigation
     const mainView = document.querySelector('.main-view');
     const settingsView = document.getElementById('settings-view');
