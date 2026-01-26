@@ -139,7 +139,7 @@
     private int adsBlockedToday = 0;
     private int connectedExtensions = 0;
     private string lastReportTime = "Never";
-    private string serverVersion = "v2.0.2";
+    private string serverVersion = $"v{Constants.AppVersion}";
     private List<YouTubeStat> recentStats = new();
 
     protected override async Task OnInitializedAsync()

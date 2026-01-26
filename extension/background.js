@@ -162,7 +162,9 @@ async function reportStats(stats) {
             adsFailed: stats.adsFailed || 0,
             sponsorsSkipped: stats.sponsorsSkipped || 0,
             timeSavedSeconds: stats.timeSavedSeconds || 0,
-            filterVersion: stats.filterVersion || 'unknown'
+            filterVersion: stats.filterVersion || 'unknown',
+            titlesCleaned: stats.titlesCleaned || 0,
+            thumbnailsReplaced: stats.thumbnailsReplaced || 0
         };
 
         await fetch(`${dnsAgentUrl}/api/youtube-stats`, {

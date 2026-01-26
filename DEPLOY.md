@@ -57,3 +57,30 @@ We maintain a detailed [CHANGELOG.md](CHANGELOG.md) in the repository. Before ev
 
 ## 🏗️ Manual Installer
 For Inno Setup instructions, see [installer/BUILD.md](installer/BUILD.md).
+
+---
+
+## ☣️ Post-Mortem: Zombie Extermination Reference
+Use this logic in any future build or setup scripts to ensure no file handles are locked.
+
+```powershell
+# 1. Kill by port (53, 5123)
+$PortsToClean = @(53, 5123)
+foreach ($port in $PortsToClean) {
+    $processes = Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess
+    $processes += Get-NetUDPEndpoint -LocalPort $port -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess
+    foreach ($owningPid in ($processes | Select-Object -Unique)) {
+        try { Stop-Process -Id $owningPid -Force -ErrorAction SilentlyContinue } catch { }
+    }
+}
+
+# 2. Kill by binary name (Force + Recursive)
+try {
+    & taskkill.exe /F /IM "DNSAgent.Service.exe" /T 2>$null
+    & taskkill.exe /F /IM "DNSAgent.Tray.exe" /T 2>$null
+    & taskkill.exe /F /IM "dotnet.exe" /T 2>$null
+} catch {}
+
+# 3. Aggressive stop (PowerShell Native)
+Get-Process -Name "DNSAgent*" -ErrorAction SilentlyContinue | Stop-Process -Force
+```
