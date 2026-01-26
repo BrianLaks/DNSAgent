@@ -289,6 +289,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return true;
     }
 
+    if (message.action === 'getServiceStatus') {
+        fetch(`${dnsAgentUrl}/api/status`)
+            .then(res => res.json())
+            .then(sendResponse)
+            .catch(() => sendResponse(null));
+        return true;
+    }
+
     if (message.action === 'getConnectionStatus') {
         const lastStatus = { connected, dnsAgentUrl, dnsProxyActive };
         // Trigger a check in the background to refresh status

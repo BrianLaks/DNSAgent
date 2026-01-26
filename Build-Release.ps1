@@ -2,7 +2,7 @@
 # This script automates the publishing and packaging of DNS Agent
 
 $ErrorActionPreference = "Stop"
-$Version = "2.3.11"
+$Version = "2.3.12"
 $ReleaseName = "DNSAgent_V$Version"
 $ProjectRoot = Get-Location
 $ReleasePath = Join-Path $ProjectRoot "Release"

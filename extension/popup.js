@@ -101,12 +101,18 @@ function updateConnectionStatus(status) {
         statusDot.className = 'status-dot connected';
         statusText.textContent = 'Connected';
         statusDetails.textContent = `Connected to ${status.dnsAgentUrl}`;
+        // Update service version
+        chrome.runtime.sendMessage({ action: 'getServiceStatus' }).then(res => {
+            if (res && res.version) {
+                document.getElementById('service-version-footer').textContent = `Service: v${res.version}`;
+            }
+        });
     } else {
         statusDot.className = 'status-dot disconnected';
         statusText.textContent = 'Disconnected';
         statusDetails.textContent = 'Service not found. Check settings.';
+        document.getElementById('service-version-footer').textContent = 'Service: OFFLINE';
     }
-
     // Update Proxy Status
     const proxyStatus = document.getElementById('proxy-status');
     if (proxyStatus) {
