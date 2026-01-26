@@ -13,7 +13,7 @@ if '%errorlevel%' NEQ '0' (
     exit /B
 )
 
-powershell.exe -ExecutionPolicy Bypass -File "./Toggle-DNS.ps1"
+powershell.exe -ExecutionPolicy Bypass -File "%~dp0Toggle-DNS.ps1"
 if %errorlevel% neq 0 (
     echo.
     echo ************************************************************
