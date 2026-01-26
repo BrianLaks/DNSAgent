@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "DNS Agent - YouTube Ad Blocker",
-    "version": "2.3.1",
+    "version": "2.3.2",
     "description": "Block YouTube ads and sync with your local DNS Agent for network-wide protection",
     "permissions": [
         "storage",

@@ -20,7 +20,12 @@ powershell.exe -ExecutionPolicy Bypass -File "Build-Release.ps1"
 ### 2. Utilities
 - **`Toggle-DNS.ps1`**: A convenience script for developers to quickly toggle their local machine's primary adapter between using the local DNS Agent (`127.0.0.1`) and Automatic (DHCP). It automatically flushes the DNS cache after each change.
 
-### 3. Deployment Methodology (Master Setup)
+### 3. Extension Versioning Policy
+To ensure architectural alignment and simplify troubleshooting, the **Browser Extension version MUST always match the Service version** (e.g., v2.3.2). 
+- When bumping the version, update `Constants.cs`, `manifest.json`, and `Build-Release.ps1` simultaneously.
+- The Service tracks connected extension versions in the Dashboard via heartbeat metadata.
+
+### 4. Deployment Methodology (Master Setup)
 The deployment is handled by `Start-Setup.bat` (wrapper) and `Setup-DNSAgent.ps1`, which invoke the `install-service.ps1` master script.
 
 **What the Master Setup Ensures:**

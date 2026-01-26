@@ -309,11 +309,10 @@ namespace DNSAgent.Service.Services
             }
 
 
-        // Log to DB
-            _ = LogQueryAsync(clientEndPoint.Address.ToString(), domain, blocked ? "Blocked" : "Allowed", "Local", false);
-
+            // Log to DB (only for Blocked here, Allowed is logged in Forwarding methods)
             if (blocked)
             {
+                _ = LogQueryAsync(clientEndPoint.Address.ToString(), domain ?? "unknown", "Blocked", "Local", false);
                 byte[] response = CreateNxDomainResponse(buffer);
                 await listener.SendAsync(response, response.Length, clientEndPoint);
                 _logger.LogInformation("Blocked: {Domain} from {Client}", domain, clientEndPoint);
@@ -358,7 +357,7 @@ namespace DNSAgent.Service.Services
                     SourceIP = ip, 
                     SourceHostname = hostname,
                     ClientId = clientId,
-                    Domain = domain, 
+                    Domain = string.IsNullOrEmpty(domain) ? "unknown" : domain, 
                     Status = status,
                     Transport = transport,
                     IsDnssec = isDnssec

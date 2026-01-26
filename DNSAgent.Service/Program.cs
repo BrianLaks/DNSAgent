@@ -95,6 +95,17 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<DnsDbContext>();
     db.Database.EnsureCreated();
+    
+    // Safety Backup before migration
+    try 
+    {
+        var dbPath = "dnsagent.db";
+        if (File.Exists(dbPath))
+        {
+            var backupPath = $"dnsagent.db.backup.{DateTime.Now:yyyyMMddHHmmss}.bak";
+            File.Copy(dbPath, backupPath, true);
+        }
+    } catch { }
 
     // --- DATABASE MIGRATION START ---
     

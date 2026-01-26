@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.3.2] - 2026-01-25
+### Added
+- **Premium Identity**: Brand-new high-tech shield icons for the extension.
+- **Version Tracking**: The dashboard now displays the connected extension version for each device.
+### Changed
+- **Unified Versioning**: Synchronized all components to v2.3.2 and established a strict version alignment policy in `DEPLOY.md`.
+
 ## [2.3.1] - 2026-01-25
 ### Fixed
 - **System Analytics**: Resolved race condition in chart rendering logic.

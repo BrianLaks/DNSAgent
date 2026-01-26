@@ -184,13 +184,15 @@ async function sendHeartbeat() {
     if (!connected || !clientId) return;
 
     try {
+        const manifest = chrome.runtime.getManifest();
         await fetch(`${dnsAgentUrl}/api/heartbeat`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 clientId: clientId,
                 machineName: machineName,
-                userName: userName
+                userName: userName,
+                version: manifest.version
             })
         });
         console.log('[DNS Agent] Heartbeat sent');

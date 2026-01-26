@@ -44,6 +44,7 @@ namespace DNSAgent.Service.Data
         public string MachineName { get; set; } = string.Empty;
         public string UserName { get; set; } = string.Empty;
         public string LastIP { get; set; } = string.Empty;
+        public string? ExtensionVersion { get; set; }
         public DateTime LastSeen { get; set; } = DateTime.UtcNow;
     }
 

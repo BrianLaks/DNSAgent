@@ -60,6 +60,7 @@
                 colors: ['#28a745', '#dc3545'],
                 legend: { position: 'bottom' },
                 plotOptions: { pie: { donut: { labels: { show: true, total: { show: true } } } } }
+            };
             if (window.distChartInstance) window.distChartInstance.destroy();
             window.distChartInstance = new ApexCharts(document.querySelector("#distributionChart"), distOptions);
             window.distChartInstance.render();

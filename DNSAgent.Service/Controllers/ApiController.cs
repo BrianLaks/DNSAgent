@@ -244,6 +244,7 @@ namespace DNSAgent.Service.Controllers
             device.MachineName = request.MachineName ?? "Unknown Machine";
             device.UserName = request.UserName ?? "Unknown User";
             device.LastIP = ip;
+            device.ExtensionVersion = request.Version;
             device.LastSeen = DateTime.UtcNow;
 
             await _db.SaveChangesAsync();
@@ -329,5 +330,6 @@ namespace DNSAgent.Service.Controllers
         public string ClientId { get; set; } = string.Empty;
         public string? MachineName { get; set; }
         public string? UserName { get; set; }
+        public string? Version { get; set; }
     }
 }
