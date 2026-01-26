@@ -352,6 +352,30 @@ namespace DNSAgent.Service.Controllers
             });
         }
 
+        /// <summary>
+        /// GET /api/download/extension - Direct download for the browser extension
+        /// </summary>
+        [HttpGet("download/extension")]
+        public IActionResult DownloadExtension()
+        {
+            var fileName = $"DNSAgent_Extension_v{Constants.AppVersion}.zip";
+            var filePath = Path.Combine(AppContext.BaseDirectory, "wwwroot", "assets", fileName);
+
+            if (!System.IO.File.Exists(filePath))
+            {
+                // Fallback to searching for any extension zip in assets
+                var assetsDir = Path.Combine(AppContext.BaseDirectory, "wwwroot", "assets");
+                if (Directory.Exists(assetsDir))
+                {
+                    var file = Directory.GetFiles(assetsDir, "DNSAgent_Extension_v*.zip").OrderByDescending(f => f).FirstOrDefault();
+                    if (file != null) return PhysicalFile(file, "application/zip", Path.GetFileName(file));
+                }
+                return NotFound("Extension package not found. Please run Build-Release.ps1 first.");
+            }
+
+            return PhysicalFile(filePath, "application/zip", fileName);
+        }
+
         // Helper methods
         private string GetUptime()
         {

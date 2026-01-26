@@ -2,7 +2,7 @@
 # This script automates the publishing and packaging of DNS Agent
 
 $ErrorActionPreference = "Stop"
-$Version = "2.4.0"
+$Version = "2.4.1"
 $ReleaseName = "DNSAgent_V$Version"
 $ProjectRoot = Get-Location
 $ReleasePath = Join-Path $ProjectRoot "Release"
@@ -68,7 +68,18 @@ $ExtDistPath = Join-Path $DistPath "extension"
 New-Item -Path $ExtDistPath -ItemType Directory -Force | Out-Null
 Copy-Item "extension\*" -Destination "$ExtDistPath\" -Recurse -Exclude ".git*"
 
-# 7. Cleanup Temp Folders
+# 7. Package Extension separately for direct download
+Write-Host "Creating separate Extension package..." -ForegroundColor Yellow
+$ExtensionZip = Join-Path $ReleasePath "DNSAgent_Extension_v$Version.zip"
+if (Test-Path $ExtensionZip) { Remove-Item $ExtensionZip -Force }
+[System.IO.Compression.ZipFile]::CreateFromDirectory($ExtDistPath, $ExtensionZip, [System.IO.Compression.CompressionLevel]::Optimal, $false)
+
+# Copy extension zip to Service assets for direct dashboard download
+$ServiceAssets = Join-Path $ProjectRoot "DNSAgent.Service\wwwroot\assets"
+if (!(Test-Path $ServiceAssets)) { New-Item -Path $ServiceAssets -ItemType Directory -Force | Out-Null }
+Copy-Item $ExtensionZip -Destination "$ServiceAssets\" -Force
+
+# 8. Cleanup Temp Folders
 Write-Host "Cleaning up temp folders..." -ForegroundColor Yellow
 Remove-Item $TempService -Recurse -Force
 Remove-Item $TempTray -Recurse -Force
