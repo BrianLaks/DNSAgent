@@ -9,7 +9,86 @@
         <div class="col-md-10 offset-md-1">
             <h1 class="mb-4">Setup & Help Guide 📖</h1>
             
+            <!-- Network Guardian Value Proposition -->
+            <div class="card shadow-sm border-0 bg-gradient-primary text-white mb-4 overflow-hidden">
+                <div class="card-body p-4 position-relative">
+                    <div class="row align-items-center">
+                        <div class="col-lg-8">
+                            <h2 class="fw-bold mb-2">The Sentinel & The Shield 🛡️👁️</h2>
+                            <p class="lead mb-0">Experience the only DNS filter that <strong>watches back</strong>. While standard filters are passive, our <strong>Network Guardian</strong> system turns your browser into an active security probe.</p>
+                        </div>
+                        <div class="col-lg-4 text-center d-none d-lg-block">
+                            <i class="bi bi-shield-lock-fill" style="font-size: 5rem; opacity: 0.2;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="accordion" id="helpAccordion">
+                <!-- How it Works: The Ecosystem -->
+                <div class="accordion-item shadow-sm mb-3 border-0">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#howItWorks">
+                            <span class="bi bi-gear-wide-connected me-2"></span> 🚀 How Our System Beats Standard DNS
+                        </button>
+                    </h2>
+                    <div id="howItWorks" class="accordion-collapse collapse show" data-bs-parent="#helpAccordion">
+                        <div class="accordion-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="fw-bold text-primary">Traditional DNS (The Old Way) 🐢</h6>
+                                    <p class="small">Passive lists only. If a tracker isn't on a list made last week, it gets through. Browsers can easily bypass it using "Secure DNS" (DoH).</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="fw-bold text-success">Sentinel Architecture (Our Way) ⚡</h6>
+                                    <p class="small">The <strong>Sentinel</strong> (Browser Extension) catches trackers <em>as they execute</em> in your browser and tells the <strong>Shield</strong> (DNS Agent) to block them for everyone else instantly.</p>
+                                </div>
+                            </div>
+                            
+                            <hr class="my-3">
+                            
+                            <ul class="list-group list-group-flush small">
+                                <li class="list-group-item border-0 px-0 d-flex">
+                                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                    <div><strong>Network-Wide Immunity</strong>: A tracker discovered on your laptop is instantly blocked for your Smart TV, Fridge, and Mobile devices.</div>
+                                </li>
+                                <li class="list-group-item border-0 px-0 d-flex">
+                                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                    <div><strong>Zero-Hour Tracking</strong>: Protects you before public blocklists are even updated.</div>
+                                </li>
+                                <li class="list-group-item border-0 px-0 d-flex">
+                                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                    <div><strong>DoH Transparency</strong>: Identifies when browsers are "cheating" and resolve domains via encrypted paths, giving you 100% network visibility.</div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Setup Guide: Extension -->
+                <div class="accordion-item shadow-sm mb-3 border-0 border-start border-4 border-info">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#extensionSetup">
+                            <span class="bi bi-puzzle me-2"></span> 🔌 Step 1: Install The Sentinel
+                        </button>
+                    </h2>
+                    <div id="extensionSetup" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                        <div class="accordion-body">
+                            <p>To enable the <strong>Network Guardian</strong>, you must install the Browser Extension on your main computer.</p>
+                            <ol class="small">
+                                <li>Click the <strong>Get Extension</strong> button on the top right.</li>
+                                <li>Extract the ZIP folder.</li>
+                                <li>Open <code>brave://extensions</code> (or chrome/edge equivalent).</li>
+                                <li>Enable <strong>Developer Mode</strong>.</li>
+                                <li>Click <strong>Load Unpacked</strong> and select the <code>extension</code> folder.</li>
+                            </ol>
+                            <div class="alert alert-info py-2">
+                                <small>Once installed, look for the green <strong>"Connected"</strong> dot in the popup! 🟢</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Client Visibility Guide -->
                 <div class="accordion-item shadow-sm mb-3 border-0">
                     <h2 class="accordion-header">
@@ -47,13 +126,34 @@
                             <p>Run this PowerShell script (as Administrator) on any Windows machine to point it directly to this server. This ensures the dashboard can identify this specific PC.</p>
                             
                             <div class="bg-dark p-3 rounded position-relative">
-                                <pre class="text-success mb-0" id="psScript"><code>$dnsServer = "@CurrentIP"
+                                <pre class="text-success mb-0" id="psScript" style="font-size: 0.8rem;"><code>$dnsServer = "@CurrentIP"
 $interfaces = Get-NetIPInterface -AddressFamily IPv4 | Where-Object { $_.ConnectionState -eq "Connected" }
 foreach ($interface in $interfaces) {
     Set-DnsClientServerAddress -InterfaceIndex $interface.InterfaceIndex -ServerAddresses $dnsServer
     Write-Host "DNS updated to $dnsServer for interface: $($interface.InterfaceAlias)"
 }</code></pre>
                                 <button class="btn btn-sm btn-outline-light position-absolute top-0 end-0 m-2" @onclick="CopyScript">
+                                    <span class="bi bi-clipboard"></span> Copy
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Firewall Help -->
+                <div class="accordion-item shadow-sm mb-3 border-0">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#firewallHelp">
+                            <span class="bi bi-bricks me-2"></span> 🧱 Firewall & Connectivity
+                        </button>
+                    </h2>
+                    <div id="firewallHelp" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                        <div class="accordion-body">
+                            <p>If other devices can't reach this server, you may need to open ports 53 (DNS) and 5123 (Dashboard) in your Windows Firewall.</p>
+                            <div class="bg-dark p-3 rounded position-relative">
+                                <pre class="text-info mb-0" style="font-size: 0.8rem;"><code>New-NetFirewallRule -DisplayName "DNS Agent Web" -Direction Inbound -LocalPort 5123 -Protocol TCP -Action Allow;
+New-NetFirewallRule -DisplayName "DNS Agent DNS" -Direction Inbound -LocalPort 53 -Protocol UDP,TCP -Action Allow</code></pre>
+                                <button class="btn btn-sm btn-outline-light position-absolute top-0 end-0 m-2" @onclick="CopyFwScript">
                                     <span class="bi bi-clipboard"></span> Copy
                                 </button>
                             </div>

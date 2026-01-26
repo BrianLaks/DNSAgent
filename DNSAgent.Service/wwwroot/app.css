@@ -195,6 +195,24 @@ a,
     box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22) !important;
 }
 
+/* Premium Aesthetics */
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+}
+
+.card-animate:hover {
+    transform: translateY(-5px);
+    transition: transform 0.3s ease;
+}
+
+.help-icon {
+    opacity: 0.15;
+    position: absolute;
+    right: -10px;
+    bottom: -10px;
+    font-size: 8rem;
+}
+
 /* Specific card colors for summary */
 .bg-warning.text-dark .card-title {
     color: rgba(0, 0, 0, 0.6) !important;
