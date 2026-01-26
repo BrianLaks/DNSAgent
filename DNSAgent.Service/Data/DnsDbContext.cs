@@ -17,6 +17,7 @@ namespace DNSAgent.Service.Data
         public DbSet<DnsProvider> DnsProviders { get; set; }
         public DbSet<DeviceInfo> Devices { get; set; }
         public DbSet<YouTubeStat> YouTubeStats { get; set; }
+        public DbSet<SentinelReport> SentinelReports { get; set; }
     }
 
     public class BlacklistedDomain

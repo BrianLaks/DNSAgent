@@ -289,6 +289,69 @@ namespace DNSAgent.Service.Controllers
             }
         }
 
+        /// <summary>
+        /// POST /api/sentinel/report - Report tracker detection or DNS bypass
+        /// </summary>
+        [HttpPost("sentinel/report")]
+        public async Task<IActionResult> ReportSentinel([FromBody] SentinelReportRequest request)
+        {
+            try
+            {
+                var report = new SentinelReport
+                {
+                    Timestamp = DateTime.UtcNow,
+                    ClientId = request.ClientId,
+                    Domain = request.Domain.ToLowerInvariant(),
+                    ReportType = request.ReportType,
+                    PageUrl = request.PageUrl,
+                    Metadata = request.Metadata
+                };
+
+                // If it's a confirmed tracker, we can auto-block it network-wide
+                if (request.ReportType == "Tracker")
+                {
+                    if (!await _db.BlacklistedDomains.AnyAsync(b => b.Domain == report.Domain))
+                    {
+                        report.IsAutoBlocked = true;
+                        _db.BlacklistedDomains.Add(new BlacklistedDomain
+                        {
+                            Domain = report.Domain,
+                            Reason = $"Sentinel: Tracker detected on {request.PageUrl}",
+                            AddedAt = DateTime.UtcNow
+                        });
+                        await _dnsWorker.RefreshBlacklistAsync();
+                    }
+                }
+
+                _db.SentinelReports.Add(report);
+                await _db.SaveChangesAsync();
+
+                return Ok(new { success = true, autoBlocked = report.IsAutoBlocked });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// GET /api/sentinel/audit - Check if domains resolved in browser were logged by DNS
+        /// </summary>
+        [HttpGet("sentinel/audit")]
+        public async Task<IActionResult> AuditBypasses([FromQuery] string domain, [FromQuery] string clientId)
+        {
+            // Look for this domain in the DNS logs for this client in the last 60 seconds
+            var recent = DateTime.UtcNow.AddSeconds(-60);
+            var wasLogged = await _db.QueryLogs
+                .AnyAsync(q => q.Domain.Contains(domain) && q.Timestamp >= recent);
+
+            return Ok(new { 
+                domain, 
+                wasLogged, 
+                recommendation = wasLogged ? "None" : "DoH Bypass Detected - Inspect Browser Settings"
+            });
+        }
+
         // Helper methods
         private string GetUptime()
         {
@@ -328,8 +391,17 @@ namespace DNSAgent.Service.Controllers
         public int TitlesCleaned { get; set; }
         public int ThumbnailsReplaced { get; set; }
         public double TimeSavedSeconds { get; set; }
-        public string FilterVersion { get; set; } = string.Empty;
+        public string? FilterVersion { get; set; }
         public string? MachineName { get; set; }
+    }
+
+    public class SentinelReportRequest
+    {
+        public string ClientId { get; set; } = string.Empty;
+        public string Domain { get; set; } = string.Empty;
+        public string ReportType { get; set; } = "Tracker";
+        public string? PageUrl { get; set; }
+        public string? Metadata { get; set; }
     }
 
     public class HeartbeatRequest

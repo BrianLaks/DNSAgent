@@ -354,6 +354,63 @@ chrome.runtime.onInstalled.addListener(() => {
 createContextMenu();
 checkConnection();
 
+// Sentinel: Report tracker or bypass to DNS Agent
+async function reportSentinel(domain, type, pageUrl = null) {
+    if (!connected || !clientId) return;
+
+    try {
+        await fetch(`${dnsAgentUrl}/api/sentinel/report`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                clientId,
+                domain,
+                reportType: type,
+                pageUrl: pageUrl || contextDomain,
+                metadata: JSON.stringify({ browser: navigator.userAgent })
+            })
+        });
+    } catch (e) { }
+}
+
+// Sentinel: Audit resolved domains for DNS bypass
+let auditedDomains = new Set();
+async function auditDomain(domain) {
+    if (!connected || auditedDomains.has(domain)) return;
+    if (domain.includes('localhost') || domain.includes('google.com')) return;
+
+    try {
+        const response = await fetch(`${dnsAgentUrl}/api/sentinel/audit?domain=${domain}&clientId=${clientId}`);
+        if (response.ok) {
+            const data = await response.json();
+            if (!data.wasLogged) {
+                reportSentinel(domain, 'Bypass');
+            }
+            auditedDomains.add(domain);
+        }
+    } catch (e) { }
+}
+
+// Monitor Web Requests for Trackers and Bypasses
+chrome.webRequest.onBeforeRequest.addListener(
+    (details) => {
+        try {
+            const url = new URL(details.url);
+            const domain = url.hostname;
+
+            if (details.type === 'main_frame') {
+                auditDomain(domain);
+            }
+
+            const trackerPatterns = ['telemetry', 'analytics', 'tracker', 'metrics', 'doubleclick'];
+            if (trackerPatterns.some(p => domain.includes(p))) {
+                reportSentinel(domain, 'Tracker', details.initiator);
+            }
+        } catch (e) { }
+    },
+    { urls: ["<all_urls>"] }
+);
+
 // Periodic connection check (every 5 minutes)
 setInterval(async () => {
     if (!connected) {
