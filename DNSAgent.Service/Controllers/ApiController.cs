@@ -26,8 +26,17 @@ namespace DNSAgent.Service.Controllers
         /// GET /api/status - Service health check (no authentication required)
         /// </summary>
         [HttpGet("status")]
-        public IActionResult GetStatus()
+        public async Task<IActionResult> GetStatus()
         {
+            var ip = Request.HttpContext.Connection.RemoteIpAddress?.ToString();
+            var dnsActive = false;
+            
+            if (!string.IsNullOrEmpty(ip))
+            {
+                var fiveMinsAgo = DateTime.Now.AddMinutes(-5);
+                dnsActive = await _db.QueryLogs.AnyAsync(q => q.SourceIP == ip && q.Timestamp >= fiveMinsAgo);
+            }
+
             return Ok(new
             {
                 version = Constants.AppVersion,
@@ -36,6 +45,7 @@ namespace DNSAgent.Service.Controllers
                 dohEnabled = _dnsWorker.UpstreamProtocol == "DoH",
                 dnssecEnabled = _dnsWorker.EnforceDnssec,
                 blockedDomains = _dnsWorker.GetBlockedDomainCount(),
+                clientDnsActive = dnsActive,
                 timestamp = DateTime.UtcNow
             });
         }
@@ -260,6 +270,7 @@ namespace DNSAgent.Service.Controllers
                 TitlesCleaned = request.TitlesCleaned,
                 ThumbnailsReplaced = request.ThumbnailsReplaced,
                 TimeSavedSeconds = request.TimeSavedSeconds,
+                Timestamp = DateTime.Now,
                 FilterVersion = request.FilterVersion,
                 DeviceName = request.MachineName ?? Request.Headers["User-Agent"].ToString() ?? "Unknown Extension"
             };

@@ -106,4 +106,16 @@ function updateConnectionStatus(status) {
         statusText.textContent = 'Disconnected';
         statusDetails.textContent = 'Service not found. Check settings.';
     }
+
+    // Update Proxy Status
+    const proxyStatus = document.getElementById('proxy-status');
+    if (proxyStatus) {
+        if (status.dnsProxyActive) {
+            proxyStatus.textContent = 'ACTIVE';
+            proxyStatus.className = 'badge bg-success';
+        } else {
+            proxyStatus.textContent = 'INACTIVE';
+            proxyStatus.className = 'badge bg-secondary';
+        }
+    }
 }

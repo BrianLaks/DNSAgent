@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.3.1] - 2026-01-25
+### Fixed
+- **System Analytics**: Resolved race condition in chart rendering logic.
+- **Heartbeat Logic**: Aligned heartbeat detection with local server time to fix "0 Active" device issue.
+### Added
+- **Proxy Detection**: Extension now explicitly reports "DNS Proxy: Active/Inactive" status based on real-time log analysis.
+- **Utility Wrapper**: Added `Toggle-DNS.bat` for easy one-click administrator access.
+
 ## [2.3] - 2026-01-25
 ### Changed
 - Refined deployment process with robust service management and database rescue.

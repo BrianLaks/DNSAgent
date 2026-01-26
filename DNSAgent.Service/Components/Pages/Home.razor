@@ -239,7 +239,7 @@
 
             // Top Blocked
             _stats.TopBlocked = queries.Where(x => x.Status == "Blocked")
-                .GroupBy(x => x.Domain)
+                .GroupBy(x => x.Domain, StringComparer.OrdinalIgnoreCase)
                 .OrderByDescending(g => g.Count())
                 .Take(5)
                 .Select(g => (Domain: g.Key, Count: g.Count()))
@@ -271,7 +271,7 @@
             catch { }
 
             // Connected Agents (Active heartbeats in last 10 mins)
-            var heartbeatCutoff = DateTime.UtcNow.AddMinutes(-10);
+            var heartbeatCutoff = DateTime.Now.AddMinutes(-10);
             var activeHeartbeats = await Db.Devices
                 .Where(d => d.LastSeen >= heartbeatCutoff)
                 .ToListAsync();

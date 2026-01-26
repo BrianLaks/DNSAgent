@@ -10,6 +10,7 @@ let contextDomain = null;
 let clientId = null;
 let machineName = 'Unknown machine';
 let userName = 'Unknown user';
+let dnsProxyActive = false;
 
 // Generate or retrieve Client ID
 async function getClientId() {
@@ -54,8 +55,10 @@ async function checkConnection() {
             signal: AbortSignal.timeout(connected ? 5000 : 2000)
         });
         if (response.ok) {
+            const data = await response.json();
+            dnsProxyActive = data.clientDnsActive || false;
             connected = true;
-            chrome.storage.local.set({ connected: true });
+            chrome.storage.local.set({ connected: true, dnsProxyActive });
             return true;
         }
     } catch (e) {
@@ -101,10 +104,11 @@ async function discoverDnsAgent() {
                 if (data.version) {
                     dnsAgentUrl = host;
                     connected = true;
-                    console.log('[DNS Agent] Connected to:', host, 'Version:', data.version);
+                    dnsProxyActive = data.clientDnsActive || false;
+                    console.log('[DNS Agent] Connected to:', host, 'Version:', data.version, 'Proxy:', dnsProxyActive);
 
                     // Save to storage
-                    chrome.storage.local.set({ dnsAgentUrl: host, connected: true });
+                    chrome.storage.local.set({ dnsAgentUrl: host, connected: true, dnsProxyActive });
 
                     // Fetch filters
                     await fetchFilters();
@@ -282,7 +286,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
 
     if (message.action === 'getConnectionStatus') {
-        const lastStatus = { connected, dnsAgentUrl };
+        const lastStatus = { connected, dnsAgentUrl, dnsProxyActive };
         // Trigger a check in the background to refresh status
         checkConnection();
         sendResponse(lastStatus);
