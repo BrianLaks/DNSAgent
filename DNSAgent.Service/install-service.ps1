@@ -29,6 +29,9 @@ foreach ($port in $PortsToClean) {
 }
 
 # Also kill by name just in case they aren't listening yet
+Write-Host "Exterminating zombie processes..." -ForegroundColor Yellow
+& taskkill.exe /F /IM "DNSAgent.Service.exe" /T 2>$null
+& taskkill.exe /F /IM "DNSAgent.Tray.exe" /T 2>$null
 Stop-Process -Name "DNSAgent.Service" -Force -ErrorAction SilentlyContinue
 Stop-Process -Name "DNSAgent.Tray" -Force -ErrorAction SilentlyContinue
 Start-Sleep -Seconds 1

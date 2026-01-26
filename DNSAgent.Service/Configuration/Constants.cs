@@ -2,7 +2,7 @@ namespace DNSAgent.Service.Configuration
 {
     public static class Constants
     {
-        public const string AppVersion = "2.3.4";
+        public const string AppVersion = "2.3.5";
         public const string GitHubUrl = "https://github.com/BrianLaks/DNSAgent";
     }
 }

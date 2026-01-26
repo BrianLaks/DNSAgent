@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.3.5] - 2026-01-25
+### Fixed
+- **Zombie Process Extermination**: Implemented aggressive `taskkill /F /T` logic in the installer to ensure legacy service and tray processes are completely purged during upgrades.
+
 ## [2.3.4] - 2026-01-25
 ### Fixed
 - **Database Rescue**: Fixed logic failure in `install-service.ps1` when upgrading within the same directory.
