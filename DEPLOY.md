@@ -17,7 +17,10 @@ powershell.exe -ExecutionPolicy Bypass -File "Build-Release.ps1"
 - **Comprehensive**: The ZIP contains all binaries, the browser extension, and the master setup scripts.
 - **Git Backed**: Completed release ZIPs are force-committed to Git to allow deployment scripts to pull the latest architectural build.
 
-### 2. Deployment Methodology (Master Setup)
+### 2. Utilities
+- **`Toggle-DNS.ps1`**: A convenience script for developers to quickly toggle their local machine's primary adapter between using the local DNS Agent (`127.0.0.1`) and Automatic (DHCP). It automatically flushes the DNS cache after each change.
+
+### 3. Deployment Methodology (Master Setup)
 The deployment is handled by `Start-Setup.bat` (wrapper) and `Setup-DNSAgent.ps1`, which invoke the `install-service.ps1` master script.
 
 **What the Master Setup Ensures:**

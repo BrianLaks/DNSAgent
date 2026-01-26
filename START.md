@@ -43,6 +43,13 @@ To revert to automatic DNS:
 Set-DnsClientServerAddress -InterfaceAlias "Ethernet 2" -ResetServerAddresses
 ```
 
+## 🔄 Instant DNS Toggle
+For quick switching during development, run the toggle script:
+```powershell
+.\Toggle-DNS.ps1
+```
+This utility auto-detects your primary adapter, toggles between Local (127.0.0.1) and Automatic, and flushes your DNS cache.
+
 ## 🛠️ Version Maintenance
 
 When preparing a new release, ensure the version is synchronized in the following locations:

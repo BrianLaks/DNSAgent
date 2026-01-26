@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 - Refined deployment process with robust service management and database rescue.
 - Updated `Build-Release.ps1` to retain historical release artifacts in the `Release/` folder.
 - Synchronized all project versions to 2.3 for deployment continuity.
+- Added `Toggle-DNS.ps1` utility for quick DNS switching with auto-detection and flush logic.
 
 ## [2.2] - 2026-01-25
 ### Added
