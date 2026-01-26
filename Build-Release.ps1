@@ -14,10 +14,14 @@ Write-Host "--- DNS Agent v$Version Build & Release ---" -ForegroundColor Cyan
 
 # 0. Forced Zombie Extermination (Build Safety)
 Write-Host "Clearing build locks..." -ForegroundColor Yellow
-Get-Process -Name "DNSAgent*" -ErrorAction SilentlyContinue | Stop-Process -Force
-taskkill /F /IM "DNSAgent.Service.exe" /T 2>$null
-taskkill /F /IM "DNSAgent.Tray.exe" /T 2>$null
-taskkill /F /IM "dotnet.exe" /T 2>$null
+try {
+    Get-Process -Name "DNSAgent*" -ErrorAction SilentlyContinue | Stop-Process -Force
+    & taskkill.exe /F /IM "DNSAgent.Service.exe" /T 2>$null
+    & taskkill.exe /F /IM "DNSAgent.Tray.exe" /T 2>$null
+    & taskkill.exe /F /IM "dotnet.exe" /T 2>$null
+}
+catch {}
+Start-Sleep -Seconds 1
 
 # 1. Cleanup old release folders
 if (Test-Path $ReleasePath) {
