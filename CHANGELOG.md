@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.3.4] - 2026-01-25
+### Fixed
+- **Database Rescue**: Fixed logic failure in `install-service.ps1` when upgrading within the same directory.
+- **Service Management**: Further improved service stop/start reliability.
+
 ## [2.3.3] - 2026-01-25
 ### Fixed
 - **Packaging Error**: Restored missing `Toggle-DNS.ps1` to the release ZIP root.
