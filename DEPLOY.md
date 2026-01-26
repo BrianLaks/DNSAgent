@@ -40,6 +40,11 @@ The deployment is handled by `Start-Setup.bat` (wrapper) and `Setup-DNSAgent.ps1
     - **Deep Cleanup**: Terminates hung processes and deletes old service entries for a clean upgrade.
     - **Static Asset Resolution**: Configures Registry keys to ensure the service finds CSS/Images correctly in the new path.
 5.  **Integration**: Configures the Tray Icon to auto-start on user login and launches it immediately alongside the service.
+6.  **Conflict & Zombie Process Management (Critical Policy)**:
+    - **Identification**: External processes (e.g., browsers like `brave.exe`, IDEs, or hung `.NET` build processes) can inadvertently hold locks on release ZIPs or binaries, leading to silent build failures or "Corrupted ZIP" errors.
+    - **Resolution Requirement**: Every future deployment or build script **MUST** aggressively identify and terminate these locking processes before proceeding.
+    - **Global Kill Strategy**: Use `taskkill /F /T` targeting specific binaries (`DNSAgent.Service.exe`, `DNSAgent.Tray.exe`, `dotnet.exe`) and, if necessary, broad-match patterns to ensure a clean slate.
+    - **Manual Verification**: If a "Corrupted ZIP" is reported, developer intervention is required to identify the specific PID holding the lock (e.g., via `netstat` or `tasklist /V`) and terminate it manually.
 
 ## 📈 Version Tracking
 We maintain a detailed [CHANGELOG.md](CHANGELOG.md) in the repository. Before every release, ensure the following are synchronized:
