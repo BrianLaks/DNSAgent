@@ -2,8 +2,8 @@
 # This script automates the publishing and packaging of DNS Agent v1.2
 
 $ErrorActionPreference = "Stop"
-$Version = "2.2"
-$ReleaseName = "DNSAgent_V2.2"
+$Version = "2.3"
+$ReleaseName = "DNSAgent_V$Version"
 $ProjectRoot = Get-Location
 $ReleasePath = Join-Path $ProjectRoot "Release"
 $DistPath = Join-Path $ReleasePath "Dist"
@@ -14,8 +14,9 @@ Write-Host "--- DNS Agent v$Version Build & Release ---" -ForegroundColor Cyan
 
 # 1. Cleanup old release folders
 if (Test-Path $ReleasePath) {
-    Write-Host "Cleaning up old release folder..." -ForegroundColor Yellow
-    Remove-Item $ReleasePath -Recurse -Force
+    Write-Host "Cleaning up old release folders (keeping artifacts)..." -ForegroundColor Yellow
+    # Only remove Dist and Temp folders, keep existing .zip files
+    Get-ChildItem $ReleasePath -Directory | Remove-Item -Recurse -Force
 }
 New-Item -Path $DistPath -ItemType Directory -Force | Out-Null
 New-Item -Path $TempService -ItemType Directory -Force | Out-Null

@@ -1,33 +1,40 @@
 # Deployment and Release Guide 🛡️
 
-This guide documents the established patterns for building, packaging, and publishing a new release of DNS Agent.
+This guide documents the "Master Setup" approach for building, packaging, and publishing DNS Agent.
 
-## 📦 Packaging Version 2.0+
+## 📦 Successive Build Process
 
-The build process is automated via PowerShell scripts.
+We follow a diligent "Build -> Test -> Resolve" cycle. Every build must ensure continuity of service and data.
 
-### 1. Build the Release
-Run the build script from the repository root:
+### 1. Build and Package (v2.3+)
+Run the build script to generate the latest distribution:
 ```powershell
 powershell.exe -ExecutionPolicy Bypass -File "Build-Release.ps1"
 ```
 
-**What happens:**
-- Cleans the `Release/` directory.
-- Publishes `DNSAgent.Service` and `DNSAgent.Tray` in Release mode.
-- Copies the **Browser Extension** and critical setup scripts (`Start-Setup.bat`, `Setup-DNSAgent.ps1`).
-- Generates a ZIP archive named **`DNSAgent_V2.zip`** (following the V2 architectural requirement).
+**Methodology:**
+- **Non-Destructive**: Previous release ZIPs are preserved in the `Release/` folder for rollback or historical reference.
+- **Comprehensive**: The ZIP contains all binaries, the browser extension, and the master setup scripts.
+- **Git Backed**: Completed release ZIPs are force-committed to Git to allow deployment scripts to pull the latest architectural build.
 
-### 2. Publishing to GitHub
-The publish script handles the GitHub API integration:
-```powershell
-.\Publish-Release.ps1 -Version "2.0" -GitHubToken "your_token"
-```
+### 2. Deployment Methodology (Master Setup)
+The deployment is handled by `Start-Setup.bat` (wrapper) and `Setup-DNSAgent.ps1`, which invoke the `install-service.ps1` master script.
 
-**Key Patterns:**
-- **Naming**: Ensure the zip file includes the `_V2` suffix for the current architectural generation.
-- **Assets**: Always include the `/extension` folder in the distribution zip.
-- **Notes**: Release notes are automatically generated from a template within the script.
+**What the Master Setup Ensures:**
+1.  **Process Management**: Automatically terminates any hung service or tray processes listening on critical ports (53, 5123).
+2.  **Firewall Orchestration**: Sets up application-level firewall rules for both the Service and the Tray app to ensure network-wide protection.
+3.  **Data Persistence (Rescue Logic)**:
+    - Detects existing installations.
+    - Backs up the current database (if empty) to `.bak`.
+    - Automatically imports existing user data (`dnsagent.db`) from the old installation to the new one.
+4.  **Service Lifecycle**: Uninstalls old versions and installs the new service with correct working directory registry keys for static asset resolution.
+5.  **Integration**: Configures the Tray Icon to auto-start on user login and launches it immediately alongside the service.
 
-## 🏗️ Installer Generation
-For users who prefer a traditional installer, the `installer/DNSAgent.iss` file can be compiled using **Inno Setup**. Instructions are located in [installer/BUILD.md](installer/BUILD.md).
+## 📈 Version Tracking
+We maintain a detailed [CHANGELOG.md](CHANGELOG.md) in the repository. Before every release, ensure the following are synchronized:
+- `Constants.cs` (AppVersion)
+- `.csproj` files (Version)
+- `Build-Release.ps1` ($Version)
+
+## 🏗️ Manual Installer
+For Inno Setup instructions, see [installer/BUILD.md](installer/BUILD.md).
