@@ -1,6 +1,7 @@
 @page "/admin/youtube-stats"
 @using Microsoft.EntityFrameworkCore
 @using DNSAgent.Service.Data
+@using DNSAgent.Service.Configuration
 @inject DnsDbContext Db
 @attribute [Authorize(Roles = "Admin")]
 @rendermode InteractiveServer
