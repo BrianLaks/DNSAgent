@@ -36,6 +36,7 @@ Copy-Item "$TempTray\*" -Destination "$DistPath\" -Recurse -Force
 Write-Host "Copying setup scripts..." -ForegroundColor Yellow
 Copy-Item "Setup-DNSAgent.ps1" -Destination "$DistPath\"
 Copy-Item "Start-Setup.bat" -Destination "$DistPath\"
+Copy-Item "Toggle-DNS.bat" -Destination "$DistPath\"
 
 if (Test-Path "DNSAgent.Service\install-service.ps1") {
     Copy-Item "DNSAgent.Service\install-service.ps1" -Destination "$DistPath\"
