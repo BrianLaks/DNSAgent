@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.3.3] - 2026-01-25
+### Fixed
+- **Packaging Error**: Restored missing `Toggle-DNS.ps1` to the release ZIP root.
+- **Service Ghosting**: Improved `install-service.ps1` to aggressively purge previous version artifacts (fixing "v1.6" ghosting issues).
+- **Toggle Bat**: Refined `Toggle-DNS.bat` path logic for better portable execution.
+
 ## [2.3.2] - 2026-01-25
 ### Added
 - **Premium Identity**: Brand-new high-tech shield icons for the extension.

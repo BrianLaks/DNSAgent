@@ -2,7 +2,7 @@
 # This script automates the publishing and packaging of DNS Agent v1.2
 
 $ErrorActionPreference = "Stop"
-$Version = "2.3.2"
+$Version = "2.3.3"
 $ReleaseName = "DNSAgent_V$Version"
 $ProjectRoot = Get-Location
 $ReleasePath = Join-Path $ProjectRoot "Release"
@@ -37,6 +37,7 @@ Write-Host "Copying setup scripts..." -ForegroundColor Yellow
 Copy-Item "Setup-DNSAgent.ps1" -Destination "$DistPath\"
 Copy-Item "Start-Setup.bat" -Destination "$DistPath\"
 Copy-Item "Toggle-DNS.bat" -Destination "$DistPath\"
+Copy-Item "Toggle-DNS.ps1" -Destination "$DistPath\"
 
 if (Test-Path "DNSAgent.Service\install-service.ps1") {
     Copy-Item "DNSAgent.Service\install-service.ps1" -Destination "$DistPath\"

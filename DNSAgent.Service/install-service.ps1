@@ -71,8 +71,18 @@ if ($OldService) {
 
 Write-Host "Stopping and removing old service..." -ForegroundColor Gray
 Stop-Service $ServiceName -Force -ErrorAction SilentlyContinue
+& sc.exe stop $ServiceName 2>$null
+Start-Sleep -Seconds 1
 & sc.exe delete $ServiceName 2>$null
 Start-Sleep -Seconds 2
+
+# Force remove any hung files in destination if possible
+try {
+    Get-Process -Name "DNSAgent.Service" -ErrorAction SilentlyContinue | Stop-Process -Force
+    Get-Process -Name "DNSAgent.Tray" -ErrorAction SilentlyContinue | Stop-Process -Force
+}
+catch {}
+Start-Sleep -Seconds 1
 
 # 3. Install Service & FIX WEBSITE STYLING
 Write-Host "Installing Service..." -ForegroundColor Yellow
