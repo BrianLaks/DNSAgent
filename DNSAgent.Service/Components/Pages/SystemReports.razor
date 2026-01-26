@@ -140,7 +140,7 @@
         try 
         {
             // 7 Day Traffic Trend
-            var weekAgo = DateTime.Now.Date.AddDays(-6);
+            var weekAgo = DateTime.UtcNow.Date.AddDays(-6);
             var logs = await Db.QueryLogs
                 .Where(x => x.Timestamp >= weekAgo)
                 .Select(x => new { x.Timestamp, x.IsDnssec })
@@ -180,7 +180,7 @@
             };
 
             // Top Devices for last 24h
-            var dayAgo = DateTime.Now.AddHours(-24);
+            var dayAgo = DateTime.UtcNow.AddHours(-24);
             topDevices = await Db.QueryLogs
                 .Where(x => x.Timestamp >= dayAgo)
                 .GroupBy(l => l.SourceIP)

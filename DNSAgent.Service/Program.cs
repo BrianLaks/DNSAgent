@@ -199,6 +199,24 @@ using (var scope = app.Services.CreateScope())
     
     // Seed default admin user
     await DbInitializer.SeedDefaultAdminAsync(scope.ServiceProvider);
+
+    // --- DIAGNOSTICS DUMP ---
+    try 
+    {
+        var prodConn = "Data Source=C:\\DNSAgent_V2.3.10\\dnsagent.db";
+        var optionsBuilder = new DbContextOptionsBuilder<DnsDbContext>();
+        optionsBuilder.UseSqlite(prodConn);
+        using var prodDb = new DnsDbContext(optionsBuilder.Options);
+
+        var qCount = await prodDb.QueryLogs.CountAsync();
+        var yCount = await prodDb.YouTubeStats.CountAsync();
+        var dCount = await prodDb.Devices.CountAsync();
+        var diag = $"[{DateTime.Now}] PROD DIAGNOSTICS: QueryLogs={qCount}, YouTubeStats={yCount}, Devices={dCount}";
+        await File.WriteAllTextAsync("dnsagent_diagnostics_prod.txt", diag);
+        Console.WriteLine(diag);
+    } catch (Exception ex) {
+        await File.WriteAllTextAsync("dnsagent_diagnostics_prod_error.txt", ex.ToString());
+    }
 }
 
 // Configure Web UI if enabled

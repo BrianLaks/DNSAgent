@@ -249,6 +249,9 @@ namespace DNSAgent.Service.Services
                 if (!string.IsNullOrEmpty(device.LastIP))
                 {
                     _ipToClientIdMap[device.LastIP] = device.Id;
+                    // Handle dual-stack localhost
+                    if (device.LastIP == "::1") _ipToClientIdMap["127.0.0.1"] = device.Id;
+                    if (device.LastIP == "127.0.0.1") _ipToClientIdMap["::1"] = device.Id;
                 }
             }
         }
@@ -353,7 +356,7 @@ namespace DNSAgent.Service.Services
                 var db = scope.ServiceProvider.GetRequiredService<DnsDbContext>();
                 db.QueryLogs.Add(new QueryLog 
                 { 
-                    Timestamp = DateTime.Now, 
+                    Timestamp = DateTime.UtcNow, 
                     SourceIP = ip, 
                     SourceHostname = hostname,
                     ClientId = clientId,

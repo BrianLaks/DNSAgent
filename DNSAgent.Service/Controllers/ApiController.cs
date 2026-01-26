@@ -57,7 +57,7 @@ namespace DNSAgent.Service.Controllers
         [Authorize]
         public async Task<IActionResult> GetStats()
         {
-            var today = DateTime.Today;
+            var today = DateTime.UtcNow.Date;
             var totalQueries = await _db.QueryLogs.CountAsync();
             var blockedToday = await _db.QueryLogs
                 .Where(q => q.Timestamp >= today && q.Status == "Blocked")
@@ -259,27 +259,34 @@ namespace DNSAgent.Service.Controllers
         [HttpPost("youtube-stats")]
         public async Task<IActionResult> ReportYouTubeStats([FromBody] YouTubeStatsRequest request)
         {
-            // Log for visibility
-            Console.WriteLine($"[YouTube Stats] Blocked: {request.AdsBlocked}, Sponsors: {request.SponsorsSkipped}, Saved: {request.TimeSavedSeconds}s");
-
-            // Persist to database
-            var stat = new YouTubeStat
+            var logPath = Path.Combine(AppContext.BaseDirectory, "youtube_ingest.log");
+            try 
             {
-                AdsBlocked = request.AdsBlocked,
-                AdsFailed = request.AdsFailed,
-                SponsorsSkipped = request.SponsorsSkipped,
-                TitlesCleaned = request.TitlesCleaned,
-                ThumbnailsReplaced = request.ThumbnailsReplaced,
-                TimeSavedSeconds = request.TimeSavedSeconds,
-                Timestamp = DateTime.Now,
-                FilterVersion = request.FilterVersion,
-                DeviceName = request.MachineName ?? Request.Headers["User-Agent"].ToString() ?? "Unknown Extension"
-            };
+                // Persist to database
+                var stat = new YouTubeStat
+                {
+                    AdsBlocked = request.AdsBlocked,
+                    AdsFailed = request.AdsFailed,
+                    SponsorsSkipped = request.SponsorsSkipped,
+                    TitlesCleaned = request.TitlesCleaned,
+                    ThumbnailsReplaced = request.ThumbnailsReplaced,
+                    TimeSavedSeconds = request.TimeSavedSeconds,
+                    Timestamp = DateTime.UtcNow,
+                    FilterVersion = request.FilterVersion ?? "unknown",
+                    DeviceName = request.MachineName ?? Request.Headers["User-Agent"].ToString() ?? "Unknown Extension"
+                };
 
-            _db.YouTubeStats.Add(stat);
-            await _db.SaveChangesAsync();
+                _db.YouTubeStats.Add(stat);
+                await _db.SaveChangesAsync();
 
-            return Ok(new { success = true, received = DateTime.UtcNow });
+                System.IO.File.AppendAllText(logPath, $"[{DateTime.Now}] SUCCESS: Logged {request.AdsBlocked} ads from {stat.DeviceName}\n");
+                return Ok(new { success = true, received = DateTime.UtcNow });
+            }
+            catch (Exception ex)
+            {
+                System.IO.File.AppendAllText(logPath, $"[{DateTime.Now}] ERROR: {ex.Message}\n");
+                return StatusCode(500, new { error = "Database write failed" });
+            }
         }
 
         // Helper methods
