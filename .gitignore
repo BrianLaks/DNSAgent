@@ -71,3 +71,6 @@ DNSAgent.Service/publish/
 # *.zip
 !Release/*.zip
 !Toggle-DNS.bat
+
+# Staging
+_BuildStaging/

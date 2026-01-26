@@ -100,9 +100,18 @@ Start-Sleep -Seconds 1
 # 3. Install Service & FIX WEBSITE STYLING
 Write-Host "Installing Service..." -ForegroundColor Yellow
 $BinWithQuotes = "`"$BinaryPath`""
-# 103: New-Service -Name $ServiceName -BinaryPathName $BinWithQuotes -DisplayName $DisplayName -Description "DNS Ad-Blocker" -StartupType Automatic
+New-Service -Name $ServiceName -BinaryPathName $BinWithQuotes -DisplayName $DisplayName -Description "DNS Ad-Blocker" -StartupType Automatic
 
-# 4. Sentinel Asset Verification: Ensure Extension is available for Dashboard
+# 4. Registry Propagation Wait: Ensure Windows has created the service key
+Write-Host "Waiting for service registry entry..." -ForegroundColor Gray
+$RegPath = "HKLM:\SYSTEM\CurrentControlSet\Services\$ServiceName"
+$retry = 0
+while (!(Test-Path $RegPath) -and $retry -lt 10) {
+    Start-Sleep -Milliseconds 500
+    $retry++
+}
+
+# 5. Sentinel Asset Verification: Ensure Extension is available for Dashboard
 Write-Host "Verifying Sentinel assets..." -ForegroundColor Yellow
 $AssetsPath = Join-Path $CurrentDir "wwwroot\assets"
 if (!(Test-Path $AssetsPath)) {
@@ -116,8 +125,12 @@ else {
 }
 
 # This Registry fix tells Windows the "Working Directory" so it finds the CSS/Images
-$RegPath = "HKLM:\SYSTEM\CurrentControlSet\Services\$ServiceName"
-Set-ItemProperty -Path $RegPath -Name "ImagePath" -Value $BinWithQuotes
+if (Test-Path $RegPath) {
+    Set-ItemProperty -Path $RegPath -Name "ImagePath" -Value $BinWithQuotes
+}
+else {
+    Write-Host "WARNING: Registry path not found for $ServiceName. Manual fix may be required." -ForegroundColor Red
+}
 
 # 4. Start Service
 Write-Host "Starting Service..." -ForegroundColor Cyan

@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <OutputType>Exe</OutputType>
-    <Version>2.4.1</Version>
+    <Version>2.4.3</Version>
     <DefaultItemExcludes>$(DefaultItemExcludes);publish\**;production\**;dnsagent.db;*.db-shm;*.db-wal</DefaultItemExcludes>
   </PropertyGroup>
   
