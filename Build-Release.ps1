@@ -6,10 +6,11 @@ $Version = "2.4.1"
 $ReleaseName = "DNSAgent_V$Version"
 $ProjectRoot = Get-Location
 $ReleasePath = Join-Path $ProjectRoot "Release"
-$DistPath = Join-Path $ReleasePath "Dist"
-$TempService = Join-Path $ReleasePath "TempService"
-$TempTray = Join-Path $ReleasePath "TempTray"
-$TempWeb = Join-Path $ReleasePath "TempWeb"
+$StagingRoot = Join-Path $ProjectRoot "_BuildStaging"
+$DistPath = Join-Path $StagingRoot "Dist"
+$TempService = Join-Path $StagingRoot "TempService"
+$TempTray = Join-Path $StagingRoot "TempTray"
+$TempWeb = Join-Path $StagingRoot "TempWeb"
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
@@ -26,11 +27,13 @@ try {
 catch {}
 Start-Sleep -Seconds 1
 
-# 1. Cleanup old release folders
-if (Test-Path $ReleasePath) {
-    Write-Host "Cleaning up old release folders (keeping artifacts)..." -ForegroundColor Yellow
-    Get-ChildItem $ReleasePath -Directory | Remove-Item -Recurse -Force
+# 1. Cleanup staging
+if (Test-Path $StagingRoot) {
+    Write-Host "Cleaning up staging folder..." -ForegroundColor Yellow
+    try { Remove-Item $StagingRoot -Recurse -Force -ErrorAction SilentlyContinue } catch {}
 }
+if (!(Test-Path $ReleasePath)) { New-Item $ReleasePath -ItemType Directory -Force | Out-Null }
+New-Item -Path $StagingRoot -ItemType Directory -Force | Out-Null
 New-Item -Path $DistPath -ItemType Directory -Force | Out-Null
 New-Item -Path $TempService -ItemType Directory -Force | Out-Null
 New-Item -Path $TempTray -ItemType Directory -Force | Out-Null
@@ -79,11 +82,18 @@ $ServiceAssets = Join-Path $ProjectRoot "DNSAgent.Service\wwwroot\assets"
 if (!(Test-Path $ServiceAssets)) { New-Item -Path $ServiceAssets -ItemType Directory -Force | Out-Null }
 Copy-Item $ExtensionZip -Destination "$ServiceAssets\" -Force
 
-# 8. Cleanup Temp Folders
-Write-Host "Cleaning up temp folders..." -ForegroundColor Yellow
-Remove-Item $TempService -Recurse -Force
-Remove-Item $TempTray -Recurse -Force
-Remove-Item $TempWeb -Recurse -Force
+# 8. Cleanup Staging Folder
+Write-Host "Cleaning up staging folder (non-fatal)..." -ForegroundColor Yellow
+try {
+    # Attempt to kill any potential lockers again
+    & taskkill.exe /F /IM "dotnet.exe" /T 2>$null
+    & taskkill.exe /F /IM "DNSAgent.*" /T 2>$null
+    Start-Sleep -Seconds 1
+    Remove-Item $StagingRoot -Recurse -Force -ErrorAction SilentlyContinue 
+}
+catch {
+    Write-Host "Warning: Staging folder could not be fully cleaned. This can be ignored." -ForegroundColor Gray
+}
 
 # 8. Create ZIP Archive (Using robust .NET method)
 $ZipFile = Join-Path $ReleasePath "$ReleaseName.zip"

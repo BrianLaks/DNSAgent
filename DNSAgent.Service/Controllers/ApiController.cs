@@ -359,21 +359,40 @@ namespace DNSAgent.Service.Controllers
         public IActionResult DownloadExtension()
         {
             var fileName = $"DNSAgent_Extension_v{Constants.AppVersion}.zip";
-            var filePath = Path.Combine(AppContext.BaseDirectory, "wwwroot", "assets", fileName);
-
-            if (!System.IO.File.Exists(filePath))
+            
+            // Comprehensive path search (standard publish, source dev, or sibling)
+            var paths = new List<string>
             {
-                // Fallback to searching for any extension zip in assets
-                var assetsDir = Path.Combine(AppContext.BaseDirectory, "wwwroot", "assets");
-                if (Directory.Exists(assetsDir))
-                {
-                    var file = Directory.GetFiles(assetsDir, "DNSAgent_Extension_v*.zip").OrderByDescending(f => f).FirstOrDefault();
-                    if (file != null) return PhysicalFile(file, "application/zip", Path.GetFileName(file));
-                }
-                return NotFound("Extension package not found. Please run Build-Release.ps1 first.");
+                Path.Combine(AppContext.BaseDirectory, "wwwroot", "assets", fileName),
+                Path.Combine(AppContext.BaseDirectory, "assets", fileName),
+                Path.Combine(Directory.GetParent(AppContext.BaseDirectory)?.FullName ?? "", "wwwroot", "assets", fileName),
+                Path.Combine(Directory.GetParent(AppContext.BaseDirectory)?.Parent?.Parent?.Parent?.FullName ?? "", "DNSAgent.Service", "wwwroot", "assets", fileName),
+                Path.Combine(AppContext.BaseDirectory, fileName)
+            };
+
+            // Add recursive search for common patterns
+            var searchRoots = new[] { 
+                AppContext.BaseDirectory, 
+                Directory.GetParent(AppContext.BaseDirectory)?.FullName ?? ""
+            };
+
+            foreach (var path in paths)
+            {
+                if (System.IO.File.Exists(path)) return PhysicalFile(path, "application/zip", fileName);
             }
 
-            return PhysicalFile(filePath, "application/zip", fileName);
+            // Final fallback: Search for ANY v* zip matching the pattern in common areas
+            foreach (var root in searchRoots)
+            {
+                if (Directory.Exists(root))
+                {
+                    var file = Directory.GetFiles(root, "DNSAgent_Extension_v*.zip", SearchOption.AllDirectories)
+                        .OrderByDescending(f => f).FirstOrDefault();
+                    if (file != null) return PhysicalFile(file, "application/zip", Path.GetFileName(file));
+                }
+            }
+
+            return NotFound($"Extension package not found ({fileName}). BaseDir: {AppContext.BaseDirectory}");
         }
 
         // Helper methods

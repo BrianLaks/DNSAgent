@@ -151,8 +151,8 @@
                 .Select(g => new { Label = g.Key.ToString("MM/dd"), Count = g.Count() })
                 .ToList();
 
-            var trafficLabels = trafficTrend.Select(x => x.Label).ToArray();
-            var trafficData = trafficTrend.Select(x => x.Count).ToArray();
+            trafficLabels = trafficTrend.Select(x => x.Label).ToArray();
+            trafficData = trafficTrend.Select(x => x.Count).ToArray();
 
             // YouTube Trends (7 days)
             var ytStats = await Db.YouTubeStats
@@ -168,13 +168,13 @@
                 })
                 .ToList();
 
-            var ytLabels = ytTrend.Select(x => x.Label).ToArray();
-            var adsData = ytTrend.Select(x => x.Ads).ToArray();
-            var sponsorsData = ytTrend.Select(x => x.Sponsors).ToArray();
+            ytLabels = ytTrend.Select(x => x.Label).ToArray();
+            adsData = ytTrend.Select(x => x.Ads).ToArray();
+            sponsorsData = ytTrend.Select(x => x.Sponsors).ToArray();
 
             // Security Profile
-            var securityLabels = new[] { "DNSSEC", "Standard" };
-            var securityData = new[] { 
+            securityLabels = new[] { "DNSSEC", "Standard" };
+            securityData = new[] { 
                 logs.Count(x => x.IsDnssec), 
                 logs.Count(x => !x.IsDnssec) 
             };
@@ -198,8 +198,8 @@
                 if (device != null) d.Name = device.MachineName;
             }
 
-            var deviceLabels = topDevices.Select(x => x.Name).ToArray();
-            var deviceCounts = topDevices.Select(x => x.Count).ToArray();
+            deviceLabels = topDevices.Select(x => x.Name).ToArray();
+            deviceCounts = topDevices.Select(x => x.Count).ToArray();
 
             isLoading = false;
             StateHasChanged(); // Notify Blazor to re-render before JS call

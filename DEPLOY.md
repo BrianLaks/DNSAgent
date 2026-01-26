@@ -42,6 +42,7 @@ The deployment is handled by `Start-Setup.bat` (wrapper) and `Setup-DNSAgent.ps1
 4.  **Service Lifecycle Orchestration**:
     - **Deep Cleanup**: Terminates hung processes and deletes old service entries for a clean upgrade.
     - **Static Asset Resolution**: Configures Registry keys to ensure the service finds CSS/Images correctly in the new path.
+    - **Sentinel Asset Deployment**: Ensures the standalone Extension ZIP is staged in `wwwroot/assets` so the Dashboard can serve it network-wide.
 5.  **Integration**: Configures the Tray Icon to auto-start on user login and launches it immediately alongside the service.
 6.  **Conflict & Zombie Process Management (Critical Policy)**:
     - **Identification**: External processes (e.g., browsers like **`brave.exe`**, IDEs, or hung `.NET` build processes) can inadvertently hold locks on release ZIPs or binaries, leading to silent build failures, "Permission Denied" errors, or "Corrupted ZIP" artifacts. **Note: Local browser instances are the most common source of build-blocking handles.**
