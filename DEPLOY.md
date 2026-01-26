@@ -16,7 +16,9 @@ powershell.exe -ExecutionPolicy Bypass -File "Build-Release.ps1"
 - **Non-Destructive**: Previous release ZIPs are preserved in the `Release/` folder for rollback or historical reference.
 - **Comprehensive**: The ZIP contains all binaries, the browser extension, and the master setup scripts.
 - **Git Backed**: Completed release ZIPs are force-committed to Git to allow deployment scripts to pull the latest architectural build.
-- **Integrity Validation**: **MANDATORY.** Every release ZIP must be verified for payload completeness before pushing. The build script now enforces a minimum size check (~35MB+). Never push a "junk" file that has been truncated by file locks or race conditions.
+- **Integrity Validation**: **MANDATORY.** Every release ZIP must be verified for payload completeness before pushing. The build script now enforces a minimum size check (~33MB+ compressed / ~89MB+ uncompressed). Never push a "junk" file that has been truncated by file locks or race conditions.
+- **Project Dependencies**: The build script MUST explicitly include **DNSAgent.Web** (static assets), **DNSAgent.Service**, and **DNSAgent.Tray**. If any project is omitted, the release will be severely truncated (e.g., dropping from 39MB to 19MB).
+- **Compression Safety**: PowerShell's `Compress-Archive` is known to fail silently or truncate files under handle contention (e.g., from `brave.exe` or `dotnet`). Professional releases should use the **.NET ZipFile engine** as implemented in `Build-Release.ps1`.
 
 ### 2. Utilities
 - **`Toggle-DNS.ps1`**: A convenience script for developers to quickly toggle their local machine's primary adapter between using the local DNS Agent (`127.0.0.1`) and Automatic (DHCP). It automatically flushes the DNS cache after each change.
