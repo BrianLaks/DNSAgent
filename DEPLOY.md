@@ -75,10 +75,12 @@ foreach ($port in $PortsToClean) {
 }
 
 # 2. Kill by binary name (Force + Recursive)
+# IMPORTANT: Brave/Chrome must be killed if they have handle-locks on the release folder
 try {
     & taskkill.exe /F /IM "DNSAgent.Service.exe" /T 2>$null
     & taskkill.exe /F /IM "DNSAgent.Tray.exe" /T 2>$null
     & taskkill.exe /F /IM "dotnet.exe" /T 2>$null
+    & taskkill.exe /F /IM "brave.exe" /T 2>$null
 } catch {}
 
 # 3. Aggressive stop (PowerShell Native)
