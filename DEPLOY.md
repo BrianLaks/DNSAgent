@@ -31,11 +31,14 @@ The deployment is handled by `Start-Setup.bat` (wrapper) and `Setup-DNSAgent.ps1
 **What the Master Setup Ensures:**
 1.  **Process Management**: Automatically terminates any hung service or tray processes listening on critical ports (53, 5123).
 2.  **Firewall Orchestration**: Sets up application-level firewall rules for both the Service and the Tray app to ensure network-wide protection.
-3.  **Data Persistence (Rescue Logic)**:
-    - Detects existing installations.
-    - Backs up the current database (if empty) to `.bak`.
-    - Automatically imports existing user data (`dnsagent.db`) from the old installation to the new one.
-4.  **Service Lifecycle**: Uninstalls old versions and installs the new service with correct working directory registry keys for static asset resolution.
+3.  **Data Persistence (Robust Rescue Logic)**:
+    - **Installation Awareness**: Detects existing installations via service lookups.
+    - **Same-Directory Protection**: Prevents redundant imports if the new installation is in the same directory as the old one (ensures database continuity without file locks).
+    - **Automatic Migration**: Safely moves `dnsagent.db` from legacy paths to the new release folder if they differ.
+    - **Safety Snapshots**: Backs up placeholder databases to `.bak` before importing production data.
+4.  **Service Lifecycle Orchestration**:
+    - **Deep Cleanup**: Terminates hung processes and deletes old service entries for a clean upgrade.
+    - **Static Asset Resolution**: Configures Registry keys to ensure the service finds CSS/Images correctly in the new path.
 5.  **Integration**: Configures the Tray Icon to auto-start on user login and launches it immediately alongside the service.
 
 ## 📈 Version Tracking
