@@ -281,7 +281,8 @@
             _stats.ConnectedAgents = activeHeartbeats.Count;
             _stats.ActiveDevices = activeHeartbeats.Select(d => new ActiveDevice {
                 Name = d.MachineName ?? "Unknown Device",
-                IP = d.LastIP ?? "Unknown IP"
+                IP = d.LastIP ?? "Unknown IP",
+                Version = d.ExtensionVersion ?? "v2.0.2"
             }).ToList();
 
             _stats.ShouldRenderCharts = true;
@@ -346,5 +347,6 @@
     {
         public string Name { get; set; } = "";
         public string IP { get; set; } = "";
+        public string Version { get; set; } = "";
     }
 }
