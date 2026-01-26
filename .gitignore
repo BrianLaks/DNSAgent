@@ -8,7 +8,7 @@ obj/
 
 # Build results
 [Dd]ebug/
-[Rr]elease/
+# [Rr]elease/
 x64/
 x86/
 [Aa]rm/
