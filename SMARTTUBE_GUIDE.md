@@ -7,7 +7,7 @@ Official YouTube apps on Android TVs and mobile devices often have "hardcoded" a
 - Blocks all YouTube ads.
 - Features built-in [SponsorBlock](https://sponsorblock.org/) support.
 - Supports high-resolution playback (4K/8K).
-- **DNS Agent Integration**: Allows your DNS Agent to capture watch data and sync it with your local dashboard.
+- **Note**: While SmartTube blocks ads perfectly, it *cannot* report watch history to the DNS Agent dashboard due to platform limitations.
 
 ---
 
@@ -26,23 +26,6 @@ Google Play Protect often flags third-party YouTube clients as "Harmful" because
 
 > [!IMPORTANT]
 > **Security Context**: SmartTube is a widely trusted community project with over 40k stars on GitHub. However, you should always [decide for yourself](https://github.com/yuliskov/SmartTube/issues) if you are comfortable with third-party software.
-
----
-
-## 🔗 Step 2: DNS Agent Integration (The "Proxy Trick")
-
-Capture your TV's watch history and analytics directly in your DNS Agent dashboard without an extension.
-
-1. **Open SmartTube Settings**: Go to **Settings > SponsorBlock**.
-2. **Enable SponsorBlock**: Ensure the toggle is ON.
-3. **Configure API URL**:
-   - Find the **SponsorBlock Settings** or **API URL** field.
-   - Change the default URL to your DNS Agent's API endpoint:
-     `http://<YOUR_SERVER_IP>:5123/api/sponsorblock/`
-4. **Map the Device**:
-   - Go to your DNS Agent Dashboard -> **YouTube Insights**.
-   - Navigate to **Profile Management**.
-   - You should see your TV's IP address listed. Assign your YouTube handle to it to attribute watch data to your profile.
 
 ---
 

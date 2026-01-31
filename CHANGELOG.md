@@ -14,7 +14,9 @@ All notable changes to this project will be documented in this file.
 - **Professional Installer**: Added Inno Setup `.iss` script and integrated compiler checks into `Build-Release.ps1`.
 - **YouTube Intelligence**: Added "YouTube Tracking" toggle to the browser extension for privacy control.
 - **Data Governance**: Added "Purge History" button and user-configurable retention settings for YouTube activity.
-- **Comprehensive Docs**: New `SMARTTUBE_GUIDE.md` and expanded `Help.razor` to cover network-wide DNS configuration.
+- **Comprehensive Docs**: New `SMARTTUBE_GUIDE.md` (Installation only) and expanded `Help.razor` to cover network-wide DNS configuration.
+- **Limitation Notice**: Updated documentation to clarify that Smart TV watch history integration is currently not supported due to platform restrictions.
+
 ### Fixed
 - **YouTube Profile Detection**: Filtered out generic "Avatar image" alt-text to prioritize real handles.
 - **Query Logs UI**: Restored date visibility to the "Time" column for better audits.
