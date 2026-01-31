@@ -1,0 +1,40 @@
+DNS AGENT v2.4.3 - GETTING STARTED
+====================================
+
+Thank you for downloading DNS Agent! This package contains everything you need to set up a private, high-performance DNS server for your network.
+
+QUICK INSTALLATION
+------------------
+1. Extract this ZIP to a permanent folder (e.g., C:\Programs\DNSAgent).
+   DO NOT run from inside the ZIP file.
+
+2. Right-click 'Start-Setup.bat' and select "Run as Administrator".
+   This will register the Windows Service and configure your Firewall.
+
+3. Once finished, open your browser to:
+   http://localhost:5123
+
+4. Login with the default credentials:
+   User: admin@dnsagent.local
+   Pass: Admin123!
+   (Please change your password immediately after login).
+
+WHAT'S NEW IN v2.4.3
+--------------------
+- YouTube Intelligence Hub: Ad-blocking, SponsorBlock, and Search Refinements.
+- Data Governance: Control your watch history and ad-blocking statistics.
+- Direct SmartTube Link: Specialized guide for Android/TV users.
+
+UNINSTALLATION
+--------------
+To stop and remove the service, right-click 'Stop-Uninstall.bat' and select "Run as Administrator". Your database (dnsagent.db) will be preserved in the folder if you decide to reinstall later.
+
+ONLINE DOCUMENTATION
+--------------------
+- Main Project: https://github.com/BrianLaks/DNSAgent
+- Features: https://github.com/BrianLaks/DNSAgent/blob/main/FEATURES.md
+- SmartTube Guide: https://github.com/BrianLaks/DNSAgent/blob/main/SMARTTUBE_GUIDE.md
+
+====================================
+Shield Your Network. Own Your Data.
+====================================
