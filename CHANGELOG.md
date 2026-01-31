@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 
 ## [2.4.3] - 2026-01-31
+### 🚀 Quick Start
+- **Installation**: Download the ZIP, extract all files, and run `Start-Setup.bat` as Administrator.
+- **Maintenance**: Added `Stop-Uninstall.bat` for clean service removal.
+
 ### Added
 - **Professional Installer (Source)**: Added Inno Setup `.iss` script and integrated compiler checks into `Build-Release.ps1` for automated `.exe` generation (requires local Inno Setup 6).
 - **YouTube Intelligence**: Added "YouTube Tracking" toggle to the browser extension for privacy control.
