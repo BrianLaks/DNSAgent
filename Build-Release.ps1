@@ -83,6 +83,8 @@ if (Test-Path $ExtensionZip) { Remove-Item $ExtensionZip -Force }
 # Copy extension zip to Service assets for direct dashboard download
 $ServiceAssets = Join-Path $ProjectRoot "DNSAgent.Service\wwwroot\assets"
 if (!(Test-Path $ServiceAssets)) { New-Item -Path $ServiceAssets -ItemType Directory -Force | Out-Null }
+# CLEANUP: Remove old versioned extensions
+Remove-Item (Join-Path $ServiceAssets "DNSAgent_Extension_v*.zip") -Force -ErrorAction SilentlyContinue 
 Copy-Item $ExtensionZip -Destination "$ServiceAssets\" -Force
 
 # 8. Cleanup Staging Folder
