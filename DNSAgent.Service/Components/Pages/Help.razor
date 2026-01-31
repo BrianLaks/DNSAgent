@@ -100,6 +100,55 @@
                     </div>
                 </div>
 
+                <!-- Router Configuration (Network Wide) -->
+                <div class="accordion-item shadow-sm mb-3 border-0 border-start border-4 border-indigo">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#routerHelp">
+                            <span class="bi bi-router me-2 text-indigo"></span> Step 2: Configure Router (Network Wide)
+                        </button>
+                    </h2>
+                    <div id="routerHelp" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                        <div class="accordion-body">
+                            <div class="alert alert-warning py-3 mb-3">
+                                <h6 class="fw-bold mb-1"><i class="bi bi-exclamation-triangle-fill me-2"></i> Critical Distinction: WAN vs LAN</h6>
+                                <p class="small mb-0">Don't just change the "Internet" DNS. You must change the <strong>DHCP / LAN DNS</strong> to see individual devices (TVs, Phones) in your dashboard.</p>
+                            </div>
+
+                            <p class="small">Enter your Router's Admin Panel (usually <code>192.168.1.1</code>) and find the **DHCP Server** settings.</p>
+
+                            <div class="row g-3">
+                                <div class="col-sm-6">
+                                    <div class="p-3 bg-light border rounded h-100">
+                                        <h6 class="fw-bold text-primary">Netgear Nighthawk 🦅</h6>
+                                        <ol class="small ps-3 mb-0">
+                                            <li>Go to <strong>Advanced</strong> tab.</li>
+                                            <li>Select <strong>Setup</strong> &gt; <strong>LAN Setup</strong>.</li>
+                                            <li>Under "Use these DNS Servers", enter:
+                                                <ul>
+                                                    <li><strong>Secondary:</strong> <code>1.1.1.1</code> (Backup)</li> 
+                                                    <li><strong>Primary:</strong> <code>@CurrentIP</code> (This Server)</li>
+                                                </ul>
+                                            </li>
+                                            <li>Click <strong>Apply</strong>.</li>
+                                        </ol>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="p-3 bg-light border rounded h-100">
+                                        <h6 class="fw-bold text-danger">ASUS / TP-Link / Linksys</h6>
+                                        <ol class="small ps-3 mb-0">
+                                            <li>Look for <strong>DHCP Server</strong> or <strong>LAN Settings</strong>.</li>
+                                            <li>Find <strong>DNS Server</strong> fields.</li>
+                                            <li>Ensure you are <strong>NOT</strong> in "WAN" or "Internet" settings.</li>
+                                            <li>Set Primary DNS to <code>@CurrentIP</code>.</li>
+                                        </ol>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Establish the Sentinel -->
                 <div class="accordion-item shadow-sm mb-3 border-0 border-start border-4 border-primary">
                     <h2 class="accordion-header">

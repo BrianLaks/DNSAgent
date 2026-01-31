@@ -39,15 +39,30 @@
             })
         });
 
+        const getThemeColors = () => {
+            const styles = getComputedStyle(document.querySelector('.page') || document.body);
+            return {
+                primary: styles.getPropertyValue('--brand-primary').trim() || '#007bff',
+                accent: styles.getPropertyValue('--brand-accent').trim() || '#6f42c1',
+                success: '#28a745', // Keep standard or make variable if needed
+                danger: '#dc3545',   // Keep standard
+                warning: '#ffc107',
+                info: '#17a2b8'
+            };
+        };
+
         window.renderReportsCharts = (hours, values, blocked, allowed) => {
+            const colors = getThemeColors();
             const hourlyOptions = {
                 series: [{ name: 'Queries', data: values }],
                 chart: { height: 350, type: 'area', toolbar: { show: false }, zoom: { enabled: false } },
                 dataLabels: { enabled: false },
                 stroke: { curve: 'smooth', width: 2 },
                 xaxis: { categories: hours },
-                colors: ['#007bff'],
-                fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.45, opacityTo: 0.05 } }
+                colors: [colors.primary],
+                fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.6, opacityTo: 0.1 } },
+                grid: { borderColor: 'rgba(255,255,255,0.1)' },
+                theme: { mode: 'dark' } 
             };
             if (window.hourlyChartInstance) window.hourlyChartInstance.destroy();
             window.hourlyChartInstance = new ApexCharts(document.querySelector("#hourlyChart"), hourlyOptions);
@@ -57,9 +72,10 @@
                 series: [allowed, blocked],
                 labels: ['Allowed', 'Blocked'],
                 chart: { type: 'donut', height: 300 },
-                colors: ['#28a745', '#dc3545'],
-                legend: { position: 'bottom' },
-                plotOptions: { pie: { donut: { labels: { show: true, total: { show: true } } } } }
+                colors: [colors.primary, colors.danger], // Use primary for allowed 'good' state in neural theme
+                legend: { position: 'bottom', labels: { colors: '#fff' } },
+                plotOptions: { pie: { donut: { labels: { show: true, total: { show: true, color: '#fff' } } } } },
+                stroke: { show: true, colors: ['#000'], width: 2 }
             };
             if (window.distChartInstance) window.distChartInstance.destroy();
             window.distChartInstance = new ApexCharts(document.querySelector("#distributionChart"), distOptions);
@@ -67,14 +83,19 @@
         };
 
         window.renderDetailedReports = (trafficLabels, trafficData, youtubeLabels, adsData, sponsorsData, securityLabels, securityData, deviceLabels, deviceData) => {
+            const colors = getThemeColors();
+            
             // 1. Traffic Trend (7 Days)
             const trafficOptions = {
                 series: [{ name: 'Queries', data: trafficData }],
                 chart: { height: 350, type: 'line', toolbar: { show: true } },
                 stroke: { curve: 'smooth', width: 3 },
-                xaxis: { categories: trafficLabels },
-                colors: ['#007bff'],
-                markers: { size: 4 }
+                xaxis: { categories: trafficLabels, labels: { style: { colors: '#aaa' } } },
+                yaxis: { labels: { style: { colors: '#aaa' } } },
+                colors: [colors.primary],
+                markers: { size: 4 },
+                grid: { borderColor: 'rgba(255,255,255,0.1)' },
+                theme: { mode: 'dark' }
             };
             const trafficEl = document.querySelector("#trafficTrendChart");
             if (trafficEl) {
@@ -90,8 +111,12 @@
                     { name: 'Sponsors Skipped', data: sponsorsData }
                 ],
                 chart: { height: 300, type: 'bar', stacked: true },
-                xaxis: { categories: youtubeLabels },
-                colors: ['#ff0000', '#000000']
+                xaxis: { categories: youtubeLabels, labels: { style: { colors: '#aaa' } } },
+                yaxis: { labels: { style: { colors: '#aaa' } } },
+                colors: [colors.danger, '#6c757d'],
+                grid: { borderColor: 'rgba(255,255,255,0.1)' },
+                legend: { labels: { colors: '#fff' } },
+                theme: { mode: 'dark' }
             };
             const ytEl = document.querySelector("#youtubeTrendChart");
             if (ytEl) {
@@ -105,7 +130,9 @@
                 series: securityData,
                 labels: securityLabels,
                 chart: { type: 'pie', height: 300 },
-                colors: ['#28a745', '#ffc107', '#17a2b8']
+                colors: [colors.success, colors.warning, colors.info],
+                legend: { position: 'bottom', labels: { colors: '#fff' } },
+                stroke: { show: true, colors: ['#000'], width: 2 }
             };
             const secEl = document.querySelector("#securityPieChart");
             if (secEl) {
@@ -119,8 +146,11 @@
                 series: [{ name: 'Queries', data: deviceData }],
                 chart: { type: 'bar', height: 350 },
                 plotOptions: { bar: { horizontal: true } },
-                xaxis: { categories: deviceLabels },
-                colors: ['#6f42c1']
+                xaxis: { categories: deviceLabels, labels: { style: { colors: '#aaa' } } },
+                yaxis: { labels: { style: { colors: '#fff' } } },
+                colors: [colors.accent],
+                grid: { borderColor: 'rgba(255,255,255,0.1)' },
+                theme: { mode: 'dark' }
             };
             const devEl = document.querySelector("#deviceVolumeChart");
             if (devEl) {

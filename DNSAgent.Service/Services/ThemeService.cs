@@ -7,12 +7,13 @@ namespace DNSAgent.Service.Services
         Classic,
         Aegis,
         Sentry,
-        GhostGuard
+        GhostGuard,
+        NeuralBlue
     }
 
     public class ThemeService
     {
-        public AppTheme CurrentTheme { get; private set; } = AppTheme.Classic;
+        public AppTheme CurrentTheme { get; private set; } = AppTheme.NeuralBlue;
         public string ThemeName => CurrentTheme.ToString();
         
         public event Action OnThemeChanged;
@@ -33,6 +34,7 @@ namespace DNSAgent.Service.Services
             AppTheme.Aegis => "Aegis DNS",
             AppTheme.Sentry => "SentryDNS",
             AppTheme.GhostGuard => "GhostGuard",
+            AppTheme.NeuralBlue => "NeuralDNS",
             _ => "DNS Agent"
         };
 
@@ -41,6 +43,7 @@ namespace DNSAgent.Service.Services
             AppTheme.Aegis => "logo_aegis.png",
             AppTheme.Sentry => "logo_sentry.png",
             AppTheme.GhostGuard => "logo_ghost.png",
+            AppTheme.NeuralBlue => "images/logo_neural.png",
             _ => "logo.png"
         };
         
@@ -49,6 +52,7 @@ namespace DNSAgent.Service.Services
             AppTheme.Aegis => "theme-aegis",
             AppTheme.Sentry => "theme-sentry",
             AppTheme.GhostGuard => "theme-ghost",
+            AppTheme.NeuralBlue => "theme-neural",
             _ => "theme-classic"
         };
 
@@ -57,6 +61,7 @@ namespace DNSAgent.Service.Services
             AppTheme.Aegis => "--brand-primary: #d4af37; --brand-secondary: #0a192f; --brand-accent: #f9e29f;",
             AppTheme.Sentry => "--brand-primary: #e0115f; --brand-secondary: #1a1a1a; --brand-accent: #ff4d4d;",
             AppTheme.GhostGuard => "--brand-primary: #9d00ff; --brand-secondary: #000000; --brand-accent: #00f2ff;",
+            AppTheme.NeuralBlue => "--brand-primary: #00d4ff; --brand-secondary: #050a14; --brand-accent: #00f2ff; --bg-gradient: linear-gradient(135deg, #050a14 0%, #0a192f 100%);",
             _ => "--brand-primary: #1e90ff; --brand-secondary: #000080; --brand-accent: #00bfff;"
         };
     }

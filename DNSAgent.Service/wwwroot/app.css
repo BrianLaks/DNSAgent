@@ -120,30 +120,34 @@ body {
 
 .theme-aegis .card,
 .theme-sentry .card,
-.theme-ghost .card {
-    background: rgba(0, 0, 0, 0.7) !important;
+.theme-ghost .card,
+.theme-neural .card {
+    background: rgba(10, 20, 40, 0.7) !important;
     color: white !important;
-    border-color: rgba(255, 255, 255, 0.2) !important;
+    border-color: rgba(0, 242, 255, 0.2) !important;
 }
 
 .theme-aegis .card .text-muted,
 .theme-sentry .card .text-muted,
-.theme-ghost .card .text-muted {
-    color: rgba(255, 255, 255, 0.7) !important;
+.theme-ghost .card .text-muted,
+.theme-neural .card .text-muted {
+    color: rgba(0, 242, 255, 0.6) !important;
 }
 
 .theme-aegis .card code,
 .theme-sentry .card code,
-.theme-ghost .card code {
+.theme-ghost .card code,
+.theme-neural .card code {
     color: var(--brand-accent) !important;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(0, 242, 255, 0.1);
 }
 
 .theme-aegis .card-header,
 .theme-sentry .card-header,
-.theme-ghost .card-header {
-    background: rgba(0, 0, 0, 0.9) !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+.theme-ghost .card-header,
+.theme-neural .card-header {
+    background: rgba(5, 10, 20, 0.9) !important;
+    border-bottom: 1px solid rgba(0, 242, 255, 0.3);
 }
 
 .card:hover {
@@ -172,12 +176,12 @@ a,
     top: 50%;
     left: 55%;
     transform: translate(-50%, -50%) rotate(-10deg);
-    opacity: 0.02;
+    opacity: 0.05;
     /* Extremely subtle */
     z-index: -10;
     pointer-events: none;
     width: 600px;
-    filter: grayscale(100%) blur(2px);
+    filter: drop-shadow(0 0 50px var(--brand-primary)) blur(2px);
     transition: all 0.5s ease;
 }
 
@@ -216,4 +220,30 @@ a,
 /* Specific card colors for summary */
 .bg-warning.text-dark .card-title {
     color: rgba(0, 0, 0, 0.6) !important;
+}
+
+/* Neural Theme Bootstrap Overrides */
+.theme-neural .bg-primary {
+    background: linear-gradient(135deg, #0072ff 0%, #00c6ff 100%) !important;
+    box-shadow: 0 0 15px rgba(0, 198, 255, 0.4);
+}
+
+.theme-neural .bg-danger {
+    background: linear-gradient(135deg, #ff0055 0%, #ff4d4d 100%) !important;
+    box-shadow: 0 0 15px rgba(255, 0, 85, 0.4);
+}
+
+.theme-neural .bg-warning {
+    background: linear-gradient(135deg, #ffcc00 0%, #ffe600 100%) !important;
+    color: #000 !important;
+    box-shadow: 0 0 15px rgba(255, 204, 0, 0.4);
+}
+
+.theme-neural .bg-info {
+    background: linear-gradient(135deg, #00d4ff 0%, #00f2ff 100%) !important;
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.4);
+}
+
+.theme-neural .badge {
+    box-shadow: 0 0 5px currentColor;
 }

@@ -8,10 +8,13 @@ All notable changes to this project will be documented in this file.
 - **Maintenance**: Added `Stop-Uninstall.bat` for clean service removal.
 
 ### Added
-- **Professional Installer (Source)**: Added Inno Setup `.iss` script and integrated compiler checks into `Build-Release.ps1` for automated `.exe` generation (requires local Inno Setup 6).
+- **Rebranding ("Neural Blue")**: Complete visual overhaul with a cyber-security aesthetic, neon-blue gradients, and glassmorphism UI.
+- **Dynamic Theming**: Dashboard charts now automatically adapt their color palette to the active application theme.
+- **Router Configuration Guide**: Added specific instructions for Netgear Nighthawk and ASUS routers to the in-app Help page.
+- **Professional Installer**: Added Inno Setup `.iss` script and integrated compiler checks into `Build-Release.ps1`.
 - **YouTube Intelligence**: Added "YouTube Tracking" toggle to the browser extension for privacy control.
 - **Data Governance**: Added "Purge History" button and user-configurable retention settings for YouTube activity.
-- **Comprehensive Documentation**: New SmartTube installation guide for Android/TV and modernized GitHub README.
+- **Comprehensive Docs**: New `SMARTTUBE_GUIDE.md` and expanded `Help.razor` to cover network-wide DNS configuration.
 ### Fixed
 - **YouTube Profile Detection**: Filtered out generic "Avatar image" alt-text to prioritize real handles.
 - **Query Logs UI**: Restored date visibility to the "Time" column for better audits.
