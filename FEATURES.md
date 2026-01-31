@@ -7,7 +7,7 @@ DNS Agent is a professional-grade DNS management and network protection suite. B
 ### 📊 Real-Time Dynamic Dashboard
 Stay informed with a high-fidelity dashboard that tracks network-wide DNS requests, blocked threats, and allowed traffic distribution in real-time.
 
-![Dashboard Preview](C:/Users/BRIAN/.gemini/antigravity/brain/fab30f0b-82ab-4cfa-9696-0dc9e2f300de/uploaded_media_1769339897225.png)
+![Dashboard Preview](docs/images/dashboard_preview.png)
 *Professional glassmorphic design featuring DodgerBlue branding.*
 
 ---
@@ -15,7 +15,7 @@ Stay informed with a high-fidelity dashboard that tracks network-wide DNS reques
 ### 🔍 Deep Query Log Analytics
 Audit every request on your network. Our enhanced filtering allows you to search by domain name or source IP to identify exactly where traffic is coming from.
 
-![Query Logs](C:/Users/BRIAN/.gemini/antigravity/brain/fab30f0b-82ab-4cfa-9696-0dc9e2f300de/uploaded_media_0_1769340916490.png)
+![Query Logs](docs/images/query_logs.png)
 *Detailed logs with instant search and status indicators.*
 
 ---
@@ -28,7 +28,7 @@ Understand which devices are most active on your network. DNS Agent groups and a
 ### 📖 Interactive Help & Setup Guide
 Setting up a network-wide DNS server has never been easier. Our built-in guide includes interactive accordions and one-click PowerShell script copying.
 
-![Setup Guide](C:/Users/BRIAN/.gemini/antigravity/brain/fab30f0b-82ab-4cfa-9696-0dc9e2f300de/uploaded_media_1_1769340916490.png)
+![Setup Guide](docs/images/setup_guide.png)
 *Step-by-step instructions for routers and individual machines.*
 
 ---
@@ -36,7 +36,7 @@ Setting up a network-wide DNS server has never been easier. Our built-in guide i
 ### 🛡️ Glassmorphic System Tray Monitor
 Monitor the core engine directly from your Windows taskbar. The tray app provides real-time status (Active/Stopped) and quick access to the dashboard.
 
-![System Tray Icon](C:/Users/BRIAN/.gemini/antigravity/brain/fab30f0b-82ab-4cfa-9696-0dc9e2f300de/dns_agent_tray_icon_1769337847294.png)
+![System Tray Icon](docs/images/tray_icon.png)
 *Subtle, modern status indicator for your desktop.*
 
 ---
