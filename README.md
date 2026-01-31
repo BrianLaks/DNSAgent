@@ -11,12 +11,15 @@ DNS Agent is a lightweight, high-performance network-wide DNS server designed fo
 - **Zero-Device Left Behind**: Protection for Smart TVs, IoT, and mobile apps by sanitizing DNS queries at the source.
 
 ## 🚀 Quick Start (Windows)
-The easiest way to get started is with our professional installer:
-
-1. **Download the Installer**: Grab `DNSAgent-Setup-v2.4.3.exe` from the latest [Release](https://github.com/BrianLaks/DNSAgent/releases).
-2. **Run and Install**: The installer will automatically configure the Windows Service, Firewall rules, and Tray icon.
-3. **Launch Dashboard**: Open your browser to `http://localhost:5123`.
+1. **Download the Release**: Grab `DNSAgent_V2.4.3.zip` from the latest [Release](https://github.com/BrianLaks/DNSAgent/releases).
+2. **Extract All Files**: Right-click the ZIP and select **Extract All**.
+3. **Run as Admin**: Right-click `Start-Setup.bat` and select **Run as Administrator**.
+    - This script automatically registers the service and firewall rules for you.
+4. **Launch Dashboard**: Open your browser to `http://localhost:5123`.
     - *Default Admin*: `admin@dnsagent.local` / `Admin123!` (Change immediately after login).
+
+> [!TIP]
+> **Developer Feature**: We have included an Inno Setup script in `installer/DNSAgent.iss`. If you have [Inno Setup 6](https://jrsoftware.org/isdl.php) installed, you can generate a professional `.exe` installer by running `Build-Release.ps1`.
 
 ### 🖥️ Manual / Developer Install
 If you prefer running from source:

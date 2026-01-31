@@ -75,7 +75,7 @@
                     </div>
                 </div>
 
-                <!-- Installation: The New Professional Way -->
+                <!-- Installation: The Professional Way (Scripted) -->
                 <div class="accordion-item shadow-sm mb-3 border-0 border-start border-4 border-success">
                     <h2 class="accordion-header">
                         <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#installerHelp">
@@ -84,19 +84,17 @@
                     </h2>
                     <div id="installerHelp" class="accordion-collapse collapse show" data-bs-parent="#helpAccordion">
                         <div class="accordion-body">
-                            <p>The DNS Agent is now deployed using a professional Windows Installer:</p>
+                            <p>To register the DNS Agent as a Windows Service and open the required firewall ports:</p>
                             <div class="p-3 bg-light border rounded mb-3">
-                                <h6 class="fw-bold"><i class="bi bi-download me-2"></i> Professional Setup</h6>
-                                <p class="small mb-2">Run the <strong>DNSAgent-Setup-v2.4.3.exe</strong> from your release package. It handles everything:</p>
-                                <ul class="small mb-0">
-                                    <li>Registers the Windows Service.</li>
-                                    <li>Configures Firewall rules for DNS (53) and UI (5123).</li>
-                                    <li>Sets up the System Tray icon for real-time monitoring.</li>
-                                    <li><strong>Data Preservation</strong>: Keeps your previous database and settings safe during upgrades.</li>
-                                </ul>
+                                <h6 class="fw-bold"><i class="bi bi-terminal me-2"></i> Automated Setup (Recommended)</h6>
+                                <ol class="small mb-0">
+                                    <li>Extract the release ZIP to a permanent folder (e.g., <code>C:\Programs\DNSAgent</code>).</li>
+                                    <li>Right-click <strong>Start-Setup.bat</strong> and select <strong>Run as Administrator</strong>.</li>
+                                    <li>The script will automatically handle service registration, firewall rules, and process cleanup.</li>
+                                </ol>
                             </div>
                             <div class="alert alert-info py-2 small">
-                                <i class="bi bi-info-circle me-1"></i> Already installed manually? The installer will detect your old version and migrate your data automatically.
+                                <i class="bi bi-info-circle me-1"></i> <strong>Data Preservation</strong>: The setup script will detect and preserve your existing <code>dnsagent.db</code> automatically during upgrades.
                             </div>
                         </div>
                     </div>

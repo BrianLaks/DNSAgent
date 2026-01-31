@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## [2.4.3] - 2026-01-31
 ### Added
-- **Professional Installer**: New Inno Setup `.exe` installer that handles service registration, firewall rules, and robust database rescue.
+- **Professional Installer (Source)**: Added Inno Setup `.iss` script and integrated compiler checks into `Build-Release.ps1` for automated `.exe` generation (requires local Inno Setup 6).
 - **YouTube Intelligence**: Added "YouTube Tracking" toggle to the browser extension for privacy control.
 - **Data Governance**: Added "Purge History" button and user-configurable retention settings for YouTube activity.
 - **Comprehensive Documentation**: New SmartTube installation guide for Android/TV and modernized GitHub README.
