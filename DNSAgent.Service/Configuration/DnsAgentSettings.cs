@@ -9,6 +9,7 @@ namespace DNSAgent.Service.Configuration
         public int WebUIPort { get; set; } = 5123;
         public bool EnableLogging { get; set; } = true;
         public int LogRetentionDays { get; set; } = 30;
+        public int YouTubeRetentionDays { get; set; } = 90;
         public bool EnableBlocking { get; set; } = true;
 
         // Security v1.3 Features

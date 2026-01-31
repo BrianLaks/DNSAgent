@@ -122,6 +122,7 @@ function autoSkipAds() {
             skipButton.click();
             stats.adsBlocked++;
             console.log('[DNS Agent] Auto-skipped ad via button');
+            reportAdEvent(getYouTubeVideoId(), 'SkipButton', 'Skipped');
             updateStats();
             return true;
         }
@@ -137,6 +138,7 @@ function autoSkipAds() {
             video.currentTime = video.duration;
             console.log('[DNS Agent] Forced ad to end');
             stats.adsBlocked++;
+            reportAdEvent(getYouTubeVideoId(), 'ForcedEnd', 'Skipped');
             updateStats();
             return true;
         }
@@ -146,6 +148,7 @@ function autoSkipAds() {
             video.playbackRate = 16;
             video.muted = true;
             console.log('[DNS Agent] Speeding through ad at 16x');
+            reportAdEvent(getYouTubeVideoId(), 'FastForward', 'SpedUp');
             return true;
         }
     }
@@ -210,9 +213,76 @@ function monitorVideoPlayer() {
             autoSkipAds();
 
             stats.adsBlocked++;
+            reportAdEvent(getYouTubeVideoId(), 'PlayerMonitor', 'ForcedSkip');
             updateStats();
         }
     });
+}
+
+/**
+ * Report granular ad events
+ */
+function reportAdEvent(videoId, adType, actionTaken, metadata = null) {
+    chrome.storage.local.get(['youtubeTrackingEnabled'], (result) => {
+        if (result.youtubeTrackingEnabled === false) return;
+
+        chrome.runtime.sendMessage({
+            action: 'reportYouTubeAdEvent',
+            adEvent: {
+                videoId,
+                adType,
+                actionTaken,
+                metadata: metadata ? String(metadata) : null
+            }
+        });
+    });
+}
+
+/**
+ * Extract video metadata and report activity
+ */
+async function extractAndReportActivity() {
+    const videoId = getYouTubeVideoId();
+    if (!videoId) return;
+
+    // Wait for DOM
+    let titleEl, channelEl;
+    let attempts = 0;
+    const userHandle = detectYouTubeUser();
+
+    while (attempts < 10) {
+        titleEl = document.querySelector('h1.ytd-watch-metadata yt-formatted-string');
+        channelEl = document.querySelector('ytd-video-owner-renderer #channel-name a');
+        if (titleEl && channelEl && titleEl.textContent.trim()) break;
+        await new Promise(r => setTimeout(r, 1000));
+        attempts++;
+    }
+
+    if (titleEl && channelEl) {
+        const title = titleEl.textContent.trim();
+        const channel = channelEl.textContent.trim();
+        const videoEl = document.querySelector('video');
+        const duration = videoEl ? videoEl.duration : 0;
+
+        chrome.storage.local.get(['youtubeTrackingEnabled'], (result) => {
+            if (result.youtubeTrackingEnabled === false) {
+                console.log('[DNS Agent] YouTube tracking is disabled by user.');
+                return;
+            }
+
+            chrome.runtime.sendMessage({
+                action: 'reportYouTubeActivity',
+                activity: {
+                    videoId,
+                    title,
+                    channel,
+                    durationSeconds: duration,
+                    youTubeUser: userHandle
+                }
+            });
+            console.log('[DNS Agent] Reported activity:', { videoId, title, channel });
+        });
+    }
 }
 
 // Update statistics
@@ -344,6 +414,9 @@ async function onVideoChange() {
             console.log(`[SponsorBlock] Loaded ${sponsorSegments.length} segments to skip`);
             addTimelineMarkers();
         }
+
+        // Report activity to DNS Agent
+        extractAndReportActivity();
     }
 }
 
@@ -353,6 +426,38 @@ async function onVideoChange() {
 function getYouTubeVideoId() {
     const url = new URL(window.location.href);
     return url.searchParams.get('v');
+}
+
+/**
+ * Detect the currently logged-in YouTube handle/account
+ */
+function detectYouTubeUser() {
+    try {
+        // Higher priority: window.ytInitialData contains structured identity info
+        if (window.ytInitialData?.responseContext?.serviceTrackingParams) {
+            const params = window.ytInitialData.responseContext.serviceTrackingParams;
+            for (const p of params) {
+                const val = p.params?.find(x => x.key === 'logged_in_as')?.value;
+                if (val && val.length > 0) return val;
+            }
+        }
+
+        // Try getting handle from DOM elements
+        const handleEl = document.querySelector('#handle');
+        if (handleEl && handleEl.textContent.trim()) return handleEl.textContent.trim();
+
+        const avatarImg = document.querySelector('button#avatar-btn img');
+        if (avatarImg && avatarImg.alt) {
+            const altText = avatarImg.alt.trim();
+            // Blacklist generic strings that aren't real handles/names
+            const genericStrings = ["Avatar image", "Account profile photo"];
+            if (!genericStrings.some(gs => altText.toLowerCase().includes(gs.toLowerCase())) && altText.length > 0) {
+                return altText;
+            }
+        }
+
+    } catch (e) { }
+    return null;
 }
 
 /**
@@ -390,6 +495,7 @@ function monitorSponsorSegments() {
                     const categoryName = sponsorBlockClient.getCategoryName(segment.category);
                     showSkipNotification(categoryName, duration);
 
+                    reportAdEvent(currentVideoId, 'SponsorBlock', 'Skipped', segment.category);
                     console.log(`[SponsorBlock] Skipped ${segment.category}: ${start.toFixed(1)}s - ${end.toFixed(1)}s (${duration.toFixed(1)}s saved)`);
                 }
             }

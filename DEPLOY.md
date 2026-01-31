@@ -58,8 +58,18 @@ We maintain a detailed [CHANGELOG.md](CHANGELOG.md) in the repository. Before ev
 - `.csproj` files (Version)
 - `Build-Release.ps1` ($Version)
 
-## 🏗️ Manual Installer
-For Inno Setup instructions, see [installer/BUILD.md](installer/BUILD.md).
+## 🏗️ Professional Installer (v2.4.3+)
+We use **Inno Setup** to generate a professional `.exe` installer that handles service management and data preservation.
+
+**Build Workflow:**
+1. `Build-Release.ps1` compiles the .NET projects into the `_BuildStaging/Dist` folder.
+2. The script then invokes `ISCC.exe` (Inno Setup Compiler) targeting `installer/DNSAgent.iss`.
+3. The final installer is outputted to the `Release/` folder as `DNSAgent-Setup-vX.X.X.exe`.
+
+**Installer Features:**
+- **Data Preservation**: Specifically flags `dnsagent.db` to *never* be uninstalled or overwritten.
+- **Service Configuration**: Automatically sets the "Working Directory" in the Registry so the service finds its assets.
+- **Firewall Rules**: Automatically creates rules for port 53 (DNS) and port 5123 (Web UI).
 
 ---
 

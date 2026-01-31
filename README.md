@@ -4,72 +4,35 @@ DNS Agent is a lightweight, high-performance network-wide DNS server designed fo
 
 **✨ [Check out our full Feature Showcase with Screenshots!](FEATURES.md)**
 
-## 🚀 Features
-- **AD & Tracker Blocking**: Real-time filtering based on community-sourced blocklists.
-- **YouTube Intelligence Hub**: (NEW v1.6) Collaborative ad-blocking, SponsorBlock skipping, and DeArrow clickbait cleaning via our hybrid browser extension.
-- **Glassmorphic Dashboard**: A professional, blue-themed UI for statistics and logs.
-- **Per-Device Analytics**: Monitor traffic distribution across your network.
-- **System Tray Monitor**: Stay informed with real-time status and quick controls.
-- **Whitelist Management**: Easily unblock false positives.
+## 🚀 Highlights
+- **YouTube Intelligence Hub**: Collaborative ad-blocking, SponsorBlock skipping, and clickbait cleaning via our hybrid extension + proxy.
+- **Professional Installer**: A robust Windows `.exe` that handles service creation, firewall rules, and data preservation automatically.
+- **Algorithm Circumvention**: Surgically modify the YouTube interface to hide watched videos and prioritize trusted channels using your *local* data.
+- **Zero-Device Left Behind**: Protection for Smart TVs, IoT, and mobile apps by sanitizing DNS queries at the source.
 
-## 🚀 Quick Start
-- **Users**: Follow the [Quick Start Guide](START.md) to install and run the agent.
-- **Developers**: See [START.md](START.md) for environment setup and [DEPLOY.md](DEPLOY.md) for release instructions.
+## 🚀 Quick Start (Windows)
+The easiest way to get started is with our professional installer:
 
-### 🦁 Browser Extension Support
+1. **Download the Installer**: Grab `DNSAgent-Setup-v2.4.3.exe` from the latest [Release](https://github.com/BrianLaks/DNSAgent/releases).
+2. **Run and Install**: The installer will automatically configure the Windows Service, Firewall rules, and Tray icon.
+3. **Launch Dashboard**: Open your browser to `http://localhost:5123`.
+    - *Default Admin*: `admin@dnsagent.local` / `Admin123!` (Change immediately after login).
 
-### 🦁 Brave / 🌐 Chrome / 🧭 Microsoft Edge
-Our extension works on all Chromium-based browsers:
-1. Open your browser's extensions page (`brave://extensions` or `edge://extensions` or `chrome://extensions`).
-2. Enable **Developer Mode** (usually a toggle in the corner).
-3. Click **Load unpacked** and select the `extension` folder from your extracted ZIP.
+### 🖥️ Manual / Developer Install
+If you prefer running from source:
+1. Ensure **.NET 9 SDK** is installed.
+2. Run `dotnet publish DNSAgent.Service/DNSAgent.Service.csproj -c Release`.
+3. Use the `Setup-DNSAgent.ps1` script in the root folder to register the service.
 
-### 🏛️ Internet Explorer / Legacy Browsers
-Internet Explorer does not support modern extensions. However, **you are still protected!** 
-Because DNS Agent is a **DNS Server**, it blocks ads at the network level. To protect IE:
-1. Change your Windows Network Settings to use `127.0.0.1` (or your server's IP) as your **DNS Server**.
-2. DNS Agent will now block ad domains for *every* app on that machine, including IE.
+## 🔌 Browser Extension
+To enable Advanced YouTube Filtering:
+1. Open your browser's extensions page (`brave://extensions` or `chrome://extensions`).
+2. Enable **Developer Mode**.
+3. Click **Load unpacked** and select the `/extension` folder from this repository.
+4. Set your "DNS Agent URL" in the extension popup to point to your server (e.g., `http://localhost:5123`).
 
----
-
-## 🛠️ Troubleshooting
-
-### Dashboard is not accessible from other devices
-If the server is running but you cannot reach the dashboard from another machine (e.g., `http://192.168.1.168:5123`), the Windows Firewall may be blocking traffic. 
-
-Run this command in an **Administrator PowerShell** to fix it instantly:
-```powershell
-New-NetFirewallRule -DisplayName "DNS Agent Web" -Direction Inbound -LocalPort 5123 -Protocol TCP -Action Allow; New-NetFirewallRule -DisplayName "DNS Agent DNS" -Direction Inbound -LocalPort 53 -Protocol UDP -Action Allow
-```
-
-### Dashboard looks unstyled (No graphics)
-Ensure you extracted **all files** from the ZIP before running the setup. The `wwwroot` folder must be in the same directory as `DNSAgent.Service.exe`.
-
-To install and run DNS Agent on your Windows machine, follow these steps:
-
-### 1. Prerequisites
-- **.NET 9 SDK**: [Download here](https://dotnet.microsoft.com/en-us/download/dotnet/9.0)
-- **Git**: [Download here](https://git-scm.com/downloads)
-
-### 2. Clone and Build
-Open PowerShell as **Administrator** and run:
-```powershell
-git clone https://github.com/BrianLaks/DNSAgent.git
-cd DNSAgent
-dotnet publish DNSAgent.Service/DNSAgent.Service.csproj -c Release -o DNSAgent.Service/publish
-```
-
-### 3. Install the Windows Service
-The service core runs in the background. Install it with:
-```powershell
-cd DNSAgent.Service/publish
-Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
-.\install-service.ps1 install
-```
-
-### 4. Launch the Dashboard
-- Open your browser to `http://localhost:5123`
-- Default Admin Login: `admin@dnsagent.local` / `Admin123!` (Please change after login)
+## 📺 SmartTube & Android Guide
+Using a Smart TV or Android device? Check out our dedicated [SMARTTUBE_GUIDE.md](SMARTTUBE_GUIDE.md) for instructions on installation, bypassing Google blockers, and integration with DNS Agent.
 
 ---
 

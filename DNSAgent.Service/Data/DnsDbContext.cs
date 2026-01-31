@@ -17,6 +17,9 @@ namespace DNSAgent.Service.Data
         public DbSet<DnsProvider> DnsProviders { get; set; }
         public DbSet<DeviceInfo> Devices { get; set; }
         public DbSet<YouTubeStat> YouTubeStats { get; set; }
+        public DbSet<YouTubeActivity> YouTubeActivities { get; set; }
+        public DbSet<YouTubeAdEvent> YouTubeAdEvents { get; set; }
+        public DbSet<YouTubeProfileMapping> YouTubeProfileMappings { get; set; }
         public DbSet<SentinelReport> SentinelReports { get; set; }
     }
 
@@ -63,6 +66,30 @@ namespace DNSAgent.Service.Data
         public string FilterVersion { get; set; } = string.Empty;
     }
 
+    public class YouTubeActivity
+    {
+        public int Id { get; set; }
+        public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+        public string VideoId { get; set; } = string.Empty;
+        public string? Title { get; set; }
+        public string? Channel { get; set; }
+        public double DurationSeconds { get; set; }
+        public string? DeviceName { get; set; }
+        public string? YouTubeHandle { get; set; }
+    }
+
+    public class YouTubeAdEvent
+    {
+        public int Id { get; set; }
+        public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+        public string? VideoId { get; set; }
+        public string AdType { get; set; } = string.Empty; // "Preroll", "Overlay", "Sponsor", etc.
+        public string ActionTaken { get; set; } = string.Empty; // "Blocked", "Skipped", "Hidden"
+        public string? Metadata { get; set; }
+        public string? DeviceName { get; set; }
+        public string? YouTubeHandle { get; set; }
+    }
+
     public class QueryLog
     {
         public int Id { get; set; }
@@ -82,5 +109,12 @@ namespace DNSAgent.Service.Data
         public int Id { get; set; }
         public string Domain { get; set; }
         public DateTime AddedAt { get; set; }
+    }
+    public class YouTubeProfileMapping
+    {
+        public int Id { get; set; }
+        public string DeviceIdentifier { get; set; } = string.Empty; // IP address or Device Name
+        public string YouTubeHandle { get; set; } = string.Empty;
+        public DateTime LastUsed { get; set; } = DateTime.UtcNow;
     }
 }

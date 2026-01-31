@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.4.3] - 2026-01-31
+### Added
+- **Professional Installer**: New Inno Setup `.exe` installer that handles service registration, firewall rules, and robust database rescue.
+- **YouTube Intelligence**: Added "YouTube Tracking" toggle to the browser extension for privacy control.
+- **Data Governance**: Added "Purge History" button and user-configurable retention settings for YouTube activity.
+- **Comprehensive Documentation**: New SmartTube installation guide for Android/TV and modernized GitHub README.
+### Fixed
+- **YouTube Profile Detection**: Filtered out generic "Avatar image" alt-text to prioritize real handles.
+- **Query Logs UI**: Restored date visibility to the "Time" column for better audits.
+
 ## [2.3.5] - 2026-01-25
 ### Fixed
 - **Zombie Process Extermination**: Implemented aggressive `taskkill /F /T` logic in the installer to ensure legacy service and tray processes are completely purged during upgrades.

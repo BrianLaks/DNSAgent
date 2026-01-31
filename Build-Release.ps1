@@ -126,6 +126,28 @@ if ($ZipSize -lt 35MB) {
     exit 1
 }
 
+# 10. Generate Inno Setup Installer (.exe)
+Write-Host "`n--- Generating Professional Installer ---" -ForegroundColor Cyan
+$IsccPath = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+$IssScript = Join-Path $ProjectRoot "installer\DNSAgent.iss"
+$SetupExe = Join-Path $ReleasePath "DNSAgent-Setup-v$Version.exe"
+
+if (Test-Path $IsccPath) {
+    Write-Host "Compiling Inno Setup script: $IssScript" -ForegroundColor Yellow
+    & $IsccPath $IssScript
+    
+    if (Test-Path $SetupExe) {
+        Write-Host "Installer created successfully: $SetupExe" -ForegroundColor Green
+    }
+    else {
+        Write-Host "Warning: Installer compilation finished but $SetupExe not found in Release folder." -ForegroundColor Yellow
+    }
+}
+else {
+    Write-Host "Warning: Inno Setup (ISCC.exe) not found at $IsccPath. Skipping .exe generation." -ForegroundColor Yellow
+}
+
 Write-Host "`nRelease package created successfully!" -ForegroundColor Green
 Write-Host "Archive: $ZipFile" -ForegroundColor Cyan
+if ($SetupExe -and (Test-Path $SetupExe)) { Write-Host "Installer: $SetupExe" -ForegroundColor Cyan }
 Write-Host "`nBuild complete. Ready for distribution!" -ForegroundColor Green

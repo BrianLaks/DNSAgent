@@ -55,6 +55,7 @@ builder.Services.ConfigureApplicationCookie(options =>
 builder.Services.AddHttpClient();
 builder.Services.AddSingleton<ThemeService>();
 builder.Services.AddSingleton<DeArrowService>();
+builder.Services.AddSingleton<SponsorBlockService>();
 builder.Services.AddSingleton<DnsWorker>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<DnsWorker>());
 
@@ -190,6 +191,49 @@ using (var scope = app.Services.CreateScope())
                 PageUrl TEXT,
                 IsAutoBlocked INTEGER NOT NULL DEFAULT 0,
                 Metadata TEXT
+            );");
+    } catch { }
+
+    // 5. YouTubeActivities Table
+    try {
+        db.Database.ExecuteSqlRaw(@"
+            CREATE TABLE IF NOT EXISTS YouTubeActivities (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                Timestamp TEXT NOT NULL,
+                VideoId TEXT NOT NULL,
+                Title TEXT NOT NULL,
+                Channel TEXT NOT NULL,
+                DurationSeconds REAL NOT NULL,
+                DeviceName TEXT,
+                YouTubeHandle TEXT
+            );");
+    } catch { }
+    try { db.Database.ExecuteSqlRaw("ALTER TABLE YouTubeActivities ADD COLUMN YouTubeHandle TEXT"); } catch { }
+
+    // 6. YouTubeAdEvents Table
+    try {
+        db.Database.ExecuteSqlRaw(@"
+            CREATE TABLE IF NOT EXISTS YouTubeAdEvents (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                Timestamp TEXT NOT NULL,
+                VideoId TEXT,
+                AdType TEXT NOT NULL,
+                ActionTaken TEXT NOT NULL,
+                Metadata TEXT,
+                DeviceName TEXT,
+                YouTubeHandle TEXT
+            );");
+    } catch { }
+    try { db.Database.ExecuteSqlRaw("ALTER TABLE YouTubeAdEvents ADD COLUMN YouTubeHandle TEXT"); } catch { }
+    
+    // 7. YouTubeProfileMappings Table
+    try {
+        db.Database.ExecuteSqlRaw(@"
+            CREATE TABLE IF NOT EXISTS YouTubeProfileMappings (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                DeviceIdentifier TEXT NOT NULL,
+                YouTubeHandle TEXT NOT NULL,
+                LastUsed TEXT NOT NULL
             );");
     } catch { }
 

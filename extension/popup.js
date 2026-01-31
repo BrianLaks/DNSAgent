@@ -118,6 +118,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }, 500);
     });
+
+    // YouTube Tracking Toggle
+    const trackingToggle = document.getElementById('youtube-tracking-toggle');
+    if (trackingToggle) {
+        chrome.storage.local.get(['youtubeTrackingEnabled'], (result) => {
+            trackingToggle.checked = result.youtubeTrackingEnabled !== false;
+        });
+
+        trackingToggle.addEventListener('change', () => {
+            chrome.storage.local.set({ youtubeTrackingEnabled: trackingToggle.checked });
+        });
+    }
 });
 
 function updateConnectionStatus(status) {

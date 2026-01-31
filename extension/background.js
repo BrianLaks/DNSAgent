@@ -181,6 +181,54 @@ async function reportStats(stats) {
     }
 }
 
+// Report YouTube activity to API
+async function reportYouTubeActivity(activity) {
+    if (!connected) return;
+    try {
+        await fetch(`${dnsAgentUrl}/api/youtube/activity`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                ...activity,
+                machineName: machineName
+            })
+        });
+        console.log('[DNS Agent] Activity reported:', activity.title);
+    } catch (e) { }
+}
+
+// Report YouTube ad event to API
+async function reportYouTubeAdEvent(adEvent) {
+    if (!connected) return;
+    try {
+        await fetch(`${dnsAgentUrl}/api/youtube/ad-event`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                ...adEvent,
+                machineName: machineName
+            })
+        });
+        console.log('[DNS Agent] Ad event reported:', adEvent.adType);
+    } catch (e) { }
+}
+
+// Fetch YouTube history from API
+async function getYoutubeHistory(limit = 100, user = null) {
+    if (!connected) return [];
+    try {
+        let url = `${dnsAgentUrl}/api/youtube/history?limit=${limit}`;
+        if (user) url += `&user=${encodeURIComponent(user)}`;
+        const response = await fetch(url);
+        if (response.ok) {
+            return await response.json();
+        }
+    } catch (e) {
+        console.error('[DNS Agent] Failed to fetch history:', e);
+    }
+    return [];
+}
+
 // Send heartbeat to DNS Agent
 async function sendHeartbeat() {
     if (!connected || !clientId) return;
@@ -263,6 +311,19 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
     if (message.action === 'reportStats') {
         reportStats(message.stats);
+    }
+
+    if (message.action === 'reportYouTubeActivity') {
+        reportYouTubeActivity(message.activity);
+    }
+
+    if (message.action === 'reportYouTubeAdEvent') {
+        reportYouTubeAdEvent(message.adEvent);
+    }
+
+    if (message.action === 'getYoutubeHistory') {
+        getYoutubeHistory(message.limit, message.user).then(sendResponse);
+        return true;
     }
 
     if (message.action === 'getDeArrowTitles') {

@@ -29,7 +29,8 @@
             "js": [
                 "sponsorblock-client.js",
                 "dearrow-client.js",
-                "youtube-blocker.js"
+                "youtube-blocker.js",
+                "youtube-search.js"
             ],
             "run_at": "document_start",
             "all_frames": false

@@ -70,7 +70,7 @@
                     @foreach (var log in logs)
                     {
                         <tr class="@GetRowClass(log.Status)">
-                            <td>@log.Timestamp.ToString("HH:mm:ss")</td>
+                            <td>@log.Timestamp.ToString("MM/dd HH:mm:ss")</td>
                             <td>
                                 @{
                                     devices.TryGetValue(log.ClientId ?? "", out var d);

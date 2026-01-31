@@ -1,8 +1,5 @@
-; DNS Agent - Inno Setup Installer Script
-; Requires Inno Setup 6.0 or later: https://jrsoftware.org/isdl.php
-
 #define MyAppName "DNS Agent"
-#define MyAppVersion "1.0.0"
+#define MyAppVersion "2.4.3"
 #define MyAppPublisher "Brian Laks"
 #define MyAppURL "https://github.com/BrianLaks/DNSAgent"
 #define MyAppExeName "DNSAgent.Service.exe"
@@ -20,8 +17,8 @@ DefaultDirName={autopf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
 LicenseFile=..\LICENSE.txt
-OutputDir=..\installer
-OutputBaseFilename=DNSAgent-Setup-{#MyAppVersion}
+OutputDir=..\Release
+OutputBaseFilename=DNSAgent-Setup-v{#MyAppVersion}
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
@@ -29,7 +26,7 @@ PrivilegesRequired=admin
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 UninstallDisplayIcon={app}\{#MyAppExeName}
-SetupIconFile=..\icon.ico
+SetupIconFile=..\DNSAgent.Tray\icon.ico
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -39,9 +36,10 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Name: "startservice"; Description: "Start DNS Agent service after installation"; GroupDescription: "Service Options:"; Flags: checkedonce
 
 [Files]
-Source: "..\DNSAgent.Service\publish\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "..\README.md"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\LICENSE.txt"; DestDir: "{app}"; Flags: ignoreversion isreadme
+; Core application files from the staging dist folder
+Source: "..\_BuildStaging\Dist\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+; Specific handling for the database to avoid overwriting user data
+Source: "..\_BuildStaging\Dist\dnsagent.db"; DestDir: "{app}"; Flags: uninsneveruninstall onlyifdoesntexist
 
 [Icons]
 Name: "{group}\DNS Agent Dashboard"; Filename: "http://localhost:5123"; IconFilename: "{app}\{#MyAppExeName}"
@@ -49,9 +47,12 @@ Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\DNS Agent Dashboard"; Filename: "http://localhost:5123"; IconFilename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
 [Run]
-; Install and start the service
+; Stop existing service just in case
+Filename: "{sys}\sc.exe"; Parameters: "stop {#MyServiceName}"; Flags: runhidden
+; Install and configure the service
 Filename: "{sys}\sc.exe"; Parameters: "create {#MyServiceName} binPath= ""{app}\{#MyAppExeName}"" start= auto DisplayName= ""DNS Agent - Network Ad Blocker"""; Flags: runhidden
 Filename: "{sys}\sc.exe"; Parameters: "description {#MyServiceName} ""DNS-based advertisement and tracking blocker with web management interface"""; Flags: runhidden
+; Start the service
 Filename: "{sys}\sc.exe"; Parameters: "start {#MyServiceName}"; Flags: runhidden; Tasks: startservice
 ; Open dashboard
 Filename: "http://localhost:5123"; Description: "Open DNS Agent Dashboard"; Flags: postinstall shellexec skipifsilent
@@ -89,6 +90,9 @@ begin
     // Configure Windows Firewall
     Exec('netsh', 'advfirewall firewall add rule name="DNS Agent - DNS" dir=in action=allow protocol=UDP localport=53', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
     Exec('netsh', 'advfirewall firewall add rule name="DNS Agent - Web UI" dir=in action=allow protocol=TCP localport=5123', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+    
+    // Set Working Directory for Service (CRITICAL for SQLite and Static Files)
+    RegWriteStringValue(HKLM, 'SYSTEM\CurrentControlSet\Services\' + '{#MyServiceName}', 'WorkingDirectory', ExpandConstant('{app}'));
   end;
 end;
 

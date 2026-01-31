@@ -14,12 +14,14 @@ namespace DNSAgent.Service.Controllers
         private readonly DnsWorker _dnsWorker;
         private readonly DnsDbContext _db;
         private readonly DeArrowService _deArrowService;
+        private readonly SponsorBlockService _sponsorBlockService;
 
-        public ApiController(DnsWorker dnsWorker, DnsDbContext db, DeArrowService deArrowService)
+        public ApiController(DnsWorker dnsWorker, DnsDbContext db, DeArrowService deArrowService, SponsorBlockService sponsorBlockService)
         {
             _dnsWorker = dnsWorker;
             _db = db;
             _deArrowService = deArrowService;
+            _sponsorBlockService = sponsorBlockService;
         }
 
         /// <summary>
@@ -153,6 +155,7 @@ namespace DNSAgent.Service.Controllers
         [HttpGet("dearrow/v1/getThumbnail")]
         public async Task<IActionResult> GetDeArrowThumbnail([FromQuery] string videoID)
         {
+            await LogProxyActivity(videoID);
             var query = new Dictionary<string, string> { { "videoID", videoID } };
             var result = await _deArrowService.ProxyV1Async("getThumbnail", query);
             if (string.IsNullOrEmpty(result)) return NotFound();
@@ -162,8 +165,19 @@ namespace DNSAgent.Service.Controllers
         [HttpGet("dearrow/v1/branding")]
         public async Task<IActionResult> GetDeArrowV1Branding([FromQuery] string videoID)
         {
+            await LogProxyActivity(videoID);
             var query = new Dictionary<string, string> { { "videoID", videoID } };
             var result = await _deArrowService.ProxyV1Async("branding", query);
+            if (string.IsNullOrEmpty(result)) return NotFound();
+            return Content(result, "application/json");
+        }
+
+        [HttpGet("sponsorblock/skipSegments")]
+        public async Task<IActionResult> GetSponsorBlockVideoSegments([FromQuery] string videoID)
+        {
+            await LogProxyActivity(videoID);
+            var query = new Dictionary<string, string> { { "videoID", videoID } };
+            var result = await _sponsorBlockService.ProxyAsync("skipSegments", query);
             if (string.IsNullOrEmpty(result)) return NotFound();
             return Content(result, "application/json");
         }
@@ -290,6 +304,187 @@ namespace DNSAgent.Service.Controllers
         }
 
         /// <summary>
+        /// POST /api/youtube/activity - Report YouTube watch activity
+        /// </summary>
+        [HttpPost("youtube/activity")]
+        public async Task<IActionResult> ReportYouTubeActivity([FromBody] YouTubeActivityRequest request)
+        {
+            try
+            {
+                var activity = new YouTubeActivity
+                {
+                    VideoId = request.VideoId,
+                    Title = request.Title,
+                    Channel = request.Channel,
+                    DurationSeconds = request.DurationSeconds,
+                    DeviceName = request.MachineName ?? Request.Headers["User-Agent"].ToString() ?? "Unknown Extension",
+                    YouTubeHandle = request.YouTubeUser,
+                    Timestamp = DateTime.UtcNow
+                };
+
+                _db.YouTubeActivities.Add(activity);
+                await _db.SaveChangesAsync();
+
+                return Ok(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "Database write failed" });
+            }
+        }
+
+        /// <summary>
+        /// POST /api/youtube/ad-event - Report detailed YouTube ad blocking event
+        /// </summary>
+        [HttpPost("youtube/ad-event")]
+        public async Task<IActionResult> ReportYouTubeAdEvent([FromBody] YouTubeAdEventRequest request)
+        {
+            try
+            {
+                var adEvent = new YouTubeAdEvent
+                {
+                    VideoId = request.VideoId,
+                    AdType = request.AdType,
+                    ActionTaken = request.ActionTaken,
+                    Metadata = request.Metadata,
+                    DeviceName = request.MachineName ?? Request.Headers["User-Agent"].ToString() ?? "Unknown Extension",
+                    YouTubeHandle = request.YouTubeUser,
+                    Timestamp = DateTime.UtcNow
+                };
+
+                _db.YouTubeAdEvents.Add(adEvent);
+                await _db.SaveChangesAsync();
+
+                return Ok(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "Database write failed" });
+            }
+        }
+
+        /// <summary>
+        /// GET /api/youtube/history - Get YouTube watch history for search augmentation
+        /// </summary>
+        [HttpGet("youtube/history")]
+        public async Task<IActionResult> GetYouTubeHistory([FromQuery] string? query, [FromQuery] string? user, [FromQuery] int limit = 100)
+        {
+            var history = _db.YouTubeActivities.AsQueryable();
+
+            if (!string.IsNullOrEmpty(user))
+            {
+                history = history.Where(h => h.YouTubeHandle == user);
+            }
+            
+            if (!string.IsNullOrEmpty(query))
+            {
+                history = history.Where(a => a.Title.Contains(query) || a.Channel.Contains(query));
+            }
+
+            var results = await history
+                .OrderByDescending(a => a.Timestamp)
+                .Take(limit)
+                .Select(a => new { a.VideoId, a.Title, a.Channel, a.Timestamp })
+                .ToListAsync();
+
+            return Ok(results);
+        }
+
+        /// <summary>
+        /// DELETE /api/youtube/history - Clear all YouTube watch history and ad events
+        /// </summary>
+        [HttpDelete("youtube/history")]
+        public async Task<IActionResult> ClearYouTubeHistory()
+        {
+            _db.YouTubeActivities.RemoveRange(_db.YouTubeActivities);
+            _db.YouTubeAdEvents.RemoveRange(_db.YouTubeAdEvents);
+            await _db.SaveChangesAsync();
+            return Ok(new { success = true });
+        }
+
+        /// <summary>
+        /// GET /api/youtube/mappings - Get all IP-to-Profile mappings
+        /// </summary>
+        [HttpGet("youtube/mappings")]
+        public async Task<IActionResult> GetYouTubeMappings()
+        {
+            var mappings = await _db.YouTubeProfileMappings.OrderByDescending(m => m.LastUsed).ToListAsync();
+            return Ok(mappings);
+        }
+
+        /// <summary>
+        /// POST /api/youtube/mappings - Create or update a profile mapping
+        /// </summary>
+        [HttpPost("youtube/mappings")]
+        public async Task<IActionResult> UpdateYouTubeMapping([FromBody] MappingRequest request)
+        {
+            if (string.IsNullOrEmpty(request.DeviceIdentifier) || string.IsNullOrEmpty(request.YouTubeHandle))
+                return BadRequest("DeviceIdentifier and YouTubeHandle are required");
+
+            var existing = await _db.YouTubeProfileMappings
+                .FirstOrDefaultAsync(m => m.DeviceIdentifier == request.DeviceIdentifier);
+
+            if (existing != null)
+            {
+                existing.YouTubeHandle = request.YouTubeHandle;
+                existing.LastUsed = DateTime.UtcNow;
+            }
+            else
+            {
+                _db.YouTubeProfileMappings.Add(new YouTubeProfileMapping
+                {
+                    DeviceIdentifier = request.DeviceIdentifier,
+                    YouTubeHandle = request.YouTubeHandle,
+                    LastUsed = DateTime.UtcNow
+                });
+            }
+
+            await _db.SaveChangesAsync();
+            return Ok(new { success = true });
+        }
+
+        /// <summary>
+        /// DELETE /api/youtube/mappings/{id} - Remove a profile mapping
+        /// </summary>
+        [HttpDelete("youtube/mappings/{id}")]
+        public async Task<IActionResult> DeleteYouTubeMapping(int id)
+        {
+            var mapping = await _db.YouTubeProfileMappings.FindAsync(id);
+            if (mapping != null)
+            {
+                _db.YouTubeProfileMappings.Remove(mapping);
+                await _db.SaveChangesAsync();
+            }
+            return Ok(new { success = true });
+        }
+
+        /// <summary>
+        /// GET /api/youtube/unmapped-devices - Find proxy IPs without a profile assigned
+        /// </summary>
+        [HttpGet("youtube/unmapped-devices")]
+        public async Task<IActionResult> GetUnmappedDevices()
+        {
+            var mappedIps = await _db.YouTubeProfileMappings.Select(m => m.DeviceIdentifier).ToListAsync();
+            
+            var unmappedIps = await _db.YouTubeActivities
+                .Where(a => a.DeviceName.StartsWith("Proxy:"))
+                .ToListAsync();
+
+            var distinctUnmapped = unmappedIps
+                .Select(a => a.DeviceName.Replace("Proxy: ", ""))
+                .Distinct()
+                .Where(ip => !mappedIps.Contains(ip))
+                .ToList();
+
+            return Ok(distinctUnmapped);
+        }
+
+        public class MappingRequest {
+            public string DeviceIdentifier { get; set; } = string.Empty;
+            public string YouTubeHandle { get; set; } = string.Empty;
+        }
+
+        /// <summary>
         /// POST /api/sentinel/report - Report tracker detection or DNS bypass
         /// </summary>
         [HttpPost("sentinel/report")]
@@ -412,6 +607,37 @@ namespace DNSAgent.Service.Controllers
                    !domain.StartsWith('.') &&
                    !domain.EndsWith('.');
         }
+
+        private async Task LogProxyActivity(string videoId)
+        {
+            if (string.IsNullOrEmpty(videoId)) return;
+
+            // Only log if not already logged in last 5 minutes to avoid spam from multiple proxy calls
+            var recentlyLogged = await _db.YouTubeActivities
+                .AnyAsync(a => a.VideoId == videoId && a.Timestamp >= DateTime.UtcNow.AddMinutes(-5));
+
+            if (!recentlyLogged)
+            {
+                var ip = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+                
+                // Check if this IP is mapped to a specific profile (e.g. SmartTube on a specific TV)
+                var mapping = await _db.YouTubeProfileMappings
+                    .FirstOrDefaultAsync(m => m.DeviceIdentifier == ip);
+
+                var handle = mapping?.YouTubeHandle ?? "[Proxy Captured]";
+
+                _db.YouTubeActivities.Add(new YouTubeActivity
+                {
+                    VideoId = videoId,
+                    Timestamp = DateTime.UtcNow,
+                    DeviceName = $"Proxy: {ip}",
+                    YouTubeHandle = handle,
+                    Title = "[Proxy Captured]",
+                    Channel = "[Proxy Captured]"
+                });
+                await _db.SaveChangesAsync();
+            }
+        }
     }
 
     // Request models
@@ -453,5 +679,25 @@ namespace DNSAgent.Service.Controllers
         public string? MachineName { get; set; }
         public string? UserName { get; set; }
         public string? Version { get; set; }
+    }
+
+    public class YouTubeActivityRequest
+    {
+        public string VideoId { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
+        public string Channel { get; set; } = string.Empty;
+        public double DurationSeconds { get; set; }
+        public string? MachineName { get; set; }
+        public string? YouTubeUser { get; set; }
+    }
+
+    public class YouTubeAdEventRequest
+    {
+        public string? VideoId { get; set; }
+        public string AdType { get; set; } = string.Empty;
+        public string ActionTaken { get; set; } = string.Empty;
+        public string? Metadata { get; set; }
+        public string? MachineName { get; set; }
+        public string? YouTubeUser { get; set; }
     }
 }

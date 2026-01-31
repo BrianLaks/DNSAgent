@@ -75,55 +75,154 @@
                     </div>
                 </div>
 
-                <!-- Setup Steps -->
+                <!-- Installation: The New Professional Way -->
+                <div class="accordion-item shadow-sm mb-3 border-0 border-start border-4 border-success">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#installerHelp">
+                            <span class="bi bi-rocket-takeoff me-2 text-success"></span> Step 1: Install the Network Shield
+                        </button>
+                    </h2>
+                    <div id="installerHelp" class="accordion-collapse collapse show" data-bs-parent="#helpAccordion">
+                        <div class="accordion-body">
+                            <p>The DNS Agent is now deployed using a professional Windows Installer:</p>
+                            <div class="p-3 bg-light border rounded mb-3">
+                                <h6 class="fw-bold"><i class="bi bi-download me-2"></i> Professional Setup</h6>
+                                <p class="small mb-2">Run the <strong>DNSAgent-Setup-v2.4.3.exe</strong> from your release package. It handles everything:</p>
+                                <ul class="small mb-0">
+                                    <li>Registers the Windows Service.</li>
+                                    <li>Configures Firewall rules for DNS (53) and UI (5123).</li>
+                                    <li>Sets up the System Tray icon for real-time monitoring.</li>
+                                    <li><strong>Data Preservation</strong>: Keeps your previous database and settings safe during upgrades.</li>
+                                </ul>
+                            </div>
+                            <div class="alert alert-info py-2 small">
+                                <i class="bi bi-info-circle me-1"></i> Already installed manually? The installer will detect your old version and migrate your data automatically.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Establish the Sentinel -->
                 <div class="accordion-item shadow-sm mb-3 border-0 border-start border-4 border-primary">
                     <h2 class="accordion-header">
                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#extensionSetup">
-                            <span class="bi bi-plugin me-2 text-primary"></span> Step 1: Establish the Sentinel
+                            <span class="bi bi-plugin me-2 text-primary"></span> Step 2: Establish the Sentinel (Browser)
                         </button>
                     </h2>
                     <div id="extensionSetup" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
                         <div class="accordion-body">
-                            <p>To enable <strong>Real-time Tracker Detection</strong>, you must install the Browser Extension:</p>
+                            <p>To enable <strong>Real-time Tracker Detection</strong> and advanced YouTube filtering, install the extension on your PC:</p>
                             <div class="d-flex align-items-center mb-3">
                                 <a href="/api/download/extension" class="btn btn-primary me-3">
-                                    <i class="bi bi-download me-1"></i> Get Extension v2.4+
+                                    <i class="bi bi-download me-1"></i> Get Extension v2.4.3
                                 </a>
                                 <span class="badge bg-info">Auto-packaged for this server</span>
                             </div>
                             <small class="text-muted d-block mb-2">Instructions:</small>
                             <ol class="small text-muted">
                                 <li>Download and extract the ZIP.</li>
-                                <li>Visit <code>brave://extensions</code> and enable "Developer Mode".</li>
+                                <li>Visit <code>brave://extensions</code> (or <code>chrome://extensions</code>) and enable "Developer Mode".</li>
                                 <li>Use "Load Unpacked" and select the extension folder.</li>
                             </ol>
                         </div>
                     </div>
                 </div>
 
-                <!-- Manual PC Setup -->
-                <div class="accordion-item shadow-sm mb-3 border-0">
+                <!-- YouTube & SmartTube -->
+                <div class="accordion-item shadow-sm mb-3 border-0 border-start border-4 border-danger">
                     <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#manualSetup">
-                            <span class="bi bi-pc-display me-2"></span> 💻 Per-Device Shield Setup
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#youtubeHelp">
+                            <span class="bi bi-youtube me-2 text-danger"></span> Step 3: YouTube Insights & SmartTube (Android/TV)
                         </button>
                     </h2>
-                    <div id="manualSetup" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                    <div id="youtubeHelp" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
                         <div class="accordion-body">
-                            <p>To see <strong>Machine Names</strong> instead of just Router IPs, run this script as Admin on each PC:</p>
-                            <div class="bg-dark p-3 rounded position-relative">
-                                <pre class="text-success mb-0" style="font-size: 0.8rem;"><code>$dnsServer = "@CurrentIP"
-$interfaces = Get-NetIPInterface -AddressFamily IPv4 | Where-Object { $_.ConnectionState -eq "Connected" }
-foreach ($interface in $interfaces) {
-    Set-DnsClientServerAddress -InterfaceIndex $interface.InterfaceIndex -ServerAddresses $dnsServer
-    Write-Host "DNS updated to $dnsServer for interface: $($interface.InterfaceAlias)"
-}</code></pre>
-                                <button class="btn btn-sm btn-outline-light position-absolute top-0 end-0 m-2" @onclick="CopyScript">
-                                    <span class="bi bi-clipboard"></span> Copy
-                                </button>
+                            <div class="alert alert-danger py-3 mb-4">
+                                <h6 class="fw-bold mb-1"><i class="bi bi-android me-2"></i> Using a Smart TV or Android Device?</h6>
+                                <p class="small mb-2">Standard apps often bypass DNS. Use our specialized guide to install SmartTube and sync it with this dashboard.</p>
+                                <a href="https://github.com/BrianLaks/DNSAgent/blob/main/SMARTTUBE_GUIDE.md" target="_blank" class="btn btn-sm btn-danger">View SmartTube Guide</a>
+                            </div>
+
+                            <h6 class="fw-bold">Algorithm Circumvention Layer</h6>
+                            <p class="small">YouTube's algorithm often shows you content you've already seen. Our system uses your <em>local</em> history to surgically modify the YouTube interface:</p>
+                            <ul class="small">
+                                <li><strong>Hide Watched</strong>: Search results automatically hide videos you've already finished.</li>
+                                <li><strong>Boost Trusted</strong>: Channels you watch frequently are prioritized and badged.</li>
+                                <li><strong>User Isolation</strong>: Detects your YouTube Handle (e.g. <code>@@brianlaks</code>) so results aren't polluted by others.</li>
+                            </ul>
+
+                            <hr />
+
+                            <h6 class="fw-bold">The "Proxy Trick" (For TVs)</h6>
+                            <p class="small">Capture watch history from Smart TVs without needing an extension by proxying the SponsorBlock API:</p>
+                            <div class="p-3 bg-light border rounded">
+                                <ol class="small mb-0">
+                                    <li>In SmartTube: Settings > SponsorBlock > <strong>API URL</strong>.</li>
+                                    <li>Change to: <code>http://@CurrentIP:5123/api/sponsorblock/</code></li>
+                                </ol>
                             </div>
                         </div>
                     </div>
+                </div>
+
+                <!-- Community & Open Source -->
+                <div class="accordion-item shadow-sm mb-3 border-0 border-start border-4 border-success">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#communityHelp">
+                            <span class="bi bi-github me-2 text-dark"></span> 🤝 Community & Contribution Portal
+                        </button>
+                    </h2>
+                    <div id="communityHelp" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                        <div class="accordion-body">
+                            <p class="small"><strong>DNS Agent</strong> is an open source project built on the philosophy of network transparency and user sovereignty. We welcome contributions, bug reports, and feature requests from the community.</p>
+                            
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <div class="p-3 border rounded text-center bg-light h-100">
+                                        <i class="bi bi-bug text-danger fs-3 mb-2 d-block"></i>
+                                        <h6 class="fw-bold">Report a Bug</h6>
+                                        <p class="small text-muted mb-2">Found a tracker getting through? Crashed on startup?</p>
+                                        <a href="https://github.com/BrianLaks/DNSAgent/issues/new" target="_blank" class="btn btn-sm btn-outline-danger w-100">Open Bug Report</a>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="p-3 border rounded text-center bg-light h-100">
+                                        <i class="bi bi-lightbulb text-warning fs-3 mb-2 d-block"></i>
+                                        <h6 class="fw-bold">Request a Feature</h6>
+                                        <p class="small text-muted mb-2">Have an idea for a new YouTube filter or UI enhancement?</p>
+                                        <a href="https://github.com/BrianLaks/DNSAgent/issues/new" target="_blank" class="btn btn-sm btn-outline-warning w-100">Submit Request</a>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="p-3 border rounded text-center bg-light h-100">
+                                        <i class="bi bi-git text-primary fs-3 mb-2 d-block"></i>
+                                        <h6 class="fw-bold">Pull Requests</h6>
+                                        <p class="small text-muted mb-2">Ready to contribute code? Fork us on GitHub!</p>
+                                        <a href="https://github.com/BrianLaks/DNSAgent/pulls" target="_blank" class="btn btn-sm btn-outline-primary w-100">Join the Dev Team</a>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4 p-3 border-top">
+                                <h6 class="fw-bold"><i class="bi bi-chat-quote me-2"></i> Our Mission</h6>
+                                <p class="small text-muted mb-0">We believe that your network data belongs to <strong>you</strong>. By making this a community-driven project, we ensure that the "Sentinel" is always ahead of corporate tracking and algorithmic manipulation.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Community Link -->
+            <div class="text-center mt-5 mb-5 opacity-75">
+                <p class="small text-muted">DNS Agent is an Open Source Project</p>
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="https://github.com/BrianLaks/DNSAgent" target="_blank" class="text-reset text-decoration-none">
+                        <i class="bi bi-github me-1"></i> GitHub Repo
+                    </a>
+                    <span class="text-muted">|</span>
+                    <a href="https://github.com/BrianLaks/DNSAgent/discussions" target="_blank" class="text-reset text-decoration-none">
+                        <i class="bi bi-people me-1"></i> Community Portal
+                    </a>
                 </div>
             </div>
         </div>

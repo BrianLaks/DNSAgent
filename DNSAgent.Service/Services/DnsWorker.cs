@@ -184,8 +184,9 @@ namespace DNSAgent.Service.Services
                 using var scope = _scopeFactory.CreateScope();
                 var db = scope.ServiceProvider.GetRequiredService<DnsDbContext>();
                 var config = scope.ServiceProvider.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>();
+                
+                // DNS Logs Retention
                 var days = config.GetValue<int>("DnsAgent:LogRetentionDays", 5);
-
                 var cutoff = DateTime.Now.AddDays(-days);
                 var oldLogs = db.QueryLogs.Where(l => l.Timestamp < cutoff);
                 
@@ -195,6 +196,28 @@ namespace DNSAgent.Service.Services
                     db.QueryLogs.RemoveRange(oldLogs);
                     await db.SaveChangesAsync();
                     _logger.LogInformation("Cleaned up {Count} logs older than {Days} days.", count, days);
+                }
+
+                // YouTube Retention (Separate from general DNS logs)
+                var ytDays = config.GetValue<int>("DnsAgent:YouTubeRetentionDays", 90);
+                var ytCutoff = DateTime.UtcNow.AddDays(-ytDays);
+                
+                var oldActivities = db.YouTubeActivities.Where(a => a.Timestamp < ytCutoff);
+                int ytCount = await oldActivities.CountAsync();
+                if (ytCount > 0)
+                {
+                    db.YouTubeActivities.RemoveRange(oldActivities);
+                    await db.SaveChangesAsync();
+                    _logger.LogInformation("Cleaned up {Count} YouTube activities older than {Days} days.", ytCount, ytDays);
+                }
+
+                var oldAds = db.YouTubeAdEvents.Where(a => a.Timestamp < ytCutoff);
+                int adCount = await oldAds.CountAsync();
+                if (adCount > 0)
+                {
+                    db.YouTubeAdEvents.RemoveRange(oldAds);
+                    await db.SaveChangesAsync();
+                    _logger.LogInformation("Cleaned up {Count} YouTube ad events older than {Days} days.", adCount, ytDays);
                 }
             }
             catch (Exception ex)
