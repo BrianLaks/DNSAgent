@@ -14,7 +14,7 @@ if '%errorlevel%' NEQ '0' (
 )
 
 echo Starting DNS Agent Setup with Permission Bypass...
-powershell.exe -ExecutionPolicy Bypass -File "./Setup-DNSAgent.ps1"
+powershell.exe -ExecutionPolicy Bypass -File "%~dp0Setup-DNSAgent.ps1"
 if %errorlevel% neq 0 (
     echo.
     echo ************************************************************
